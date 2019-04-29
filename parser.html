@@ -1,0 +1,1796 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Programming parsers</title>
+<meta name="description" content="Programming parsers, building code">
+<meta name="viewport" content="width=devide-width, initial-scale=1">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="stylesheet" href="unstyle.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="print.css" media="print">
+</head>
+<body>
+
+<!--[ PAGES BEGIN ]-->
+<div id="pages" class="clearfix">
+
+<div class="page-even" data-page-number="❦">
+  <h1 id="title"><a href="#title"></a>Parser programming</h1>
+  <p>This text explains expression parsers and how one can be built. We want to interpret mathematical notation like <span class="maths">-0.6+12.5×5.5</span> as well as regular expressions like <code>x.|y+</code>.</p>
+
+  <p>The first part of a parser translates a string of characters into pre-defined symbols of specific types. E.g. the character sequence <code>"12+3"</code> can be translated into the symbols <span class="maths">12</span>, <span class="maths">+</span>, and <span class="maths">3</span>; a number, an addition operator, and another number. Together, they are interpreted as <span class="maths">12+3</span>, which is an expression that can be reduced mathematically to <span class="maths">15</span>. This is a translation from an expression given as a character sequence (a string) to an expression given as a symbol sequence—it isn't interpreted yet.</p>
+  <p>The second part of a parser interprets a sequence of symbols to build a data structure which encodes the expression's order of evaluation. The rules for how to evaluate expressions is just like how you parse <span class="maths">12+3×4</span> as <span class="maths">12+(3×4)=24</span> and not as <span class="maths">(12+3)×4=60</span>. I.e. multiplication has a higher precedence than addition, so it's evaluated first.</p>
+  <p>A simple parsing algorithm is the <span class="bold">shunting yard algorithm</span>. An expression consisting of a sequence of symbols is treated as a queue that is iterated over from beginning to end. The output is another queue where the symbols have been reordered into postfix notation. The shunting yard parsing algorithm works like this:</p>
+  <div class="code" id="code-1"><pre><code
+>For each input symbol:
+
+  If it is a number:
+    Copy it to output queue.
+
+  Else if it is an operator:
+    Move all operators with higher or equal precedence from the top of the 
+    operator stack to the output queue. Then copy current operator to operator stack.
+
+Until the operator stack is empty, move every operator from the top of the operator stack
+to the output queue. This ends parsing.</code></pre>
+  </div>
+
+  <p><a href="#figure-1">Figure 1</a> shows an example of the shunting yard algorithm. Addition and subtraction have equal precedence. Multiplication and division have equal precedence that is higher than addition and subtraction.</p>
+  <figure aria-labelledby="figure-1-caption" id="figure-1">
+<pre role="img">Input queue: 1+2*3-4÷5
+
+  | output queue
+  +-------------
+  | operator stack
+
+  |1   |1   |1 2   |1 2   |1 2 3   |1 2 3 * +   |1 2 3 * + 4   |1 2 3 * + 4   |1 2 3 * + 4 5
+  +--  +--  +----  +----  +------  +----------  +------------  +------------  +--------------
+  |    |+   |+     |+ *   |+ *     |-           |-             |- ÷           |- ÷
+
+  |1 2 3 * + 4 5 ÷ -
+  +------------------
+  |
+
+Postfix notation expression tree: [1 2 3 * + 4 5 ÷ -]   equals   ( (1 (2 3 *) +) (4 5 ÷) - )
+  postfix syntax: (left right operator)
+
+Parse tree graphically:                 Parse tree in computer memory:
+        -                               +---+---+---+---+---+---+---+---+---+
+      /   \                      value: | 1 | 2 | 3 | * | + | 4 | 5 | ÷ | - |
+     +      ÷                           +---+---+---+---+---+---+---+---+---+
+    / \    / \                   index:   0   1   2   3   4   5   6   7   8
+   1   *  4   5
+      / \
+     2   3</pre>
+  <figcaption id="figure-1-caption">Figure 1: Example of shunting yard algorithm for a mathematical expression.</figcaption>
+  </figure>
+
+</div>
+
+
+<div class="page-odd" data-page-number="1">
+
+  <p>
+    To change the order of evaluation, you can use parentheses. <span class="maths">(12+3)×4</span> will evaluate addition before multiplication. Symbols representing left parenthesis and right parenthesis are handled specially in the shunting yard algorithm, so we add two other cases. The shunting yard algorithm now looks like this:
+  </p>
+  <div class="code" id="code-2"><pre><code
+>For each input symbol:
+  If it is a number:
+    Copy it to output queue.
+
+  <span class="bold">Else if it is a left parenthesis:
+    Copy it to operator stack and give it a precedence of zero.
+
+  Else if it is a right parenthesis:
+    Move all operators from the top of the operator stack to the output queue until the
+    left parenthesis symbol is encountered. Discard both parentheses.</span>
+
+  Else if it is an operator:
+    Move all operators with higher or equal precedence from the top of the 
+    operator stack to the output queue. Then copy current operator to operator stack.
+
+Until the operator stack is empty, move every operator from the top of the operator stack
+to the output queue. This ends parsing.</code></pre>
+  </div>
+
+  <p><a href="#figure-2">Figure 2</a> shows an example of the shunting yard algorithm when it handles parentheses.</p>
+  <figure aria-labelledby="figure-2-caption" id="figure-2">
+<pre role="img">Input queue: 1+2*(3-4)÷5
+
+  |1   |1   |1 2   |1 2   |1 2     |1 2     |1 2 3   |1 2 3     |1 2 3 4   |1 2 3 4 -
+  +--  +--  +----  +----  +------  +------  +------  +--------  +--------  +----------
+  |    |+   |+     |+ *   |+ * (   |+ * (   |+ * (   |+ * ( -   |+ * ( -   |+ *
+
+  |1 2 3 4 - *   |1 2 3 4 - * 5   |1 2 3 4 - * 5 ÷ +
+  +------------  +--------------  +------------------
+  |+ ÷           |- ÷             |
+
+Postfix notation parse tree: [1 2 3 4 - * 5 ÷ +]   equals   ( 1 ( (2 (3 4 -) *) 5 ÷) + )
+
+Parse tree graphically:                 Parse tree in computer memory:
+       +                                +---+---+---+---+---+---+---+---+---+
+      / \                        value: | 1 | 2 | 3 | 4 | - | * | 5 | ÷ | + |
+     1   ÷                              +---+---+---+---+---+---+---+---+---+
+        / \                      index:   0   1   2   3   4   5   6   7   8
+       *   5
+      / \
+     2   -
+        / \
+       3   4</pre>
+  <figcaption id="figure-2-caption">Figure 2: Example of shunting yard algorithm for mathematical expression with parentheses.</figcaption>
+  </figure>
+
+  <p>An operator can be <span class="bold">left associative</span> or <span class="bold">right associative</span>. When greater-than-or-equal (<code>&gt;=</code>) precedence is used to conditionally move operators from the operator stack, then the operator is left associative. If greater-than (<code>&gt;</code>) precedence is used, then the operator would be right associative. <a href="#figure-3">Figure 3</a> demonstrates the difference for the addition operator.</p>
+
+  <figure aria-labelledby="figure-3-caption" id="figure-3">
+<pre role="img">Input queue: 1+2+3+4
+
+      |1   |1   |1 2   |1 2 +   |1 2 + 3   |1 2 + 3 +   |1 2 + 3 + 4   |1 2 + 3 + 4 +
+ (A)  +--  +--  +----  +------  +--------  +----------  +------------  +--------------
+      |    |+   |+     |+       |+         |+           |+             |
+
+Postfix notation parse tree: [1 2 + 3 + 4 +]   equals   ( ( (1 2 +) 3 +) 4 + )
+
+      |1   |1   |1 2   |1 2   |1 2 3   |1 2 3   |1 2 3 4   |1 2 3 4 + + +
+ (B)  +--  +--  +----  +----  +------  +------  +--------  +--------------
+      |    |+   |+     |+ +   |+ +     |+ + +   |+ + +     |
+
+Postfix notation parse tree: [1 2 3 4 + + +]   equals   ( 1 ( 2 (3 4 +) +) + )
+</pre>
+  <figcaption id="figure-3-caption">Figure 3: (A) shows left associative addition. (B) shows right associative addition.</figcaption>
+  </figure>
+
+</div>
+
+<div class="page-even" data-page-number="2">
+
+  <p>The associtivity of an operator may be important. The assignment operator in programming languages is right associative so that expressions like <code>a=b=1</code> assigns 1 to <code>b</code> before assigning the new value of <code>b</code> to <code>a</code>. If it were left associative, then the expression would be interpreted as <code>(a=b)=1</code>; this is an invalid assignment to a temporary in C. In C++, it's valid since <code>a=b</code> reduces to a reference to <code>a</code>, but <code>b</code> remains unchanged.</p>
+
+  <h2 id="1-1"><a href="#1-1"></a>Parsing prefix, infix, and postfix</h2>
+  <p>The shunting yard algorithm only works as is on infix operators, so throughout the following sections it will be modified into a a more general <input class="side-note left" type="checkbox" id="sn-1-1"><label for="sn-1-1">shift-reduce parser<span>There is much terminology surrounding parsing techniques. By shift-reduce, I mean we iterate only once over the input text (the shift-step) and use an intermediate stack storage before moving symbols to the output (the reduce-step). Operator precedence is used to determine when to reduce.</span></label>.</p>
+
+  <p><a href="#figure-4">Figure 4</a> parses an expression with three prefixes using the shunting yard algorithm. The result is wrong in postfix notation because <code>x</code> would be an operator acting on a function.</p>
+
+  <figure aria-labelledby="figure-4-caption" id="figure-4">
+<pre role="img">Input queue: sin tan cos x
+
+  |      |sin   |sin tan   |sin tan cos   |cos tan sin x          parse tree: ( ( (cos tan) sin) x )
+  +----  +----  +--------  +------------  +--------------    =>   
+  |sin   |tan   |cos       |              |                       syntax: (operand operator)</pre>
+  <figcaption id="figure-4-caption">Figure 4: Example of parsing prefix expression as left associative. It's wrong in postfix notation.</figcaption>
+  </figure>
+
+  <p>Modifying the algorithm to treat operators as right-associative solves the prefix problem. Greater-than (<code>></code>) precedence is used instead of greater-than-or-equal (<code>>=</code>) to conditionally move operators from the operator stack to the output queue. The parse tree from <a href="#figure-4">figure 4</a> becomes <code>( ( (x cos) tan) sin )</code>, which is correct in postfix notation.</p>
+
+  <p>However, the modified algorithm also changes the associativity of infixes and postfixes. Parsing infixes and postfixes still yields a parse tree that is in correct postfix notation, but the evaluation order for postfixes is now from right to left as shown in <a href="#figure-5">figure 5</a>. It's probably unintuitive to let the outer postfix act first on the operand.</p>
+
+  <figure aria-labelledby="figure-5-caption" id="figure-5">
+<pre role="img">Input queue: f(1)(2)(3)
+
+  |f   |f    |f        |f            |f (3) (2) (1)          parse tree: ( ( ( f (3) ) (2)) (1) )
+  +--  +---  +-------  +-----------  +--------------    =>  
+  |    |(1)  |(1) (2)  |(1) (2) (3)  |                       syntax: (operand operator)
+</pre>
+  <figcaption id="figure-5-caption">Figure 5: Example of parsing postfix expression as right associative. This is an unintuitive interpretation.</figcaption>
+  </figure>
+
+  <p>An expression containing one prefix and one postfix is parsed in <a href="#figure-6">figure 6</a> using the right associative parse algorithm. Postfixes can have equal or higher precedence than prefixes and still be evaluated before prefixes.</p>
+
+  <figure aria-labelledby="figure-6-caption" id="figure-6">
+<pre role="img">Input queue: *x++
+
+Postfixes &gt;= prefixes:                  Postfixes &lt; prefixes:
+
+  |    |x   |x      |x ++ *               |    |x   |x *   |x * ++
+  +--  +--  +-----  +-------              +--  +--  +----  +-------
+  |*   |*   |* ++   |                     |*   |*   |++    |
+
+Postfix notation parse tree:            Postfix notation parse tree:
+  [y x ++ *]  equals  ( (x ++) *)         [y x * ++]  equals ( (x *) ++)
+
+Parse tree graphically:                 Parse tree graphically:
+        *                                       ++
+         \                                       \
+          ++                                      *
+           \                                       \
+            x                                       x</pre>
+  <figcaption id="figure-6-caption">Figure 6: Example of right associative parsing of an expression containing a prefix (<code>*</code>) and postfix (<code>++</code>). The left side parses with postfixes having greater or equal precedence than prefixes. The right side parses with postfixes having lower precedence than prefixes.</figcaption>
+  </figure>
+
+</div>
+
+
+<div class="page-odd" data-page-number="3">
+  
+  <p>To achieve right associative prefixes and left associative postfixes, the precedence of a postfix is incremented after it is pushed to the operator stack. The expression from <a href="#figure-5">figure 5</a> is parsed again in <a href="#figure-7">figure 7</a>, but with two additional prefixes.</p>
+
+  <figure aria-labelledby="figure-7-caption" id="figure-7">
+<pre role="img">Input queue: @~f(1)(2)(3)
+
+  |    |      |f     |f         |f (1)     |f (1) (2)    |f (1) (2) (3) ~ @
+  +--  +----  +----  +--------  +--------  +----------   +------------------
+  |@   |@ ~   |@ ~   |@ ~ (1)   |@ ~ (2)   |@ ~ (3)      |</pre>
+  <figcaption id="figure-7-caption">Figure 7: Example of parsing right associative prefixes and left associative postfixes. Postfix precedence is set to higher than prefixes'. When pushed to the operator stack, the prefix operator's own precedence is incremented by 1.</figcaption>
+  </figure>
+
+  <p>Infixes can also be changed from left associative to right associative by incrementing the precedence. The parsing algorithm is changed to create right associative operators by default and allowing a conditional change to left associativeness:</p>
+  <div class="code" id="code-3"><pre><code
+>For each input symbol:
+  If it is a number:
+    Copy it to output queue.
+
+  Else if it is a left parenthesis:
+    Copy it to operator stack and give it a precedence of zero.
+
+  Else if it is a right parenthesis
+    Move all operators from the top of the operator stack to the output queue until the
+    left parenthesis symbol is encountered. Discard both parentheses. 
+
+  Else if it is an operator:
+    Move all operators with higher <span class="strike">or equal</span> precedence from the top of the operator stack
+    to the output queue. Then copy current operator to operator stack.
+
+    <span class="bold">If the operator is right associative:
+      Increment its precedence by 1</span>.
+
+Until the operator stack is empty, move every operator from the top of the operator stack
+to the output queue. This ends parsing.</code></pre>
+  </div>
+
+  <h3 id="1-1-1"><a href="#1-1-1"></a>Non-unary operators</h3>
+
+  <p>In <a href="#figure-8">figure 8</a> below, the operators <code>$</code> and <code>#</code> are non-unary prefixes that greedily consume operands to the right. The expression is a syntax error if the non-unary prefixes are left associative, since a single parse tree isn't created. The <code>-</code> operator is a unary prefix with the highest precedence.</p>
+
+  <figure aria-labelledby="figure-8-caption" id="figure-8">
+<pre role="img">Input queue: $ 1 -2 # 3 4
+
+Left associative non-unary prefixes:
+
+  |    |1   |1     |1 2   |1 2 - $   |1 2 - $ 3   |1 2 - $ 3 4   |1 2 - $ 3 4 #
+  +--  +--  +----  +----  +--------  +----------  +------------  +--------------
+  |$   |$   |$ -   |$ -   |#         |#           |#             |
+
+Parse tree:  1 2 - $ 3 4 #  =>  (1 (2 -) $)   ( (3 4) #)
+
+Right associative non-unary prefixes:
+
+  |    |1   |1     |1 2   |1 2 -   |1 2 - 3   |1 2 - 3 4   |1 2 - 3 4 # $
+  +--  +--  +----  +----  +------  +--------  +----------  +----------------
+  |$   |$   |$ -   |$ -   |$ #     |$ #       |$ #         |
+
+Parse tree:  1 2 - 3 4 # $  =>  (1 (2 -) (3 4 #) $)</pre>
+  <figcaption id="figure-8-caption">Figure 8: Example of parsing non-unary prefix/postfix.</figcaption>
+  </figure>
+
+  <p>The left associative version of the non-unary prefixes would be correct if parentheses were used: <code>$ 1 -2 (# 3 4)</code>. It would also work if a non-unary prefix was added on the end, as shown in <a href="#figure-9">figure 9</a> where the additional postfix operator <code>\!</code> has lowest precedence.</p>
+
+</div>
+
+
+<div class="page-even" data-page-number="4">
+
+  <figure aria-labelledby="figure-9-caption" id="figure-9">
+<pre role="img">Input queue: $ 1 -2 # 3 4 \!
+
+(A) Left associative non-unary prefixes:
+
+  |    |1   |1     |1 2   |1 2 - $   |1 2 - $ 3   |1 2 - $ 3 4   |1 2 - $ 3 4 #   |1 2 - $ 3 4 # \!
+  +--  +--  +----  +----  +--------  +----------  +------------  +--------------  +-----------------
+  |$   |$   |$ -   |$ -   |#         |#           |#             |\!              |
+
+Parse tree:  1 2 - $ 3 4 # \!  =>  ( (1 (2 -) $) (3 4 #) \!)
+
+(B) Right associative non-unary prefixes:
+
+  |    |1   |1     |1 2   |1 2 -   |1 2 - 3   |1 2 - 3 4   |1 2 - 3 4 # $   |1 2 - 3 4 # $ \!
+  +--  +--  +----  +----  +------  +--------  +----------  +--------------  +----------------
+  |$   |$   |$ -   |$ -   |$ #     |$ #       |$ #         |\!              |
+
+Parse tree:  1 2 - 3 4 # $ \!  =>  ( (1 (2 -) (3 4 #) $) \!)
+
+            \!                    \!
+   (A)     /  \           (B)       \
+          $     #                    $
+         / \   / \                 / | \
+        1   - 3   4               1  -   #
+            |                        |  / \
+            2                        2 3   4
+</pre>
+  <figcaption id="figure-9-caption">Figure 9: Example of parsing non-unary prefix/postfix.</figcaption>
+  </figure>
+
+  <h3 id="1-1-2"><a href="#1-1-2"></a>Expression-terminating symbols</h3>
+
+  <p>We can allow the use of delimiter symbols to terminate expressions that would otherwise bind to the right. These also enable expressions consisting of sequences of expressions. Some examples are:</p>
+
+  <ul>
+    <li>Semicolons (<code>;</code>) terminate statement expressions in C-like programming languages.</li>
+    <li>Semicolons are also the terminating symbols used in <code>for</code>-loop expressions:<br><code>for (int i = 0; i &lt; 10; i += 1)</code>.</li>
+    <li>The comma (<code>,</code>) symbol is used between values of a literal array: <code>[1, 2, 3]</code>.</li>
+    <li>In C, commas are also used for expression sequences on one line: <code>p = f(),x+y,p++</code>.</li>
+    <li>The ternary operator (<code>x ? y : z</code>) has a colon separating its two right operands.</li>
+    <li>The right parenthesis is also a terminating character.</li>
+  </ul>
+
+  <p>When parsing, terminating symbols will be treated as having zero precedence and they are not added to the operator stack nor output queue. They will cause operators in the operator stack to move to the output queue, up until the non-unary operator. <a href="#figure-10">Figure 10</a> shows how the ternary operator is parsed.</p>
+
+  <figure aria-labelledby="figure-10-caption" id="figure-10">
+<pre role="img">Input queue: a ? b-1 : c/2
+
+  |a   |a   |a b  |a b     |a b 1     |a b 1 -   |a b 1 - c   |a b 1 - c   |a b 1 - c 2
+  +--  +--  +---  +------  +--------  +--------  +----------  +----------  +--------------
+  |    |?   |?    |? -     |? -       |?         |?           |? /         |? /
+                                        (:)
+
+  |a b 1 - c 2 / ?
+  +----------------
+  |
+
+Parse tree:  a b 1 - c 2 / ?  =>  ( a (b 1 -) (c 2 /) ?)
+
+Graphical parse tree:      ?
+                         / |  \
+                        a  -    /
+                          / \   | \
+                         b   1  c  2</pre>
+  <figcaption id="figure-10-caption">Figure 10: Example of parsing ternary operator. The <code>:</code> symbol is a terminating symbol that moves operators from the operator stack to the output queue up until the <code>?</code> symbol.</figcaption>
+  </figure>
+
+</div>
+
+
+<div class="page-odd" data-page-number="5">
+
+  <p>When updating the algorithm to account for terminals, we can replace the parentheses cases to be general logic for all terminating symbols.</p>
+
+  <ul>
+  <li>The left parenthesis case is changed to account for all symbols that expect a terminating symbol later; these are copied to the operator stack when encountered.</li>
+  <li>The right parenthesis case is changed to account for all terminating symbols; these move operators from the operator stack to the output queue until the corresponding symbol is encountered in the operator stack.</li>
+  </ul>
+
+  <p>The symbol that expects a terminating symbol must have its precedence set to 0 to avoid being moved to the output queue until the terminating symbol is encountered. The parse algorithm would now look something like this:</p>
+
+  <div class="code" id="code-4"><pre><code
+>For each input symbol:
+  If it is a number:
+    Copy it to output queue.
+
+  Else:
+    If it is an operator:
+      Move all operators with higher precedence from the top of the operator stack
+      to the output queue. Then copy current operator to operator stack.
+
+      If the operator is right associative:
+        Increment its precedence by 1.
+
+    If it expects terminating symbol:
+      If is not an operator:
+        Copy it to the opeartor stack.
+      Give it a precedence of zero.
+
+    Else if it is a terminating symbol:
+      Move all operators from the top of the operator stack to the output queue until the
+      corresponding symbol is encountered.
+      If it is not an operator:
+        Discard both symbols.
+      Else:
+        Discard the terminating symbol.
+
+Until the operator stack is empty, move every operator from the top of the operator stack
+to the output queue. This ends parsing.</code></pre>
+  </div>
+
+  <h3 id="1-1-3"><a href="#1-1-3"></a>Variable number of operands</h3>
+
+  <p>When an operator is moved from the operator stack to the output queue (i.e. the reduce-step), the <input class="side-note right" type="checkbox" id="sn-1-2"><label for="sn-1-2">"arity"<span>nullary, unary/singulary, binary, ternary/trinary, quaternary, quinary, senary, septanary, octonary, nonary/novenary, denary, undenary, duodenary, ternidenary/tridenary, ...,  n-ary.</span></label> of an operator determines how many operands it consumes. A unary operator consumes one operand, a binary operator consumes two operands, and a ternary operator consumes three operands.</p>
+
+  <p>N-ary operators have a variable number of operands -- including allowing no operands. To determine how many operands to consume in the output stack, an extra delimiter symbol in the operator stack can be used. <a href="#figure-11">Figure 11</a> below parses with delimiters.</p>
+
+  <figure aria-labelledby="figure-11-caption" id="figure-11">
+<pre role="img">Input queue: 1 + f 2 3 4
+                                                                              +
+  |1   |1   |1 [   |1 [ 2   |1 [ 2 3   |1 [ 2 3 4   |1 [ 2 3 4 f +           / \
+  +--  +--  +----  +------  +--------  +----------  +--------------    =>   1   f
+  |    |+   |+ f   |+ f     |+ f       |+ f         |                          /|\
+                                                                              2 3 4</pre>
+  <figcaption id="figure-11-caption">Figure 11: Example of parsing an n-ary prefix operator (<code>f</code>). The delimiter symbol <code>[</code> is added to the output queue when <code>f</code> is encountered to stop the reduce-step of <code>f</code> from consuming the left operand of the infix <code>+</code>.</figcaption>
+  </figure>
+
+  <p>The delimiter symbol and the operator enclose the operands. For postfix n-ary operators, an extra symbol before all operands is necessary. For infix n-ary operators, three symbols segment the operands into a left and right group: an extra symbol as delimiter to the left, a generated delimiter in the middle, and the operator itself to the right.</p>
+  
+</div>
+
+
+<div class="page-even" data-page-number="6">
+
+  <h2 id="1-2"><a href="#1-2"></a>Translation into code</h2>
+  
+  <p>In the following sections, programs are created for parsing input text using pre-defined syntax rules.</p>
+
+  <p>First, a calculator program is created that parses and computes simple mathematical expressions. Second, a JSON-parser is created that builds a data structure from JSON input text. Third, a regular expression parser is created for a subset of regex syntax.</p>
+
+  <p>All code presented here is written in C. No error checking is included and some parts have been removed or modified for clarity's sake.</p>
+
+  <h3 id="1-2-1"><a href="#1-2-1"></a>Building a calculator</h3>
+  <p>In a calculator language where all data is known in advance, each sub-expression can be reduced to a single number when parsing—no actual code generation is necessary. An example of a valid calculator expression and how it's parsed is shown below in <a href="#figure-12">figure 12</a>.</p>
+
+  <figure aria-labelledby="figure-12-caption" id="figure-12">
+<pre role="img">Calculator input: (3.0 - -4)*2
+
+|    |3.0   |3.0   |3.0     |3.0 4   |7.0   |7.0   |7.0 2   |14.0
++--  +----  +----  +------  +------  +----  +----  +------  +-----   =>   result = 14.0
+|(   |(     |( -   |( - -   |( - -   |      |*     |*       |</pre>
+  <figcaption id="figure-12-caption">Figure 12: An example calculator expression and how it's parsed. The reduce-step modifies the token in the output queue. The right parenthesis caused sub-expression reduction before the end of input.</figcaption>
+  </figure>
+
+  <p>Below, the parser is invoked with the memory space it needs to maintain the operator stack and the output queue. Because it can reduce each sub-expression, the output queue is returned with a single token holding the result of the parsed expression.</p>
+
+  <div class="code" id="code-5"><pre><code
+>int main()
+{
+    const char *input = "(3.0 - -4)*2"; <span class="comment">// == 14.0</span>
+    void *memory = malloc((OPERATOR_STACK_LENGTH + OUTPUT_QUEUE_LENGTH) * sizeof(struct token));
+    
+    struct token *queue = parse(memory, input);
+    float result = queue[0].value; <span class="comment">// resolved to single value at head of queue</span>
+}</code></pre></div>
+
+  <p>The parse function begins by setting up the operator stack and the output queue.</p>
+
+  <div class="code"><pre><code
+>static struct token*
+parse(void* memory, const char *input)
+{   <span class="comment">// setup memory for operator stack</span>
+    struct token *operator_stack = memory;
+    struct token *operator_stack_beg = operator_stack;
+    struct token *operator_stack_end = operator_stack + OPERATOR_STACK_LENGTH;
+    <span class="comment">// first is sentinel for operator stack</span>
+    operator_stack->precedence = 0;
+    operator_stack->reduce = 0;
+
+    <span class="comment">// setup memory for output queue</span>
+    struct token *output_queue_beg = (struct token*)memory + OPERATOR_STACK_LENGTH;
+    struct token *output_queue_end = output_queue_beg + OUTPUT_QUEUE_LENGTH;
+    struct token *output_queue = output_queue_beg - 1; <span class="comment">// -1 to use ++output_queue</span>
+
+    <span class="comment">// define some convenience macros</span>
+#define top()  (operator_stack)    <span class="comment">// get last of operator stack</span>
+#define push() (++operator_stack)  <span class="comment">// add to operator stack</span>
+#define pop()  (operator_stack--)  <span class="comment">// remove top from operator stack</span>
+#define enqueue() (++output_queue) <span class="comment">// add to output queue</span>
+
+...</code></pre>
+  </div>
+
+
+</div>
+
+
+<div class="page-odd" data-page-number="7">
+
+  <p>The parse function continues by iterating over the input to recognize tokens. Numbers in the expression are interpreted as floating points.</p>
+
+  <div class="code"><pre><code
+>...
+    char ch = *input;
+    uint32 previous_type = 0;
+    uint32 precedence = 0;
+    reduce_pfn reduce = 0;
+
+    while (ch)
+    {
+        if (ch == ' ') <span class="comment">// skip space</span>
+        {   ch = *(++input);
+            continue;
+        }
+        
+        switch (ch)
+        {
+            case '*':
+            {   previous_type = INFIX_t;
+                precedence = 50;
+                reduce = reduce_multiplication;
+            } break;
+
+            case '+':
+            {   previous_type = INFIX_t;
+                precedence = 40;
+                reduce = reduce_addition;
+            } break;
+
+            case '-':
+            {   if (previous_type != TERMINAL_t)
+                {
+                    previous_type = PREFIX_t;
+                    precedence = 80;
+                    reduce = reduce_negation;
+                }
+                else
+                {
+                    previous_type = INFIX_t;
+                    precedence = 40;
+                    reduce = reduce_subtraction;
+                }
+            } break;
+
+            case '(':
+            {   previous_type = 0;
+                struct token *t = push();
+                t->precedence = 0;
+                ch = *(++input);
+                continue;
+            } break;
+
+            case ')':
+            {   previous_type = TERMINAL_t;
+                precedence = 0;
+            } break;
+
+            default: <span class="comment">// number</span>
+            {   previous_type = TERMINAL_t;
+                struct token *t = enqueue();
+                uint32 word_length;
+                t->value = string_to_float(input, &amp;word_length); <span class="comment">// translates floating point</span>
+                ch = *(input += word_length);
+                continue;
+            } break;
+        }
+...</code></pre>
+  </div>
+
+  <p>At the end of each iteration, if the token is an operator or a right parenthesis, the parsing logic determines which operators at the top of the operator stack have higher precedence than the current token. For each such token, the reduce-function member is invoked. After each input character has been read, the parse function ends by calling the reduce-function member of each token still in the operator stack. The output queue is returned, and it contains the resolved result of the computation.</p>
+
+</div>
+
+
+<div class="page-even" data-page-number="8">
+
+  <div class="code"><pre><code
+>...
+        while (top()->precedence > precedence)
+        {
+            struct token *op = pop();
+            output_queue = op->reduce(output_queue); <span class="comment">// reduce and enqueue resolved value</span>
+        }
+
+        if (precedence == 0) <span class="comment">// if a terminating character (i.e. right parenthesis)</span>
+        {
+            pop();
+        }
+        else <span class="comment">// if a regular operator</span>
+        {   struct token *t = push();
+            t->precedence = precedence;
+            t->reduce = reduce;
+        }
+        
+        ch = *(++input);
+    }
+
+    <span class="comment">// clear operator stack after the input iteration</span>
+    while (top() != operator_stack_beg)
+    {
+        struct token *op = pop();
+        output_queue = op->reduce(output_queue); <span class="comment">// reduce and enqueue resolved value</span>
+    }
+
+    return output_queue_beg;
+
+#undef top
+#undef push
+#undef pop
+#undef enqueue
+}</code></pre></div>
+
+  <p>The reduce-functions are passed a pointer to the last token of the output queue in order for them to consume the operands of the operator. An infix reduce-function removes the last token and overwrites the next-to-last token with the resulting value. Prefix and postfix reduce-functions (only negation in this case) overwrite the token of the operand with the resulting value.</p>
+
+  <p>Only addition and negation are shown below, since subtraction, multiplication, and division only differ from addition by their operation on operands.</p>
+
+  <div class="code"><pre><code
+>static struct token*
+reduce_addition(struct token *output_queue_last)
+{
+    float right = output_queue_last->value;
+    float left = (--output_queue_last)->value;
+    output_queue_last->value = left + right; <span class="comment">// do addition</span>
+    return output_queue_last;
+}
+
+static struct token*
+reduce_negation(struct token *output_queue_last)
+{
+    float right = output_queue_last->value;
+    output_queue_last->value = -right;  <span class="comment">// do negation</span>
+    return output_queue_last;
+}</code></pre></div>  
+
+  <p>The token structure contains any relevant parsing information.</p>
+
+  <div class="code"><pre><code
+>struct token;
+
+typedef struct token* (*reduce_pfn)(struct token*); <span class="comment">// reduce-function signature</span>
+
+struct token
+{   reduce_pfn reduce;
+    uint32 precedence;
+    float value;
+};</code></pre>
+  </div>
+
+</div>
+
+
+<div class="page-odd" data-page-number="9">
+  <h3 id="1-2-2"><a href="#1-2-2"></a>Building a JSON-parser</h3>
+
+  <p>A <input class="side-note right" type="checkbox" id="sn-1-3"><label for="sn-1-3">JSON<span>A comprehensive definition of JavaScript Object Notation (JSON) can be found at <a href="https://www.json.org">json.org</a>.</span></label> expression declares a tree structure of elements. Elements can be objects, arrays, strings, numbers, and the constants <code>true</code>, <code>false</code>, and <code>null</code>.</p>
+
+  <p>The parser will build a separate tree-like data structure as it parses its input. An example of a valid JSON expression and how it's parsed is shown below in <a href="#figure-13">figure 13</a>; the generated tree structure is not shown. Both objects and arrays have a variable number of members, so delimiter symbols are added to the output queue to aid in reducing these.</p>
+
+  <figure aria-labelledby="figure-13-caption" id="figure-13">
+<pre role="img">JSON:              Parsing:
+
+{                  |{   |{ A   |{ A   |{ A 1   |{ A:1   |{ A:1 B   |{ A:1 B   |{ A:1 B s   |A:1 B:s
+  "A": 1,          +--  +----  +----  +------  +------  +--------  +--------  +----------  +--------
+  "B": "s",        |{   |{     |{ :   |{ :     |{       |{         |{ :       |{ :         |{
+  "C":
+  {                |{ A:1 B:s C   |{ A:1 B:s C   |{ A:1 B:s C {   |{ A:1 B:s C { D   |{ A:1 B:s C { D
+    "D": true,     +------------  +------------  +--------------  +----------------  +----------------
+    "E": [2,3]     |{             |{ :           |{ : {           |{ : {             |{ : { :
+  }
+}                  |{ A:1 B:s C { D true   |{ A:1 B:s C { D:true   |{ A:1 B:s C { D:true E
+                   +---------------------  +---------------------  +-----------------------
+                   |{ : { :                |{ : {                  |{ : {
+
+                   |{ A:1 B:s C { D:true E   |{ A:1 B:s C { D:true E [   |{ A:1 B:s C { D:true E [ 2
+                   +-----------------------  +-------------------------  +---------------------------
+                   |{ : { :                  |{ : { : [                  |{ : { : [
+
+                   |{ A:1 B:s C { D:true E [ 2 3   |{ A:1 B:s C { D:true E [ 2 3 ]
+                   +-----------------------------  +-------------------------------
+                   |{ : { : [                      |{ : { :
+
+                   |{ A:1 B:s C { D:true E:[ 2 3 ] }   |{ A:1 B:s C:{ D:true E:[ 2 3 ] } }
+                   +---------------------------------  +-----------------------------------
+                   |{ :                                |</pre>
+  <figcaption id="figure-13-caption">Figure 13: Parsing a JSON expression example containing objects, a number, a string, a pre-defined constant (<code>true</code>) and an array.</figcaption>
+  </figure>
+
+  <p>Usage of the parser and the JSON structure API is shown below. A stringify macro is used to create the JSON input text.</p>
+
+  <div class="code" id="code-6"><pre><code
+>#define RR(x) #x
+#define R(...) RR(__VA_ARGS__) <span class="comment">// stringify</span>
+
+int main()
+{   const char *input = R(
+        {  "A": -1,
+           "B": "s",
+           "C":
+           {  "D": true,
+              "E": [2,3]
+           }
+        });
+
+    void *memory = ...  <span class="comment">// allocate memory workspace</span>
+    
+    json *tree       = parse(memory, input);            <span class="comment">// tree->type==JSON_OBJECT</span>
+    json_object *root = json_data(tree, json_tree*);    <span class="comment">// root->count==3</span>
+    
+    json_object *C = json_object_get(root, 2);
+    json_string *C_key = json_object_get_key(root, 2);  <span class="comment">// C_key->count==1</span>
+    char *C_str = json_data(C_key, char*);              <span class="comment">// "C\0"</span>
+
+    uint32 type = json_object_get_type(C, 0);           <span class="comment">// JSON_CONSTANT</span>
+    uint32 *D = json_object_find(C, "D");               <span class="comment">// {JSON_TRUE}</span>
+
+    json_array *E = json_object_find(C, "E");           <span class="comment">// E->count==2</span>
+    int *E1 = json_array_get(E, 1);                     <span class="comment">// {3}</span>
+}</code></pre></div>
+
+  <p>The memory layout of a parsed JSON tree is shown in <a href="#figure-14">figure 14</a>.</p>
+
+</div>
+
+
+<div class="page-even" data-page-number="10">
+
+  <figure aria-labelledby="figure-14-caption" id="figure-14">
+<pre role="img">JSON: {A:s B:[2 3]}
+
+Memory layout:
+
+             [ root  [      A      ] [            B            ]                      ]
+      +-----+-----------------------+---------------------------+----------------------+
+      |type |count=2|count=1|count=1|count=1|count=2| 2,| &amp;B[0],| A.type,&amp;A  B.type,&amp;B |
+      |size |*index |"A\0"  | "s\0" | "B\0" |*index | 3 | &amp;B[1] | &amp;root[0],  &amp;root[1]  |
+      +-----+-----------------------+---------------+----------------------------------+
+       json  object  string  string  string   array  int  index          index</pre>
+  <figcaption id="figure-14-caption">Figure 14: The memory structure of a JSON tree. Objects and arrays are stored as a header-element followed by its data and then the index. The first header contains the type of the root element and the size in bytes of the entire structure. Member keys are <code>json_string</code>.</figcaption>
+  </figure>
+
+  <p>The macro <code>json_data()</code> hides how data is stored immediately behind the element structures (<code>json</code>, <code>json_object</code>, <code>json_array</code>, and <code>json_string</code>). It returns a type-casted pointer to the address after the element, where the data lie. The <code>json_data()</code> macro and the structure type definitions are shown below.</p>
+
+<div class="code" id="code-7"><pre><code
+>#define json_data(element, type) (type)((uintptr)(void*)(element + 1) )
+
+typedef struct
+{   uint32 type;  <span class="comment">// type of root element</span>
+    uint32 size;  <span class="comment">// size in bytes of entire tree, including itself</span>
+    <span class="comment">// json data</span>
+} json;
+
+typedef struct
+{   uint32 type;    <span class="comment">// type of member value</span>
+    json_string *key;
+    void *value;
+} json_key_value; <span class="comment">// index type of objects</span>
+
+typedef struct
+{   uint32 count;
+    json_key_value *index;
+    <span class="comment">// member data</span>
+} json_object;
+
+typedef struct
+{   uint32 count;
+    void **index;
+    <span class="comment">// array data</span>
+} json_array;
+
+typedef struct
+{   uint32 count;
+    <span class="comment">// string data</span>
+} json_string;
+</code></pre></div>
+
+  <p>The following API functions hide the indexes that objects and arrays have. They retrieve pointers to object member keys, object member values, and array member values.</p>
+
+  <div class="code" id="code-8"><pre><code
+>static void*
+json_object_get(json_object *obj, uint32 i)
+{   return (obj->index + i)->value;
+}
+
+static json_string*
+json_object_get_key(json_object *obj, uint32 i)
+{   return (obj->index + i)->key;
+}
+
+static uint32
+json_object_get_type(json_object *obj, uint32 i)
+{   return (obj->index + i)->type;
+}
+
+static void*
+json_array_get(json_array *arr, uint32 i)
+{   return *(arr->index + i);
+}</code></pre></div>
+
+</div>
+
+<div class="page-odd" data-page-number="11">
+
+  <p>An additional API function finds object members by their key string.</p>
+
+  <div class="code" id="code-9"><pre><code
+>static void*
+json_object_find(json_object *obj, const char *key)
+{   json_key_value *kv;
+    for (uint32 i = 0; i &lt; obj->count; i += 1)
+    {   kv = obj->index + i;
+        if (string_compare(key, json_data(kv->key, char*) ) )
+        {   return kv->value;
+        }
+    }
+    return 0;
+}</code></pre></div>
+
+  <h4>The parse function</h4>
+
+  <p>The parse function iterates the JSON input string in order to reduce tokens in the expression and build the JSON tree.</p>
+
+  <div class="code" id="code-10"><pre><code
+>static json*
+parse(void *memory, const char *input)
+{
+    <span class="comment">// setup memory workspace</span>
+    struct memory_stack *operator_stack = ..., *queue = ..., *data_storage = ...;
+
+#define push() ...            <span class="comment">// construct token on top of operator stack</span>
+#define pop() ...             <span class="comment">// remove token from top of operator stack</span>
+#define top() ...             <span class="comment">// get token on top of operator stack</span>
+#define enqueue() ...         <span class="comment">// construct token at end of queue</span>
+#define new_object(type) ...  <span class="comment">// construct data type at end of data storage</span>
+
+    json *tree = new_object(json);
+    struct token *sentinel = push();  <span class="comment">// sentinel for operator stack when reducing</span>
+    struct token *operator_stack_beg = sentinel;
+    sentinel->precedence = 0;
+    sentinel->reduce = 0;
+
+    char ch = *input;
+    while (ch)
+    {   switch (ch)
+        {   case ' ':
+            case '\r':
+            case '\n':
+            case '\t':
+            {   <span class="comment">// skip whitespace</span>
+            } break;
+    ...</code></pre></div>
+
+  <p>Objects and arrays are handled similarly since they both have a delimiter token that is copied to the output queue (<code>{ [</code>), as well as terminating tokens (<code>} ]</code>). The delimiter tokens are given the type <code>LEFT_PAREN_TOKEN</code>. The precedence is chosen to avoid being reduced by the comma token.</p>
+
+<div class="code" id="code-11"><pre><code
+>            case '{':
+            {   struct token *delimiter = enqueue(); <span class="comment">// add extra token in output queue</span>
+                delimiter->data = new_object(json_object);
+                struct token *operator = push(); <span class="comment">// add token to operator stack</span>
+                operator->precedence = 2;
+                operator->reduce = reduce_object;
+                operator->type = LEFT_PAREN_TOKEN;
+                operator->data = delimiter;
+            } break;
+
+            case '[':
+            {   struct token *delimiter = enqueue(); <span class="comment">// add extra token in output queue</span>
+                delimiter->data = new_object(json_array);
+                struct token *operator = push(); <span class="comment">// add token to operator stack</span>
+                operator->precedence = 2;
+                operator->reduce = reduce_array;
+                operator->type = LEFT_PAREN_TOKEN;
+                operator->data = delimiter;
+            } break;
+    ...</code></pre></div>
+
+</div>
+
+<div class="page-even" data-page-number="12">
+  <p>When the terminating tokens of objects and arrays (<code>} ]</code>) are encountered, all operators in the operator stack are reduced up to and including the <code>LEFT_PAREN_TOKEN</code> delimiter token.</p>
+
+  <div class="code" id="code-12"><pre><code
+>            case '}':
+            case ']':
+            {   struct token *op;
+                do
+                {   op = top(); pop();
+                    op->reduce(data_storage, queue, op);
+                } while (op->type != LEFT_PAREN_TOKEN);
+            } break;
+    ...</code></pre></div>
+
+  <p>The loop that reduces operators in the operator stack based on precedence only occurs with the comma (<code>,</code>). The comma will only reduce the colon (<code>:</code>) token. When the colon token is encountered, it's pushed to the operator stack and given a precedence such that a comma may reduce it.</p>
+
+<div class="code" id="code-13"><pre><code
+>            case ',':
+            {   while (top()->precedence > 2)
+                {   struct token *op = top(); pop();
+                    op->reduce(data_storage, queue, op);
+                }
+            } break;
+
+            case ':':
+            {   struct token *t = push();
+                t->precedence = 10;
+                t->reduce = reduce_definition;
+                t->type = DEFINITION_TOKEN;
+                t->data = 0;
+            } break;
+    ...</code></pre></div>
+
+  <p>Strings are delimited by double quoutes (<code>" "</code>). A <code>json_string</code> structure is created to store the length (<code>json_string.count</code>) before the character data is copied to the address after it.</p>
+
+  <div class="code" id="code-14"><pre><code
+>            case '"':
+            {   ch = *(++input); <span class="comment">// move past first "</span>
+                json_string *str = new_object(json_string);
+                str->count = 0;
+                const char *beg = input;
+                char *write_pointer;
+                while (ch != '"')
+                {   write_pointer = new_object(char);
+                    *write_pointer = ch;
+                    ch = *(++input);
+                }
+                str->count = ARRAY_COUNT(beg, input, char); <span class="comment">// doesn't count '\0'</span>
+                write_pointer = new_object(char);
+                *write_pointer = '\0';
+                struct token *t = enqueue();
+                t->data = str;
+                t->type = JSON_STRING;
+            } break;
+    ...</code></pre></div>
+
+  <p><code>int</code> and <code>float</code> numbers are typed as <code>JSON_INT</code> or <code>JSON_FLOAT</code>. A string comparison is done to recognize constant values. <code>JSON_CONSTANT</code> is the constant type.</p>
+
+  <div class="code" id="code-15"><pre><code
+>            default:
+            {   uint32 parsed_length;
+                struct token *t = enqueue(); <span class="comment">// copy token to output queue</span>
+                ...
+                <span class="comment">/*  data pointer = new_object(int | float | uint32);
+                    *data pointer = parse value as constant or number
+                    t->data = data pointer;
+                    t->type = JSON_INT | JSON_FLOAT | JSON_CONSTANT;*/</span>
+                ch = *(input += parsed_length);
+                continue; <span class="comment">// input is aleady shifted</span>
+            } break;
+    ...</code></pre></div>
+</div>
+
+<div class="page-odd" data-page-number="13">
+  <p>The input is shifted at the of the loop.</p>
+
+  <div class="code" id="code-16"><pre><code
+>        }
+        ch = *(++input);
+    }
+    ...</code></pre></div>
+  <p>Finally, when there's no more input, the operator stack should be empty since all JSON expressions end with an object or array terminating token. The only token left in the output queue will hold a pointer to the root of the JSON tree data structure.</p>
+
+  <div class="code" id="code-17"><pre><code
+>    struct token *root = ... <span class="comment">// the only item left in `queue` is the root element</span>
+    tree->type = root->type;
+    tree->size = ... <span class="comment">// size in bytes is the distance between beginning and end of the data structure.</span>
+    return tree;
+}</code></pre></div>
+
+  <h4>Memory management functions</h4>
+
+  <p>The macro <code>new_object()</code> is used in the parse function to create element data at the end of the allocated tree memory. It's similar to the append function of a regular array-like data structure except that any type can be appended. It's defined in terms of a function that advances a pointer stored inside a struct. It makes sure the address that the pointer advances to is aligned to the size of the specified type.</p>
+
+  <div class="code" id="code-18"><pre><code
+>#define new_object(type) PUSH_ALIGNED(data_storage, bytes, ALIGN_OF(type))
+
+struct memory_stack
+{   void *data_location;
+    uintptr capacity;
+    uintptr used;
+};
+
+static void
+init_memory_stack(struct memory_stack *stack, void *memptr, uintptr capacity)
+{   stack->data_location = memptr;
+    stack->capacity = capacity;
+    stack->used = 0;
+}
+
+static inline void*
+PUSH(struct memory_stack *stack, uintptr bytes)
+{   uintptr used = stack->used;
+    stack->used = used + bytes;
+    assert((used + bytes) &lt;= stack->capacity);
+    return ((uint8*)stack->data_location + used);
+}
+
+static inline void*
+PUSH_ALIGNED(struct memory_stack *stack, uintptr bytes, uint32 alignment)
+{   uintptr address = (uintptr)((uint8*)stack->data_location + stack->used);
+    uint32 pad = (uint32)(alignment - (address &amp; (alignment-1)) &amp; (alignment-1));
+    PUSH(stack, pad);
+    return PUSH(stack, bytes);
+}</code></pre></div>
+
+  <p>In addition to <code>PUSH()</code> and <code>PUSH_ALIGNED()</code>, the function <code>POP()</code> removes data from the <code>memory_stack</code> and the function <code>TOP()</code> retrieves the last element with the specified size.</p>
+
+  <div class="code" id="code-19"><pre><code
+>static inline void
+POP(struct memory_stack *stack, uintptr bytes)
+{   uintptr used = stack->used;
+    assert(bytes &lt;= used); <span class="comment">// no underflow</span>
+    stack->used = used - bytes;
+}
+
+static inline void*
+TOP(struct memory_stack *stack, uintptr bytes)
+{   return (uint8*)stack->data_location + stack->used - bytes;
+}</code></pre></div>
+
+</div>
+
+<div class="page-even" data-page-number="14">
+
+  <h4>Reduce functions</h4>
+
+  <p>The reduce function for arrays (<code>[</code>) is defined below. It consumes same-type value tokens from the output queue and modifies the final token type to <code>JSON_ARRAY</code>.</p>
+
+  <div class="code" id="code-20"><pre><code
+>static void
+reduce_array(struct memory_stack *data_storage, struct memory_stack *queue, struct token *self_token)
+{
+    void **index = PUSH(data_storage, 0);
+    void **index_writer;
+    struct token *delimiter = self_token->data; <span class="comment">// start from the left</span>
+    struct token *member_token = delimiter + 1;
+    uint32 type = member_token->type;
+    struct token *end = PUSH(queue, 0);
+
+    while (member_token != end)
+    {   assert(member_token->type == type); <span class="comment">// array has same type members</span>
+        index_writer = PUSH(data_storage, sizeof(void*));
+        *index_writer = member_token->data;
+        member_token += 1;
+    }
+    
+    uint32 member_count = ARRAY_COUNT(index, PUSH(data_storage, 0), void*);
+    POP(queue, member_count * sizeof(struct token));
+
+    json_array *self = delimiter->data;
+    self->count = member_count;
+    self->index = member_count ? index : 0;
+    <span class="comment">// leave queue top as the array token terminal</span>
+    delimiter->type = JSON_ARRAY | type;
+}</code></pre></div>
+
+  <p>The reduce function for definitions is assigned to colon tokens and is defined as follows.</p>
+
+  <div class="code" id="code-21"><pre><code
+>static void
+reduce_definition(struct memory_stack *data_storage, struct memory_stack *queue, struct token *self_token)
+{<span class="comment">// "name":value; leave key and value tokens in the output queue to let reduce_object consume them</span>
+    struct token *value = TOP(queue, sizeof(struct token));
+    struct token *key = value - 1;
+    assert(key->type == JSON_STRING); <span class="comment">// all key elements are strings</span>
+}</code></pre></div>
+
+  <p>The reduce function for objects (<code>{</code>) is defined below. It consumes key and value token pairs from the output queue and modifies the final token type to <code>JSON_OBJECT</code>.</p>
+
+  <div class="code" id="code-22"><pre><code
+>static void
+reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, struct token *self_token)
+{   json_key_value *index = PUSH(data_storage, 0);
+    json_key_value *index_writer;
+    struct token *delimiter = self_token->data; // start from the left
+    struct token *member_token = delimiter + 1;
+    struct token *end = PUSH(queue, 0);
+    
+    while (member_token != end)
+    {   index_writer = PUSH(data_storage, sizeof(json_key_value));
+        <span class="comment">// key</span>
+        assert(member_token->type == JSON_STRING);
+        index_writer->key = member_token->data;
+        member_token += 1;
+        <span class="comment">// value</span>
+        index_writer->value = member_token->data;
+        index_writer->type = member_token->type;
+        member_token += 1;
+    }
+    
+    uint32 member_count = ARRAY_COUNT(index, PUSH(data_storage, 0), json_key_value);
+    POP(queue, 2 * member_count * sizeof(struct token));
+
+    json_object *self = delimiter->data;
+    self->count = member_count;
+    self->index = member_count ? index : 0;
+    <span class="comment">// leave queue top as the object token terminal</span>
+    delimiter->type = JSON_OBJECT;
+}</code></pre></div>
+
+</div>
+
+<div class="page-odd" data-page-number="15">
+
+  <h3 id="1-2-3"><a href="#1-2-3"></a>Building a regular expression machine</h3>
+
+  <p>Regular expression parsing generates a <span class="bold">state machine</span>. The machine encodes a multi-path progression across states when matching input text.</p>
+
+  <p>To match text, the machine is started at the designated starting state. The next part of the input is compared to the data within the current state. The path taken is either along the "match-path" or "not-match-path". A successful match is achieved when the path leads to the success state. Failure to match is when the path taken is to the failure state.</p>
+
+  <p>Multi-path connections encode specific operations. Two simple operations are sequence (<code>AND</code>) and alternation (<code>OR</code>). The machine encodings for these are shown in <a href="#figure-15">figure 15</a>.</p>
+
+  <figure aria-labelledby="figure-15-caption" id="figure-15">
+    <pre role="img"
+>                        A    B                                          A
+    Sequence: AB    ─>o───>o───> success         Alternation: A|B   ─>o────┬───> success
+                      │!A  │!B                                        │!A  │B
+                      └────┴───> failure                              └───>o───> failure
+                                                                            !B</pre>
+  <figcaption id="figure-15-caption">Figure 15: State machine connections that encode sequence- and alternation-matching of input to the internal state data <code>A</code> and <code>B</code>. The logic has diverging paths at <code>o</code>, and the path taken depends on the input.</figcaption>
+  </figure>
+
+  <p>Besides sequence and alternation, regular expression syntax also has converging paths and loops. These can be encoded with only sequences and alternations, but it's convenient to use the special encodings like the ones shown in <a href="#figure-16">figure 16</a>.</p>
+
+  <figure aria-labelledby="figure-16-caption" id="figure-16">
+    <pre role="img"
+  >               Zero-or-one: A?              Zero-or-more: A*             Any: .
+
+                   A                            !A
+               ─>o┬──> success              ─┬>o───> success             ─>o───> success
+               !A└┘                          └─┘A</pre>
+  <figcaption id="figure-16-caption">Figure 16: State machine connections that encode basic regular expressions.</figcaption>
+  </figure>
+
+  <p>Repetition loops are more complex. The syntax is <code>A{n}</code>, <code>A{n,}</code>, or <code>A{n,m}</code>. <code>A+</code> means one-or-more and is semantically the same as <code>AA*</code> or <code>A{1,}</code>.</p>
+
+  <p>Bounded repetition (<code>A{n,m}</code>) can be encoded two ways: either replicate sections for each repetition or introduce a counter. Both solutions are compared in <a href="#figure-17">figure 17</a>.</p>
+
+  <figure aria-labelledby="figure-17-caption" id="figure-17">
+    <pre role="img"
+>Expression: A{4,6}
+
+              Replication:                                     Counter:
+
+                                                         !A┌──────> failure
+                                                           │ A
+                      ┌────┬─────────┐                   ─>o───>● (loop below)
+                    !A│  !A│         │                      ++c
+    A    A    A    A  │ A  │ A   !A  │                  
+->o───>o───>o───>o───>o───>o───>o────┴> success            !A   c &lt; 4 || c &gt; 6
+  │!A  │!A  │!A  │!A            │ A                        ┌──>o───────────────> failure
+  └────┴────┴────┴──────────────┴─────> failure          ┌>●─┐ └───────────────> success
+                                                         └───┘A  c&gt;=4 &amp;&amp; c &lt;=6
+                                                          ++c</pre>
+  <figcaption id="figure-17-caption">Figure 17: State machines for bounded repetition (4 to 6). One uses replication and the other a counter (<code>c</code>). For the counter machine, a special loop state is entered at <code>●</code>. It continues at the same point below.</figcaption>
+  </figure>
+
+  <p>Replication uses more memory and every copied state's paths must be updated. Using a counter complicates the runtime logic since the program must check for a counter condition.</p>
+
+  <p>By using a counter however, all repetition loops can be encoded as a special case of <code>A{n,m}</code>. <code>A{n}</code> equals <code>A{n,n}</code>; <code>A{n,}</code> equals <code>A{n,UINT_MAX}</code>; <code>A+</code> equals <code>A{1,UINT_MAX}</code>.</p>
+  
+
+</div>
+<div class="page-even" data-page-number="16">
+
+  <p>The state machine is built by applying the operations above on it. Examples of building state machines by applying operators are shown below in <a href="#figure-18">figure 18</a>.</p>
+
+  <figure aria-labelledby="figure-18-caption" id="figure-18">
+    <pre role="img"
+>            │
+Expression: │           A                  AB                          ABC
+            │
+            │                                                             
+            │       A                    A    B                    A    B    C
+            │   ─>o───> success      ─>o───>o───> success      ─>o───>o───>o───> success          (1)
+   Machine: │     │!A                  │!A  │!B                  │!A  │!B  │!C
+            │     └───> failure        └────┴───> failure        └────┴────┴───> failure
+            │                                                    
+            │
+Expression: │           ABC                                  ABC|DEF
+            │
+            │       A    B    C                    A    B    C
+            │   ─>o───>o───>o───> success      ─>o───>o───>o──────────────────┬─> success         (2)
+   Machine: │     │!A  │!B  │!C                  │!A  │!B  │!C    D    E    F │
+            │     └────┴────┴───> failure        └────┴────┴───>o───>o───>o───┘
+            │                                                   │!D  │!E  │!F
+            │                                                   └────┴────┴─────> failure
+            │
+            │
+Expression: │          A|B                      A|B*                      (A|B*C)*
+            │
+            │        A                        A                         A
+            │    ─>o────┬───> success      ─>o────┬──> success      ─>o─────────┬──┬─> success    (3)
+   Machine: │      │!A  │B                   │!A  │!B                 │!A   !B  │C │
+            │      └───>o───> failure        └──┬>o                   └──┬>o───>o──┘
+            │            !B                     └─┘B                     └─┘B    !C</pre>
+  <figcaption id="figure-18-caption">Figure 18: Examples of building state machines by applying operators that create new connections to encode the expression. (1) applies sequence. (2) applies alternation. (3) applies zero-or-more.</figcaption>
+  </figure>
+
+  <p>The application rule for each operator on its operands is:</p>
+  <ul>
+    <li>Sequence: change every success path to lead to the next state instead.</li>
+    <li>Alternation (<code>|</code>): change every failure path to lead to the next state instead.</li>
+    <li>Zero-or-one (<code>?</code>): change every failure path to lead to success instead.</li>
+    <li>Zero-or-more (<code>*</code>): change every failure path to lead to success instead, and change every success path to lead to the first state of operands.</li>
+    <li>Repetition (<code>{n} {n,} {n,m} +</code>): apply sequence to counter-based loop-state.</li>
+  </ul>
+
+  
+
+  <h4>The match function</h4>
+
+  <p>After parsing, the <code>match</code> function is called by <code>main</code> in a loop. Each iteration the input is advanced by one. The matched text's length is calculated and is printed if it's non-zero.</p>
+
+  <div class="code" id="code-23"><pre><code
+>int
+main(int argc, char **argv)
+{
+    struct memory_stack *stack = ...
+
+    const char *text = "derehtobebtndluoci";
+    const char *regex = "(a|de)+r";
+    uint32 count;
+    struct state *states = parse(stack, regex, &amp;count);
+    uint32 matched_length, current = 0;
+    const char *it;
+    do
+    {   it = match(text, states, &amp;current, count);
+        matched_length = POINTER_DISTANCE(text, it);
+        if (matched_length)
+        {   print(text, matched_length);
+        }
+        text += 1;
+    } while (*text);
+}</code></pre>
+  </div>
+
+<p>The <code>match</code> function is shown below. It calls <code>match_with_counter</code> if it detects a counter-based loop-state.</p>
+
+</div>
+<div class="page-odd" data-page-number="17">
+
+  <div class="code" id="code-24"><pre><code
+>static const char*
+match(const char *input, struct state *states, uint32 *_current, uint32 end)
+{   const char *it = input;
+    uint32 current = *_current;
+    struct state *state;
+
+    int is_match;
+    do
+    {   state = &amp;states[current];
+        if (state->value == REPEAT_STATE)
+        {   it = match_with_counter(it, states, &amp;current);
+        }
+        else
+        {   state->cache = it; <span class="comment">// store current input location</span>
+            is_match = state->value == *it;
+            if ((is_match &amp;&amp; state->match_is_success) || (!is_match &amp;&amp; !state->match_is_success))
+            {   it += 1;
+                current = state->next_on_success;
+            }
+            else
+            {   it = states[state->reset].cache; <span class="comment">// restore input location</span>
+                current = state->next_on_failure;
+            }
+        }
+    } while (current &lt; end); <span class="comment">// while not at failure or success</span>
+
+    return it;
+}</code></pre>
+  </div>
+
+  <p>When the state machine advances to the next state, the input pointer is incremented by one if the match succeeds and it's reset to an earlier location when the match fails. The earlier locations are cached inside the state structures. Each state has an index to the state it should reset the input pointer to when it fails to match.</p>
+
+  <p>The <code>match_with_counter</code> function is shown below. It's called after its loop has been matched once already. The first part matches input until the counter reaches the lower bound. If it fails a match before then, the entire loop fails and returns the cached iterator.</p>
+
+  <p>Note that there are two extra states present immediately behind the loop's states (at index <code>loop_success_index</code> and <code>loop_failure_index</code>). If the initial walk through the loop path fails, it will reach the loop fail state outside <code>match_with_counter</code> and fail from there.</p>
+
+  <div class="code" id="code-25"><pre><code
+>static const char*
+match_with_counter(const char *it, struct state *states, uint32 *_current)
+{   uint32 loop_success_index = *_current; <span class="comment">// end of loop extra state</span>
+    uint32 loop_failure_index = loop_success_index + 1; <span class="comment">// loop failure extra state</span>
+    struct state *loop = &amp;states[loop_success_index];
+    uint32 current = loop->reset;
+
+    const char *cache = states[loop->reset].cache; <span class="comment">// before loop</span>
+
+    const char *it_before;
+    uint32 matched_length;
+    uint32 count_lower = loop->count_lower - 1; <span class="comment">// account for already matched loop</span>
+    while (count_lower)
+    {   it_before = it;
+        it = match(it, states, &amp;current, loop_success_index); <span class="comment">// recursive call</span>
+        matched_length = PTR_DIST(it_before, it);
+        if (matched_length)
+        {   count_lower -= 1;
+        }
+        else
+        {   *_current = loop->next_on_failure;
+            states[loop->reset].cache = cache; <span class="comment">// loop start should reset to before loop later</span>
+            return cache; <span class="comment">// reset to before matching</span>
+        }
+    }
+    ...</code></pre>
+  </div>
+
+  <p>The second part matches input until either the counter reaches the upper bound or a failed match occurs. A failed match means the loop succeeded in matching <code>n</code> to <code>m</code> times. If the loop exceeds the upper bound, it fails and returns the cached input iterator.</p>
+
+</div>
+<div class="page-even" data-page-number="18">
+
+
+  <div class="code" id="code-26"><pre><code
+>    uint32 count_upper = loop->count_upper - loop->count_lower;
+    while (count_upper) <span class="comment">// don't match more than upper bound</span>
+    {   it_before = it;
+        it = match(it, states, &amp;current, loop_success_index);
+        matched_length = PTR_DIST(it_before, it);
+        if (matched_length)
+        {   count_upper -= 1;
+        }
+        else
+        {   *_current = loop->next_on_success;
+            states[loop->reset].cache = cache; <span class="comment">// loop start should reset to before loop later</span>
+            return it;
+        }
+    }
+    *_current = loop->next_on_failure;
+    states[loop->reset].cache = cache; <span class="comment">// loop start should reset to before loop later</span>
+    return cache; <span class="comment">// reset to before matching</span>
+}</code></pre>
+  </div>
+
+  <p>The definition of the state structure is:</p>
+
+  <div class="code" id="code-27"><pre><code
+>struct state                <span class="comment">// 16 bytes</span>
+{   char value;             <span class="comment">// value to match input against</span>
+    uint8 match_is_success; <span class="comment">// whether match should take success path or failure path</span>
+    uint16 reset;           <span class="comment">// index to the state that has cached the input to reset to</span>
+    uint16 next_on_success; <span class="comment">// success state index</span>
+    uint16 next_on_failure; <span class="comment">// failure state index</span>
+    union                   <span class="comment">// counter-loop state stores repeat bounds instead of cache</span>
+    {   const char *cache;  <span class="comment">// store location to matched input value</span>
+        struct
+        {   uint32 count_lower;
+            uint32 count_upper;
+        };
+    };
+};</code></pre>
+  </div>
+
+  <p>Because loop states don't cache input iterators inside the state, this memory space is repurposed using a union to store the loop state's counter bounds.</p>
+
+  <h4>The parse function</h4>
+
+  <p>Each operator implemented here can be treated as postfix, which simplifies the parse function. Each operator can be applied to the state machine as it's encountered, instead of pushing it to the operator stack and later calling its reduce-function.</p>
+
+  <p>The parse function begins by setting up the memory for the state machine and creating the operator stack and output queue. The operator stack will only contain parenthesis tokens and it grows with each nested one. The output queue is only ever a single token. Both of these are stored on the call stack. The resulting array of states is returned.</p>
+
+  <div class="code" id="code-28"><pre><code
+>static struct state*
+parse(struct memory_stack *stack, const char *input, uint32 *size_out)
+{   struct memory_stack *state_machine = ...
+    init_memory_stack(state_machine, state_machine, stack_size);
+
+    uint8 mem[OPERATOR_STACK_SIZE]; <span class="comment">// store operator stack in call stack (for nested parentheses)</span>
+    struct memory_stack *op_stack = (struct memory_stack *)mem;
+    init_memory_stack(op_stack, op_stack, OPERATOR_STACK_SIZE);
+
+    struct token *o_sentinel = PUSH_ALIGNED(op_stack, sizeof(struct token), ALIGN_OF(struct token));
+    o_sentinel->type = DELIM_TOKEN;
+    o_sentinel->data = PUSH(state_machine, 0); <span class="comment">// pointer to first state (index 2)</span>
+
+#define push() ((struct token*)PUSH(op_stack, sizeof(struct token)))
+#define pop() POP(op_stack, sizeof(struct token))
+#define top() ((struct token*)TOP(op_stack, sizeof(struct token)))
+
+    struct token prev = {0}; <span class="comment">// output queue is single token</span>
+    prev.data = PUSH(state_machine, 0);
+    ...</code></pre>
+  </div>
+
+  </div>
+
+<div class="page-odd" data-page-number="19">  
+
+  <p>Next in the parse function, the regular expression input is iterated and for each detected type an apply-function is called to create and manipulate states in the state machine.</p>
+
+  <div class="code" id="code-29"><pre><code
+>    char ch = *input;
+    while (ch)
+    {   switch (ch)
+        {   case ' ':
+            case '\t':
+            case '\n':
+            case '\r':
+            {   // skip whitespace
+            } break;
+
+            case '(':
+            {   struct token *operator = push(); // add token to operator stack
+                operator->type = DELIM_TOKEN;
+                operator->data = PUSH(state_machine, 0);
+            } break;
+
+            case ')':
+            {   struct token *op = top();
+                pop(); // remove ( in operator stack
+                prev.type = GROUP_TOKEN;
+                prev.data = op->data; // pointer to beginning of group
+            } break;
+
+            case '*':
+            {   struct state *left = prev.data;
+                apply_zero_or_more(state_machine, left, PUSH(state_machine, 0));
+                prev.type = ZERO_OR_MORE_TOKEN;
+            } break;
+
+            case '|':
+            {   struct token *t = top();
+                while (t->type != DELIM_TOKEN) // scan left for ( to get leftmost state operand
+                {   t -= 1;
+                }
+                struct state *left = t->data;
+                apply_alternation(state_machine, left, PUSH(state_machine, 0));
+                prev.type = ALTERNATION_TOKEN;
+            } break;
+
+            case '+': // create a repeat state
+            {   struct state *left = prev.data;
+                struct state *loop_success = PUSH(state_machine, sizeof(struct state));
+                apply_repeat(state_machine, left, loop_success);
+                loop_success->count_lower = 1;
+                loop_success->count_upper = 0;
+                prev.data = loop_success;
+                prev.type = REPEAT_TOKEN;
+            } break;
+
+            case '{': // {n,m} or {n,} or {n}
+            {
+                // parse n and m...
+
+                struct state *left = prev.data;
+                struct state *loop_success = PUSH(state_machine, sizeof(struct state));
+                apply_repeat(state_machine, left, loop_success);
+                loop_success->count_lower = n;
+                loop_success->count_upper = m;
+                prev.data = loop_success;
+                prev.type = REPEAT_TOKEN;
+            } break;
+
+          ...</code></pre>
+  </div>
+
+  <p>Even though alternation seems like an infix operator, it can also be treated as a postfix since it doesn't do anything to its right operand.</p>
+
+  <p>When characters or the any-value (<code>.</code>) are encountered, new states are created as next in sequence. The any-value state will succeed when it doesn't match the input, since it should match everything.</p>
+
+  <p>The parse function ends by calculating the memory used for the state machine and freeing up unused space. It returns a pointer to the first state of the state array.</p>
+
+</div>
+
+<div class="page-even" data-page-number="20">
+
+  <div class="code" id="code-30"><pre><code
+>            case '.':
+            {   struct state *s = PUSH(state_machine, sizeof(struct state));
+                if (prev.type != ALTERNATION_TOKEN)
+                {   apply_sequence(state_machine, prev.data, s);
+                }
+                s->value = META_STATE;
+                s->next_on_success = SUCCESS_STATE;
+                s->next_on_failure = SUCCESS_STATE;
+                s->reset = 0;
+                s->match_is_success = 0;
+                prev.type = CHAR_TOKEN;
+                prev.data = s;
+            } break;
+
+            default: // sequence
+            {   struct state *s = PUSH(state_machine, sizeof(struct state));
+                if (prev.type != ALTERNATION_TOKEN)
+                {   apply_sequence(state_machine, prev.data, s);
+                }
+                s->value = ch;
+                s->next_on_success = SUCCESS_STATE;
+                s->next_on_failure = FAILURE_STATE;
+                s->reset = 0;
+                s->match_is_success = 1;
+                prev.type = CHAR_TOKEN;
+                prev.data = s;
+            } break;
+        }
+        ch = *(++input);
+    }
+
+    *size_out = (uint32)state_machine->used; // size of states and memory_stack
+    // free unused memory...
+    return BOTTOM(state_machine);
+}</code></pre>
+  </div>
+
+  <h4>The apply-functions</h4>
+
+  <p>The apply-function for sequence is:</p>
+
+  <div class="code" id="code-31"><pre><code
+>static void
+apply_sequence(struct memory_stack *state_machine, struct state *left, struct state *end)
+{   uint16 next_index = (uint16)ARRAY_COUNT(BOTTOM(state_machine), end, struct state);
+    while (left != end)
+    {   // update state connections to go to new state instead of success
+        if (left->next_on_success == SUCCESS_STATE)
+        {   left->next_on_success = next_index;
+        }
+        if (left->next_on_failure == SUCCESS_STATE)
+        {   left->next_on_failure = next_index;
+        }
+        left += 1;
+    }
+}</code></pre>
+  </div>
+
+  <p>The apply-function for alternation is:</p>
+
+  <div class="code" id="code-32"><pre><code
+>static void
+apply_alternation(struct memory_stack *state_machine, struct state *left, struct state *end)
+{   uint16 branch_index = (uint16)ARRAY_COUNT(BOTTOM(state_machine), end, struct state);
+    uint16 reset = index_of(left);
+    while (left != end)
+    {   // update state connections to go to branch on failure
+        if (left->next_on_failure == FAILURE_STATE)
+        {   left->next_on_failure = branch_index;
+        }
+        if (left->next_on_success == FAILURE_STATE)
+        {   left->next_on_success = branch_index;
+        }
+        if (left->reset == 0)
+        {   left->reset = reset;
+        }
+        left += 1;
+    }
+}</code></pre>
+  </div>
+
+</div>
+
+<div class="page-odd" data-page-number="21">
+
+  <p>The apply-function for zero-or-more is:</p>
+
+  <div class="code" id="code-33"><pre><code
+>static void
+apply_zero_or_more(struct memory_stack *state_machine, struct state *left, struct state *end)
+{   uint16 index_start = (uint16)ARRAY_COUNT(BOTTOM(state_machine), left, struct state);
+    uint16 reset = index_of(left);
+    while (left != end)
+    {   if (left->next_on_success == SUCCESS_STATE) // change success to loop back to start of sequence
+        {   left->next_on_success = index_start;
+        }
+        else if (left->next_on_success == FAILURE_STATE)
+        {   left->next_on_success = SUCCESS_STATE;
+        }
+        if (left->next_on_failure == SUCCESS_STATE)
+        {   left->next_on_failure = index_start;
+        }
+        else if (left->next_on_failure == FAILURE_STATE) // change failures to success
+        {   left->next_on_failure = SUCCESS_STATE;
+        }
+        if (left->reset == 0) // if unmodified revert state
+        {   left->reset = reset; // how many steps back to the revert state
+        }
+        left += 1;
+    }
+}</code></pre>
+  </div>
+
+  <p>The apply-function for repetition is:</p>
+
+  <div class="code" id="code-34"><pre><code
+>static void
+apply_repeat(struct memory_stack *state_machine, struct state *left, struct state *loop_success)
+{   struct state *loop_failure = PUSH(state_machine, sizeof(struct state));
+    uint16 loop_success_index = index_of(loop_success);
+    uint16 loop_failure_index = index_of(loop_failure);
+    uint16 reset = index_of(left);
+    
+    loop_success->value = REPEAT_STATE;
+    loop_success->next_on_failure = FAILURE_STATE;
+    loop_success->next_on_success = SUCCESS_STATE;
+    loop_success->reset = reset;
+
+    loop_failure->next_on_failure = FAILURE_STATE;
+    loop_failure->next_on_success = loop_failure_index; // never matches
+    loop_failure->reset = loop_failure_index; // resets to self
+    loop_failure->value = META_STATE; // matches nothing
+    loop_failure->match_is_success = 1;
+
+    while (left != loop_success) // apply sequence and apply repeat
+    {   if (left->next_on_success == SUCCESS_STATE)
+        {   left->next_on_success = loop_success_index;
+        }
+        else if (left->next_on_success == FAILURE_STATE)
+        {   left->next_on_success = loop_failure_index;
+        }
+        if (left->next_on_failure == SUCCESS_STATE)
+        {   left->next_on_failure = loop_success_index;
+        }
+        else if (left->next_on_failure == FAILURE_STATE)
+        {   left->next_on_failure = loop_failure_index;
+        }
+        if (left->reset == 0) // if unmodified revert state
+        {   left->reset = reset; // how many steps back to the revert state
+        }
+        left += 1;
+    }
+}</code></pre>
+  </div>
+
+  <p>The values for <code>SUCCESS_STATE</code> and <code>FAILURE_STATE</code> must be higher than any valid state index. The token structure has a type and a pointer to a state.</p>
+
+  <div class="code" id="code-35"><pre><code
+>#define SUCCESS_STATE ((uint16)-2)
+#define FAILURE_STATE ((uint16)-1)
+
+struct token
+{   void *data;
+    uint32 type;
+};
+</code></pre>
+  </div>
+
+</div>
+
+<div class="page-even" data-page-number="22">
+
+  <h4>Extra notes</h4>
+
+  <p>This regular expression parser and machine only handle a subset of the actual regular expression syntax. The differences are:</p>
+  <ul>
+    <li>There are no character classes like <code>\d</code> for digit and <code>\w</code> for a word.</li>
+    <li>There are no lookaround mechanisms.</li>
+    <li><code>( )</code> doesn't capture text and there's no backsubstitution.</li>
+    <li>The <code>* +</code> operators are always greedy.</li>
+    <li>There's no backtracking; this affects both the greedy <code>* +</code> operators, and alternation (<code>|</code>) which short-circuits when the left operand matches.</li>
+    <li>There's no negative matching; i.e. <code>[^ab]</code>.</li>
+    <li>There's no backslash-escaping.</li>
+  </ul>
+
+</div>
+
+<div class="page-odd" data-page-number="23">
+
+  <h3 id="1-2-4"><a href="#1-2-4"></a>Lexeme lookup using a lookup table</h3>
+
+  <p>Having a big <code>switch-case</code>-block for recognizing tokens can be a bottleneck for the parser's data throughput. When you know every symbol identifier in the syntax lexeme set, you can generate a lookup table and trade the costs of conditionals' branch-mispredictions for the cost of memory space and a key-lookup computation.</p>
+
+  <p>The lookup function's time complexity is constant, and with a small lexeme set the lookup table will hopefully avoid CPU cache-misses. If lexeme parsing isn't a tight loop however, the lexeme table is more likely to be ejected from close cache memory. This implies that token generation before parsing may be necessary for any performance improvement by using a lexeme lookup table.</p>
+
+  <p>The symbol identifiers are already encoded into unique keys since they're all 8-bit ASCII codes. If you're using symbol identifiers encoded as Unicode codepoints, the keys are decoded from UTF-8 or UTF-16 to 32 bits instead.</p>
+</div>
+
+</div><!--[ PAGES END ]-->
+
+
+<div id="footer" class="remove-on-print">
+  2019, Linda Jansson.
+</div>
+
+
+<!--[ SIDE PANEL ]-->
+<div id="side-panel" class="remove-on-print">
+  <input type="checkbox" id="switch-1"/>
+
+  <div id="tabs">
+    <input type="radio" id="tab-0" name="tab-control" checked>
+    <label aria-label="button for the side panel's outline-tab" for="tab-0">outline</label>
+    <div id="outline-tab">
+      <div id="outline">
+        <a href="#title">Parser programming</a>
+        <ul>
+          <li><a href="#1-1">Parsing prefix, infix, and postfix</a>
+            <ul>
+              <li><a href="#1-1-1">Non-unary operators</a></li>
+              <li><a href="#1-1-2">Expression-terminating symbols</a></li>
+              <li><a href="#1-1-3">Variable number of operands</a></li>
+            </ul>
+          </li>
+          <li><a href="#1-2">Translation into code</a>
+              <ul>
+                <li><a href="#1-2-1">Building a calculator</a></li>
+                <li><a href="#1-2-2">Building a JSON-parser</a></li>
+                <li><a href="#1-2-3">Building a regular expression machine</a></li>
+                <li><a href="#1-2-4">Lexeme lookup using a lookup table</a></li>
+              </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <input type="radio" id="tab-1" name="tab-control">
+    <label aria-label="button for the side panel's external-tab" for="tab-1">external</label>
+    <div class="pack16 collapse">
+      
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[1]</span>
+          <span class="fourteen">A recursive parsing algorithm.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">Top Down Operator Precedence</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve">Douglas Crockford</span></span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">2007-02-21</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="http://crockford.com/javascript/tdop/tdop.html">crockford.com/javascript/tdop/tdop.html</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[2]</span>
+          <span class="fourteen">About syntax and top down operator precedence parsing.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">Syntaxation, goto; conference</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve">Douglas Crockford</span></span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">2013-09-30</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://www.youtube.com/watch?v=Nlqv6NtBXcA">YouTube, GOTO Conferences</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[3]</span>
+          <span class="fourteen">About performance improvements to the expression input scanner.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">Some Strategies For Fast Lexical Analysis when Parsing Programming Languages</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve">Sean Barrett</span></span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">2015-05-01</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://nothings.org/computer/lexing.html">nothings.org/computer/lexing.html</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[4]</span>
+          <span class="fourteen">The source code for Chromium's V8 JavaScript engine parser.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">Chromium's V8 JavaScript Engine parser</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve"></span>V8 project contributors</span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">fetched 2019-04-29</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://cs.chromium.org/chromium/src/v8/src/parsing/">cs.chromium.org/chromium/src/v8/src/parsing/</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[5]</span>
+          <span class="fourteen">About the performance of the V8 engine's scanner.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">Blazingly fast parsing, part 1: optimizing the scanner</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve"></span>Toon Verwaest</span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">2019-03-25</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://v8.dev/blog/scanner">v8.dev/blog/scanner</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[6]</span>
+          <span class="fourteen">About the performance of the V8 engine's parser.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">Blazingly fast parsing, part 2: lazy parsing</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve"></span>Toon Verwaest, Marja Hölttä</span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">2019-04-15</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://v8.dev/blog/preparser">v8.dev/blog/preparser</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+    </div>
+    <input type="radio" id="tab-2" name="tab-control">
+    <label aria-label="button for the side panel's more-tab" for="tab-2">more</label>
+    <div class="pack16 collapse" id="more-tab">
+      <div role="img" aria-label="shrugging emoticon" class="sixteen" id="shrug">╮( ꒪౪꒪)╭</div>
+    </div>
+
+    <input type="radio" id="tab-4" name="tab-control">
+    <label aria-label="button for the side panel's about-tab" for="tab-4">about</label>
+    <div id="about-tab" class="pack16 collapse">
+      <div class="sixteen"><hr/></div>
+      <div class="sixteen">
+        <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
+
+        <p>I've studied computer engineering and do a lot of hobby programming in C.</p>
+
+        <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
+
+        <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+      </div>
+      <div class="sixteen"><hr/></div>
+    </div>
+  </div>
+  <label aria-label="toggle button for side panel" for="switch-1" id="side-panel-icon"></label>
+</div>
+
+</body>
+</html>
+

@@ -4,10 +4,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=devide-width, initial-scale=1">
 <title>Title</title>
+<link rel="stylesheet" href="unstyle.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="print.css" media="print">
 </head>
 <body>
-  
-<p>Hello.</p>
-  
+
+<div id="pages" class="clearfix">
+
+<div class="page-even" data-page-number="❦">
+  <h1 id="title"><a href="#title"></a>linjan.github.io</h1>
+  <p>I'm rewriting my various notes into texts about programming. It's a work in progress.</p>
+  <p>Done:</p>
+  <ul>
+    <li><a href="parser.html">Programming parsers</a></li>
+  </ul>
+  <p>Not done:</p>
+  <ul>
+    <li>UTF-8 and UTF-16 conversion in C</li>
+    <li>Multithreaded web server in C (Win32/Linux)</li>
+    <li>OpenGL vertex streaming renderer in C (Win32/X11)</li>
+    <li>Compiling C for Android with the NDK bundle.</li>
+    <li>Deep neural network with SSE</li>
+  </ul>
+</div>
+
+<div class="page-odd" data-page-number="1">
+
+</div>
+</div><!--[ PAGES END ]-->
+
+<div id="footer" class="remove-on-print">2019, Linda Jansson.</div>
 </body>
 </html>
+
