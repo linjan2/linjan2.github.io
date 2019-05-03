@@ -1,1 +1,54 @@
-body{width:595.4pt;background-color:#fff}#pages{width:595.4pt;overflow:hidden;margin:auto}.page-even,.page-odd{width:595.4pt;height:842pt;float:none;background-color:#fff;box-shadow:none;margin:0;page-break-before:always;page-break-after:always}h1 > a,h2 > a,h3 > a{display:none}h1,h2,h3{left:0}.remove-on-print{display:none}.hide-on-print{visibility:hidden}p{color:#000;font-size:12pt}a,a:active,a:hover,a:link,a:visited{color:#000}.side-note > input~label::after,.side-note > span{display:none}.note::after{background:none;border-left-width:2px}.code,.code-ln{border-left-width:2px}figure,figure > figcaption{background:none}
+body
+{ width:595.4pt;
+  background-color:#fff;
+}
+#pages
+{ width:595.4pt;
+  overflow:hidden;
+  margin:auto;
+}
+.page-even,.page-odd
+{ width:595.4pt;
+  height:842pt;
+  float:none;
+  background-color:#fff;
+  box-shadow:none;
+  margin:0;
+  page-break-before:always;
+  page-break-after:always;
+}
+h1>a,h2>a,h3>a
+{ display:none;
+}
+h1,h2,h3
+{ left:0;
+}
+.remove-on-print
+{ display:none;
+}
+.hide-on-print
+{ visibility:hidden;
+}
+p
+{ color:#000;
+  font-size:12pt;
+}
+a,a:link,a:visited,a:hover,a:active
+{ color:#000;
+}
+td,th
+{ background:none !important;
+}
+.side-note>span,.side-note>input~label::after
+{ display:none;
+}
+.note::after
+{ background:none;
+  border-left-width:2px;
+}
+.code,.code-ln
+{ border-left-width:2px;
+}
+figure,figure>figcaption
+{ background:none;
+}

@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=devide-width, initial-scale=1">
+<title>UTF-16 and UTF-8 in C</title>
+<link rel="stylesheet" href="unstyle.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="print.css" media="print">
+</head>
+<body>
+<div id="pages" class="clearfix">
+
+<div class="page-even" data-page-number="❦">
+  <h1 id="title"><a href="#title"></a>UTF-16 and UTF-8 in C</h1>
+
+  <p>Unicode maps characters to 21-bit values. Not all 21-bit values are mapped and some have special meaning. The data format for the codepoints are further encoded into one of UTF-8, UTF-16, and UTF-32. <a href="#figure-1">Figure 1</a> shows the encoding formats for these.</p>
+  <p>UTF-32 is simply the 21-bit values padded with zeroes to fill 32-bit integers.</p>
+  <p>UTF-16 is a format that stores 21-bit values within one or two 16-bit integers. A double 16-bit UTF-16 character has a high word and a low word; these are called a surrogate pair. The bits not used for the 21-bit codepoint identify the surrogates.</p>
+  <p>UTF-8 stores 21-bit values within one, two, three, or four 8-bit integers. For multibyte sequences, the bits in the first byte that aren't part of the 21-bit codepoint identifies the length. Subsequent bytes start with the bits <code>10</code>.</p>
+
+  <figure aria-labelledby="figure-1-caption" id="figure-1">
+<pre role="img">          Codepoint               Encoding
+
+UTF-32:
+        0x0 - 0x1F FFFF      <=>  0000 0000 000x xxxx xxxx xxxx xxxx xxxx      (21 data bits)
+
+UTF-16:
+        0x0000 - 0xD7FF      <=>  xxxx xxxx xxxx xxxx                          (16 data bits)
+        0xD800 - 0xDFFF           (not valid codepoints)                       ( 2048 values)
+        0xE000 - 0xFFFF      <=>  xxxx xxxx xxxx xxxx                          (16 data bits)
+        0x010000 - 0x10FFFF  <=>  <span>1101 10</span>yy yyyy yyyy, <span>1101 11</span>xx xxxx xxxx     (20 data bits)
+
+UTF-8:
+        0x0 - 0x7F           <=>  <span>0</span>xxx xxxx                                    ( 7 data bits)
+        0x80 - 0x7FF         <=>  <span>110</span>x xxxx, <span>10</span>xx xxxx                         (11 data bits)
+        0x800 - 0xFFFF       <=>  <span>1110</span> xxxx, <span>10</span>xx xxxx, <span>10</span>xx xxxx              (16 data bits)
+        0x10000 - 0x1FFFFF   <=>  <span>1111 0</span>xxx, <span>10</span>xx xxxx, <span>10</span>xx xxxx, <span>10</span>xx xxxx   (21 data bits)</pre>
+  <figcaption id="figure-1-caption">Figure 1: Encoding formats for UTF-32, UTF-16, and UTF-8. Encoding bits are colored. The values <code>x</code> and <code>y</code> represent the codepoint data for the character. Invalid codepoints are those that begin with values that make them indistinguishable from other encoded codepoints.<figcaption>
+  </figure>
+
+  <h2 id="1-1"><a href="#1-1"></a>Unicode and UTF-16 conversion</h2>
+
+  <p>The steps to encode a codepoint into UTF-16 are:</p>
+
+  <div class="code"><pre><code
+>If codepoint is between 0x0000 - 0xD7FF or 0xE000 - 0xFFFF then:
+  Type cast to a single wchar.
+Else if value is 0x010000 - 0x10FFFF then:
+  Subtract 0x10000 to get a 20-bit representation (i.e. 0x0 - 0x0FFFFF)
+  Split the 20 bits into two 10-bit wchars: yyyy yyyy yy.xx xxxx xxxx
+  Add 0xD800 to the high ten bits: 1101 10yy yyyy yyyy
+  Add 0xDC00 to the low ten bits:  1101 11xx xxxx xxxx
+  Write out the high surrogate first, then the low surrogate.</code></pre>
+  </div>
+
+  <p>The steps to decode UTF-16 into a codepoint:</p>
+
+  <div class="code"><pre><code
+>If the wchar is a high surrogate then:
+  Store value as 32-bit.
+  Remove 0xD800 from the value.
+  Shift 10 bits left.
+  Store next wchar value as 32-bit
+  Remove 0xDC00 from the next value.
+  Add both values.
+  Add 0x10000 to the value.
+Else:
+  Type cast wchar to unsigned int.</code></pre>
+  </div>
+
+</div>
+
+<div class="page-odd" data-page-number="1">
+
+  <p>The type <code>wchar</code> below is <code>typedef</code>:ed from a 16-bit unsigned integer (<code>uint16_t</code>). The sign and bit-length of <code>wchar_t</code> from <code>stddef.h</code> is <input class="side-note left" type="checkbox" id="sn-1-2"><label for="sn-1-2">compiler-specific<span><code>wchar_t</code> is used in string-based standard library functions and systems APIs. By using <code>wchar_t</code> strings, the string passed and the internal string format compile into the same type.</span></label>. The C11 standard's types for unsigned wide characters are <code>char16_t</code> and <code>char32_t</code>, but these are not used here.</p>
+
+  <p>The code below converts from codepoint value to UTF-16.</p>
+
+  <div class="code"><pre><code
+>#define is_valid_codepoint(i) ((i < 0xD800 || i > 0xDFFF) && i <= 0x10FFFF)
+#define fits_1_word_sequence(i) (i <= 0xFFFF)              <span class="comment">// fits in 16 bits</span>
+#define fits_2_word_sequence(i) (!fits_1_word_sequence(i)) <span class="comment">// needs two 16-bit</span>
+
+static wchar*
+codepoint_to_utf16(struct memory_stack *stack, uint32 value, uint32 *size)
+{   wchar *wchars = ... <span class="comment">// get memory space</span>
+    if (!is_valid_codepoint(value))
+    {   FAIL("bad Unicode value");
+    }
+    else if (fits_1_word_sequence(value))
+    {   wchars[0] = (wchar)value;
+        *size = sizeof(wchar);
+    }
+    else
+    {   value -= 0x10000;
+        wchars[0] = ((value >> 10) & 0x3FF) | 0xD800; <span class="comment">// high is stored first</span>
+        wchars[1] = (value & 0x3FF) | 0xDC00;         <span class="comment">// low is stored second</span>
+        *size = 2*sizeof(wchar);
+    }
+    return wchars;
+}</code></pre>
+  </div>
+
+  <p>The code below converts from UTF-16 to codepoint value. It's assumed that the Unicode is stored in the same byte-order as the architecture endianness without a <input class="side-note left" type="checkbox" id="sn-1-1"><label for="sn-1-1">BOM<span>Byte-order mark. When the UTF-16 byte-order doesn't match the system's, the value <code>0xFEFF</code> equals <code>0xFFFE</code>. By detecting the value of the BOM at the beginning of the UTF-16 data, the program can swap every <code>wchar</code>'s two bytes to correct the endianness mismatch.</span></label>.</p>
+
+  <div class="code"><pre><code
+>#define is_high_surrogate(wc) (((wc) & 0xFC00) == 0xD800)  <span class="comment">// 1101 10xx xxxx xxxx</span>
+#define is_low_surrogate(wc)  (((wc) & 0xFC00) == 0xDC00)  <span class="comment">// 1101 11xx xxxx xxxx</span>
+
+static uint32
+utf16_to_codepoint(const wchar **wchars)
+{   const wchar *wc = *wchars;
+    uint32 value;
+    if (is_high_surrogate(wc[0]))              <span class="comment">// high is stored first</span>
+    {   value = ((uint32)*wc++ & 0x3FF) << 10; <span class="comment">// remove 0xD800 and shift</span>
+        if (!is_low_surrogate(wc[1]))          <span class="comment">// low is stored second</span>
+        {  FAIL("bad Unicode value");
+        }
+        value += ((uint32)*wc++ & 0x3FF);      <span class="comment">// remove 0xDC00 and add</span>
+        value += 0x10000;
+    }
+    else
+    {   if (is_low_surrogate(*wc))
+        {  FAIL("bad Unicode value");
+        }
+        value = *wc++;
+    }
+    *wchars = wc;
+    return value;
+}</code></pre>
+  </div>
+
+  <h2 id="1-2"><a href="#1-2"></a>Unicode and UTF-8 conversion</h2>
+
+  <p>The code below converts from codepoint value to UTF-8.</p>
+
+  <div class="code"><pre><code
+>#define fits_1_byte_sequence(i) (i <= 127)      <span class="comment">// fits in 7 bits</span>
+#define fits_2_byte_sequence(i) (i <= 0x3FF)    <span class="comment">// fits in 11 bits</span>
+#define fits_3_byte_sequence(i) (i <= 0xFFFF)   <span class="comment">// fits in 16 bits</span>
+#define fits_4_byte_sequence(i) (i <= 0x1FFFFF) <span class="comment">// fits in 21 bits</span>
+...</code></pre>
+  </div>
+
+</div>
+
+<div class="page-even" data-page-number="2">
+
+  <div class="code"><pre><code
+>static char*
+codepoint_to_utf8(struct memory_stack *stack, uint32 value, uint32 *size)
+{   char *chars = ...; <span class="comment">// get memory space</span>
+    if (fits_1_byte_sequence(value))
+    {   chars[0] = (char)value;
+        *size = 1;
+    }
+    else if (fits_2_byte_sequence(value))
+    {   chars[0] = (char)((value>>6) | 0xC0);     <span class="comment">// 110x xxxx</span>
+        chars[1] = (char)((value & 0x3F) | 0x80); <span class="comment">// 10xx xxxx</span>
+        *size = 2;
+    }
+    else if (fits_3_byte_sequence(value))
+    {   chars[0] = (char)((value>>12) | 0xE0);         <span class="comment">// 1110 xxxx</span>
+        chars[1] = (char)(((value>>6) & 0x3F) | 0x80); <span class="comment">// 10xx xxxx</span>
+        chars[2] = (char)((value & 0x3F)| 0x80);       <span class="comment">// 10xx xxxx</span>
+        *size = 3;
+    }
+    else if (fits_4_byte_sequence(value))
+    {   chars[0] = (char)((value>>18) | 0xF0);          <span class="comment">// 1111 0xxx</span>
+        chars[1] = (char)(((value>>12) & 0x3F) | 0x80); <span class="comment">// 10xx xxxx</span>
+        chars[2] = (char)(((value>>12) & 0x3F) | 0x80); <span class="comment">// 10xx xxxx</span>
+        chars[3] = (char)((value & 0x3F) | 0x80);       <span class="comment">// 10xx xxxx</span>
+        *size = 4;
+    }
+    else
+    {   FAIL("bad Unicode value");
+    }
+    return chars;
+}</code></pre>
+  </div>
+
+  <p>The code below converts from UTF-8 to codepoint value.</p>
+  
+  <div class="code"><pre><code
+>#define is_1_byte_sequence(c) ( ((c) & 0x80) == 0)       <span class="comment">// 0xxx xxxx</span>
+#define is_2_byte_sequence(c) ( ((c) & 0xE0) == 0xC0)    <span class="comment">// 110x xxxx _</span>
+#define is_3_byte_sequence(c) ( ((c) & 0xF0) == 0xE0)    <span class="comment">// 1110 xxxx _ _</span>
+#define is_4_byte_sequence(c) ( ((c) & 0xF8) == 0xF0)    <span class="comment">// 1111 0xxx _ _ _</span>
+#define is_continuation_byte(c) ( ((c) & 0xC0) == 0x80 ) <span class="comment">// 10xx xxxx</span>
+
+static uint32
+utf8_to_codepoint(const char **chars)
+{   const char *ch = *chars;
+    uint32 value;
+
+    if (is_1_byte_sequence(*ch))
+    {   value = *ch++;
+    }
+    else if (is_2_byte_sequence(*ch))
+    {   uint32 v = (uint32)*ch++;
+        value = (v & 0x1F) << 6;
+        if (!is_continuation_byte(*ch))
+        {   FAIL("bad UTF-8 encoding");
+        }
+        v = *ch++;
+        value += v & 0x3F;
+    }
+    else if (is_3_byte_sequence(*ch))
+    {   uint32 v = (uint32)*ch++;
+        value = (v & 0xF) << 12;
+        if (!is_continuation_byte(*ch))
+        {   FAIL("bad UTF-8 encoding");
+        }
+        v = *ch++;
+        value += (v & 0x3F) << 6;
+        if (!is_continuation_byte(*ch))
+        {   FAIL("bad UTF-8 encoding");
+        }
+        v = *ch++;
+        value += v & 0x3F;
+    }
+    ...</code></pre>
+  </div>
+
+</div>
+
+<div class="page-odd" data-page-number="3">
+
+  <div class="code"><pre><code
+>    else if (is_4_byte_sequence(*ch))
+    {   uint32 v = (uint32)*ch++;
+        value = (v & 0x7) << 18;
+        if (!is_continuation_byte(*ch))
+        {   FAIL("bad UTF-8 encoding");
+        }
+        v = *ch++;
+        value += (v & 0x3F) << 12;
+        if (!is_continuation_byte(*ch))
+        {   FAIL("bad UTF-8 encoding");
+        }
+        v = *ch++;
+        value += (v & 0x3F) << 6;
+        if (!is_continuation_byte(*ch))
+        {   FAIL("bad UTF-8 encoding");
+        }
+        v = *ch++;
+        value += v & 0x3F;
+    }
+    else
+    {   FAIL("bad UTF-8 encoding");
+    }
+    *chars = ch;
+    return value;
+}</code></pre>
+  </div>
+
+  <p>Note that this code accepts overlong encodings. Codepoints should be encoded into the minimum length byte sequences, but it's possible to encode them with more bytes than necessary. E.g. <code>0</code> can be encoded with two byte sequences (11 data bits) as: <code>1100 0000 1000 0000</code> (<code>0xC080</code>). When converting back to UTF-8, the data is 8 bits smaller.</p>
+
+</div>
+
+<div class="page-even" data-page-number="4">
+
+  <h2 id="1-3"><a href="#1-3"></a>Character tables</h2>
+
+  <p>The first 128 Unicode codepoints is equal to the 7-bit US-ASCII characters. The set is shown in <a href="#table-1">table 1</a> with some as the C string escape characters.</p>
+
+  <div class="table">
+    <input class="tc" type="radio" id="t1cc1" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc2" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc3" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc4" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc5" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc6" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc7" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc8" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc9" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc10" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc11" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc12" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc13" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc14" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc15" name="t1cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t1cc16" name="t1cc" aria-hidden="true">
+
+    <input class="tr" type="radio" id="t1rc8" name="t1rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t1rc7" name="t1rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t1rc6" name="t1rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t1rc5" name="t1rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t1rc4" name="t1rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t1rc3" name="t1rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t1rc2" name="t1rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t1rc1" name="t1rc" aria-hidden="true">
+
+    <table id="table-1">
+      <caption>Table 1: US-ASCII</caption>
+      <tr>
+        <th class="tl"
+         ><input checked="checked" type="radio" id="t1cc0" name="t1cc" aria-hidden="true"
+          ><label aria-label="button" for="t1cc0"></label
+          ><input checked="checked" type="radio" id="t1rc0" name="t1rc" aria-hidden="true"
+          ><label aria-label="button" for="t1rc0"></label
+        ></th>
+        <th><label aria-label="button" for="t1cc1">0x0</label></th>
+        <th><label aria-label="button" for="t1cc2">0x1</label></th>
+        <th><label aria-label="button" for="t1cc3">0x2</label></th>
+        <th><label aria-label="button" for="t1cc4">0x3</label></th>
+        <th><label aria-label="button" for="t1cc5">0x4</label></th>
+        <th><label aria-label="button" for="t1cc6">0x5</label></th>
+        <th><label aria-label="button" for="t1cc7">0x6</label></th>
+        <th><label aria-label="button" for="t1cc8">0x7</label></th>
+        <th><label aria-label="button" for="t1cc9">0x8</label></th>
+        <th><label aria-label="button" for="t1cc10">0x9</label></th>
+        <th><label aria-label="button" for="t1cc11">0xA</label></th>
+        <th><label aria-label="button" for="t1cc12">0xB</label></th>
+        <th><label aria-label="button" for="t1cc13">0xC</label></th>
+        <th><label aria-label="button" for="t1cc14">0xD</label></th>
+        <th><label aria-label="button" for="t1cc15">0xE</label></th>
+        <th><label aria-label="button" for="t1cc16">0xF</label></th>
+      </tr>
+
+      <tr>
+        <th><label aria-label="button" for="t1rc1">0x00</label></th>
+        <td>\0</td><td>SOH</td><td>STX</td><td>ETX</td><td>EOT</td><td>ENQ</td><td>ACK</td><td>\a</td><td>\b</td><td>\t</td><td>\n</td><td>\v</td><td>\f</td><td>\r</td><td>SO</td><td>SI</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc2">0x10</label></th>
+        <td>DLE</td><td>DC1</td><td>DC2</td><td>DC3</td><td>DC4</td><td>NAK</td><td>SYN</td><td>ETB</td><td>CAN</td><td>EM</td><td>SUB</td><td>ESC</td><td>FS</td><td>GS</td><td>RS</td><td>US</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc3">0x20</label></th>
+        <td> </td><td>!</td><td>"</td><td>#</td><td>$</td><td>%</td><td>&amp;</td><td>'</td><td>(</td><td>)</td><td>*</td><td>+</td><td>,</td><td>-</td><td>.</td><td>/</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc4">0x30</label></th>
+        <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>:</td><td>;</td><td>&lt;</td><td>=</td><td>&gt;</td><td>?</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc5">0x40</label></th>
+        <td>@</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>H</td><td>I</td><td>J</td><td>K</td><td>L</td><td>M</td><td>N</td><td>O</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc6">0x50</label></th>
+        <td>P</td><td>Q</td><td>R</td><td>S</td><td>T</td><td>U</td><td>V</td><td>W</td><td>X</td><td>Y</td><td>Z</td><td>[</td><td>\</td><td>]</td><td>^</td><td>_</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc7">0x60</label></th>
+        <td>`</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td><td>g</td><td>h</td><td>i</td><td>j</td><td>k</td><td>l</td><td>m</td><td>n</td><td>o</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc8">0x70</label></th>
+        <td>p</td><td>q</td><td>r</td><td>s</td><td>t</td><td>u</td><td>v</td><td>w</td><td>x</td><td>y</td><td>z</td><td>{</td><td>|</td><td>}</td><td>~</td><td>DEL</td>
+      </tr>
+
+    </table>
+  </div>
+
+  
+  <p>The next 128 Unicode codepoints are shown in <a href="#table-2">table 2</a>.</p>
+
+  <div class="table">
+    <input class="tc" type="radio" id="t2cc1" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc2" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc3" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc4" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc5" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc6" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc7" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc8" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc9" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc10" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc11" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc12" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc13" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc14" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc15" name="t2cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t2cc16" name="t2cc" aria-hidden="true">
+
+    <input class="tr" type="radio" id="t2rc8" name="t2rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t2rc7" name="t2rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t2rc6" name="t2rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t2rc5" name="t2rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t2rc4" name="t2rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t2rc3" name="t2rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t2rc2" name="t2rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t2rc1" name="t2rc" aria-hidden="true">
+
+    <table id="table-2">
+      <caption>Table 2: Latin-1 Supplement</caption>
+      <tr>
+        <th class="tl"
+         ><input checked="checked" type="radio" id="t2cc0" name="t2cc" aria-hidden="true"
+          ><label aria-label="button" for="t2cc0"></label
+          ><input checked="checked" type="radio" id="t2rc0" name="t2rc" aria-hidden="true"
+          ><label aria-label="button" for="t2rc0"></label
+        ></th>
+        <th><label aria-label="button" for="t2cc1">0x0</label></th>
+        <th><label aria-label="button" for="t2cc2">0x1</label></th>
+        <th><label aria-label="button" for="t2cc3">0x2</label></th>
+        <th><label aria-label="button" for="t2cc4">0x3</label></th>
+        <th><label aria-label="button" for="t2cc5">0x4</label></th>
+        <th><label aria-label="button" for="t2cc6">0x5</label></th>
+        <th><label aria-label="button" for="t2cc7">0x6</label></th>
+        <th><label aria-label="button" for="t2cc8">0x7</label></th>
+        <th><label aria-label="button" for="t2cc9">0x8</label></th>
+        <th><label aria-label="button" for="t2cc10">0x9</label></th>
+        <th><label aria-label="button" for="t2cc11">0xA</label></th>
+        <th><label aria-label="button" for="t2cc12">0xB</label></th>
+        <th><label aria-label="button" for="t2cc13">0xC</label></th>
+        <th><label aria-label="button" for="t2cc14">0xD</label></th>
+        <th><label aria-label="button" for="t2cc15">0xE</label></th>
+        <th><label aria-label="button" for="t2cc16">0xF</label></th>
+      </tr>
+
+      <tr>
+        <th><label aria-label="button" for="t2rc1">0x80</label></th>
+        <td>XXX</td><td>XXX</td><td>BPH;</td><td>NBH</td><td>IND</td><td>NEL</td><td>SSA</td><td>ESA</td><td>HTS</td><td>HTJ</td><td>VTS</td><td>PLD</td><td>PLU</td><td>RI</td><td>SS2</td><td>SS3</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t2rc2">0x90</label></th>
+        <td>DOS</td><td>PU1</td><td>PU2</td><td>STS</td><td>CCH</td><td>MW</td><td>SPA</td><td>EPA</td><td>SOS</td><td>XXX</td><td>SCI</td><td>CSI</td><td>ST</td><td>OSC</td><td>PM</td><td>APC</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t2rc3">0xA0</label></th>
+        <td>NBSP</td><td>¡</td><td>¢</td><td>£</td><td>¤</td><td>¥</td><td>¦</td><td>§</td><td>¨</td><td>©</td><td>ª</td><td>«</td><td>¬</td><td>SHY</td><td>®</td><td>¯</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t2rc4">0xB0</label></th>
+        <td>°</td><td>±</td><td>²</td><td>³</td><td>´</td><td>µ</td><td>¶</td><td>·</td><td>¸</td><td>¹</td><td>º</td><td>»</td><td>¼</td><td>½</td><td>¾</td><td>¿</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t2rc5">0xC0</label></th>
+        <td>À</td><td>Á</td><td>Â</td><td>Ã</td><td>Ä</td><td>Å</td><td>Æ</td><td>Ç</td><td>È</td><td>É</td><td>Ê</td><td>Ë</td><td>Ì</td><td>Í</td><td>Í</td><td>Ï</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t2rc6">0xD0</label></th>
+        <td>Ð</td><td>Ñ</td><td>Ò</td><td>Ó</td><td>Ô</td><td>Õ</td><td>Ö</td><td>×</td><td>Ø</td><td>Ù</td><td>Ú</td><td>Û</td><td>Ü</td><td>Ý</td><td>Þ</td><td>ß</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t2rc7">0xE0</label></th>
+        <td>à</td><td>á</td><td>â</td><td>ã</td><td>ä</td><td>å</td><td>æ</td><td>ç</td><td>è</td><td>é</td><td>ê</td><td>ë</td><td>ì</td><td>í</td><td>î</td><td>ï</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t2rc8">0xF0</label></th>
+        <td>ð</td><td>ñ</td><td>ò</td><td>ó</td><td>ô</td><td>õ</td><td>ö</td><td>÷</td><td>ø</td><td>ù</td><td>ú</td><td>û</td><td>ü</td><td>ý</td><td>þ</td><td>ÿ</td>
+      </tr>
+
+    </table>
+  </div>
+
+  <p>Codepoints <code>0x00-0xFF</code> is a combination of the ISO 8859-1 (a.k.a. latin1) characters and the C0 and C1 control characters (including <code>DEL</code>).</p>
+  
+  <p>Note that UTF-8 and UTF-16 encode codepoints <code>0x80-0xFF</code> as 16-bit, which makes the encoding incompatible with any 8-bit US-ASCII extension encodings.</p>
+
+</div>
+
+<div class="page-odd" data-page-number="5">
+
+  <p>A common 8-bit US-ASCII extension is Microsoft's windows-1252 (a.k.a. CP1252). It defines characters that ISO 8859-1 left undefined on <code>0x80-0x9F</code> and it keeps the rest. Windows-1252 characters on <code>0x80-0xFF</code> are shown in <a href="#table-3">table 3</a>. Empty cells are undefined.</p>
+
+  <div class="table">
+    <input class="tc" type="radio" id="t3cc1" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc2" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc3" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc4" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc5" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc6" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc7" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc8" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc9" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc10" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc11" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc12" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc13" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc14" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc15" name="t3cc" aria-hidden="true">
+    <input class="tc" type="radio" id="t3cc16" name="t3cc" aria-hidden="true">
+
+    <input class="tr" type="radio" id="t3rc8" name="t3rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t3rc7" name="t3rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t3rc6" name="t3rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t3rc5" name="t3rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t3rc4" name="t3rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t3rc3" name="t3rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t3rc2" name="t3rc" aria-hidden="true">
+    <input class="tr" type="radio" id="t3rc1" name="t3rc" aria-hidden="true">
+
+    <table id="table-3">
+      <caption>Table 3: Windows-1252 extension to US-ASCII</caption>
+      <tr>
+        <th class="tl"
+         ><input checked="checked" type="radio" id="t3cc0" name="t3cc" aria-hidden="true"
+          ><label aria-label="button" for="t3cc0"></label
+          ><input checked="checked" type="radio" id="t3rc0" name="t3rc" aria-hidden="true"
+          ><label aria-label="button" for="t3rc0"></label
+        ></th>
+        <th><label aria-label="button" for="t3cc1">0x0</label></th>
+        <th><label aria-label="button" for="t3cc2">0x1</label></th>
+        <th><label aria-label="button" for="t3cc3">0x2</label></th>
+        <th><label aria-label="button" for="t3cc4">0x3</label></th>
+        <th><label aria-label="button" for="t3cc5">0x4</label></th>
+        <th><label aria-label="button" for="t3cc6">0x5</label></th>
+        <th><label aria-label="button" for="t3cc7">0x6</label></th>
+        <th><label aria-label="button" for="t3cc8">0x7</label></th>
+        <th><label aria-label="button" for="t3cc9">0x8</label></th>
+        <th><label aria-label="button" for="t3cc10">0x9</label></th>
+        <th><label aria-label="button" for="t3cc11">0xA</label></th>
+        <th><label aria-label="button" for="t3cc12">0xB</label></th>
+        <th><label aria-label="button" for="t3cc13">0xC</label></th>
+        <th><label aria-label="button" for="t3cc14">0xD</label></th>
+        <th><label aria-label="button" for="t3cc15">0xE</label></th>
+        <th><label aria-label="button" for="t3cc16">0xF</label></th>
+      </tr>
+
+      <tr>
+        <th><label aria-label="button" for="t3rc1">0x80</label></th>
+        <td>€</td><td class="empty"></td><td>‚</td><td>ƒ</td><td>„</td><td>…</td><td>†</td><td>‡</td><td>ˆ</td><td>‰</td><td>Š</td><td>‹</td><td>Œ</td><td class="empty"></td><td>Ž</td><td class="empty"></td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t3rc2">0x90</label></th>
+        <td class="empty"></td><td>‘</td><td>’</td><td>“</td><td>”</td><td>•</td><td>–</td><td>—</td><td>˜</td><td>™</td><td>š</td><td>›</td><td>œ</td><td class="empty"></td><td>ž</td><td>Ÿ</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t3rc3">0xA0</label></th>
+        <td>NBSP</td><td>¡</td><td>¢</td><td>£</td><td>¤</td><td>¥</td><td>¦</td><td>§</td><td>¨</td><td>©</td><td>ª</td><td>«</td><td>¬</td><td>SHY</td><td>®</td><td>¯</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t3rc4">0xB0</label></th>
+        <td>°</td><td>±</td><td>²</td><td>³</td><td>´</td><td>µ</td><td>¶</td><td>·</td><td>¸</td><td>¹</td><td>º</td><td>»</td><td>¼</td><td>½</td><td>¾</td><td>¿</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t3rc5">0xC0</label></th>
+        <td>À</td><td>Á</td><td>Â</td><td>Ã</td><td>Ä</td><td>Å</td><td>Æ</td><td>Ç</td><td>È</td><td>É</td><td>Ê</td><td>Ë</td><td>Ì</td><td>Í</td><td>Í</td><td>Ï</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t3rc6">0xD0</label></th>
+        <td>Ð</td><td>Ñ</td><td>Ò</td><td>Ó</td><td>Ô</td><td>Õ</td><td>Ö</td><td>×</td><td>Ø</td><td>Ù</td><td>Ú</td><td>Û</td><td>Ü</td><td>Ý</td><td>Þ</td><td>ß</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t3rc7">0xE0</label></th>
+        <td>à</td><td>á</td><td>â</td><td>ã</td><td>ä</td><td>å</td><td>æ</td><td>ç</td><td>è</td><td>é</td><td>ê</td><td>ë</td><td>ì</td><td>í</td><td>î</td><td>ï</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t3rc8">0xF0</label></th>
+        <td>ð</td><td>ñ</td><td>ò</td><td>ó</td><td>ô</td><td>õ</td><td>ö</td><td>÷</td><td>ø</td><td>ù</td><td>ú</td><td>û</td><td>ü</td><td>ý</td><td>þ</td><td>ÿ</td>
+      </tr>
+
+    </table>
+  </div>
+
+</div>
+
+</div><!--[ PAGES END ]-->
+<div id="footer" class="remove-on-print">2019, Linda Jansson.</div>
+
+<!--[ SIDE PANEL ]-->
+<div id="side-panel" class="remove-on-print">
+  <input type="checkbox" id="switch-1"/>
+
+  <div id="tabs">
+    <input type="radio" id="tab-0" name="tab-control" checked>
+    <label aria-label="button for the side panel's outline-tab" for="tab-0">outline</label>
+    <div id="outline-tab">
+      <div id="outline">
+        <a href="#title">UTF-16 and UTF-8 in C</a>
+        <ul>
+          <li><a href="#1-1">Unicode and UTF-16 conversion</a></li>
+          <li><a href="#1-2">Unicode and UTF-8 conversion</a></li>
+          <li><a href="#1-3">Character tables</a></li>
+        </ul>
+      </div>
+    </div>
+    
+    <input type="radio" id="tab-1" name="tab-control">
+    <label aria-label="button for the side panel's external-tab" for="tab-1">external</label>
+    <div class="pack16 collapse">
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[1]</span>
+          <span class="fourteen">Unicode Implementation Guidelines.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">The Unicode Standard Version 12.0 – Core Specification, Chapter 5: Implementation Guidelines</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve">The Unicode Consortium</span></span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">Version 12.0, 2019-03-XX</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://www.unicode.org/versions/Unicode12.0.0/ch05.pdf">www.unicode.org/versions/Unicode12.0.0/ch05.pdf</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+      
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16"><span class="two">[2]</span><span class="fourteen">FAQ UTF-8, UTF-16, UTF-32 & BOM.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">General questions, relating to UTF or Encoding Form</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve">The Unicode Consortium</span></span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">2017-06-26</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://www.unicode.org/faq/utf_bom.html">www.unicode.org/faq/utf_bom.html</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[3]</span>
+          <span class="fourteen">RFC 2781, UTF-16.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">UTF-16, an encoding of ISO 10646</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve">P. Hoffman</span></span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">2000-14-XX</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://tools.ietf.org/html/rfc2781">tools.ietf.org/html/rfc2781</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[4]</span>
+          <span class="fourteen">RFC 3629, UTF-8.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">UTF-8, a transformation format of ISO 10646</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve">F. Yergeau</span></span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">2003-11-XX</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://tools.ietf.org/html/rfc3629">tools.ietf.org/html/rfc3629</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[5]</span>
+          <span class="fourteen">RFC 20, ASCII; explains control characters.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">ASCII format for Network Interchange</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve">Vint Cerf</span></span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve">1969-10-16</span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://tools.ietf.org/html/rfc20">tools.ietf.org/html/rfc20</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <span class="two">[6]</span>
+          <span class="fourteen">All Unicode symbols with names and descriptions.</span>
+        </div>
+        <div class="sixteen">
+        <ul>
+          <li><span class="pack16"><span class="four">Title: </span><span class="twelve">Unicode Character Table</span></span></li>
+          <li><span class="pack16"><span class="four">Authors: </span><span class="twelve">@unicodetable</span></span></li>
+          <li><span class="pack16"><span class="four">Version: </span><span class="twelve"></span></span></li>
+          <li><span class="pack16"><span class="four">Link: </span><span class="twelve"><a href="https://unicode-table.com">unicode-table.com</a></span></span></li>
+        </ul>
+        </div>
+      </div>
+
+    </div>
+    <input type="radio" id="tab-2" name="tab-control">
+    <label aria-label="button for the side panel's more-tab" for="tab-2">more</label>
+    <div class="pack16 collapse" id="more-tab">
+      <div role="img" aria-label="shrugging emoticon" class="sixteen" id="shrug">╮( ꒪౪꒪)╭</div>
+    </div>
+
+    <input type="radio" id="tab-4" name="tab-control">
+    <label aria-label="button for the side panel's about-tab" for="tab-4">about</label>
+    <div id="about-tab" class="pack16 collapse">
+      <div class="sixteen"><hr/></div>
+      <div class="sixteen">
+        <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
+
+        <p>I've studied computer engineering and do a lot of hobby programming in C.</p>
+
+        <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
+
+        <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+      </div>
+      <div class="sixteen"><hr/></div>
+    </div>
+  </div>
+  <label aria-label="toggle button for side panel" for="switch-1" id="side-panel-icon"></label>
+</div>
+
+</body>
+</html>
