@@ -16,7 +16,7 @@
 <div id="pages" class="clearfix">
 
 <div class="page-even" data-page-number="❦">
-  <h1 id="title"><a href="#title"></a>Parser programming</h1>
+  <h1 id="title"><a href="#title"></a>Programming parsers</h1>
   <p>This text explains expression parsers and how one can be built. We want to interpret mathematical notation like <span class="maths">-0.6+12.5×5.5</span> as well as regular expressions like <code>x.|y+</code>.</p>
 
   <p>The first part of a parser translates a string of characters into pre-defined symbols of specific types. E.g. the character sequence <code>"12+3"</code> can be translated into the symbols <span class="maths">12</span>, <span class="maths">+</span>, and <span class="maths">3</span>; a number, an addition operator, and another number. Together, they are interpreted as <span class="maths">12+3</span>, which is an expression that can be reduced mathematically to <span class="maths">15</span>. This is a translation from an expression given as a character sequence (a string) to an expression given as a symbol sequence—it isn't interpreted yet.</p>
@@ -631,29 +631,29 @@ struct token
   <figure aria-labelledby="figure-13-caption" id="figure-13">
 <pre role="img">JSON:              Parsing:
 
-{                  |{   |{ A   |{ A   |{ A 1   |{ A:1   |{ A:1 B   |{ A:1 B   |{ A:1 B s   |A:1 B:s
-  "A": 1,          +--  +----  +----  +------  +------  +--------  +--------  +----------  +--------
-  "B": "s",        |{   |{     |{ :   |{ :     |{       |{         |{ :       |{ :         |{
+{               |{   |{ A   |{ A   |{ A 1   |{ A:1   |{ A:1 B   |{ A:1 B   |{ A:1 B s   |A:1 B:s
+  "A": 1,       +--  +----  +----  +------  +------  +--------  +--------  +----------  +--------
+  "B": "s",     |{   |{     |{ :   |{ :     |{       |{         |{ :       |{ :         |{
   "C":
-  {                |{ A:1 B:s C   |{ A:1 B:s C   |{ A:1 B:s C {   |{ A:1 B:s C { D   |{ A:1 B:s C { D
-    "D": true,     +------------  +------------  +--------------  +----------------  +----------------
-    "E": [2,3]     |{             |{ :           |{ : {           |{ : {             |{ : { :
+  {             |{ A:1 B:s C   |{ A:1 B:s C   |{ A:1 B:s C {   |{ A:1 B:s C { D   |{ A:1 B:s C { D
+    "D": true,  +------------  +------------  +--------------  +----------------  +----------------
+    "E": [2,3]  |{             |{ :           |{ : {           |{ : {             |{ : { :
   }
-}                  |{ A:1 B:s C { D true   |{ A:1 B:s C { D:true   |{ A:1 B:s C { D:true E
-                   +---------------------  +---------------------  +-----------------------
-                   |{ : { :                |{ : {                  |{ : {
+}               |{ A:1 B:s C { D true   |{ A:1 B:s C { D:true   |{ A:1 B:s C { D:true E
+                +---------------------  +---------------------  +-----------------------
+                |{ : { :                |{ : {                  |{ : {
 
-                   |{ A:1 B:s C { D:true E   |{ A:1 B:s C { D:true E [   |{ A:1 B:s C { D:true E [ 2
-                   +-----------------------  +-------------------------  +---------------------------
-                   |{ : { :                  |{ : { : [                  |{ : { : [
+                |{ A:1 B:s C { D:true E   |{ A:1 B:s C { D:true E [   |{ A:1 B:s C { D:true E [ 2
+                +-----------------------  +-------------------------  +---------------------------
+                |{ : { :                  |{ : { : [                  |{ : { : [
 
-                   |{ A:1 B:s C { D:true E [ 2 3   |{ A:1 B:s C { D:true E [ 2 3 ]
-                   +-----------------------------  +-------------------------------
-                   |{ : { : [                      |{ : { :
+                |{ A:1 B:s C { D:true E [ 2 3   |{ A:1 B:s C { D:true E [ 2 3 ]
+                +-----------------------------  +-------------------------------
+                |{ : { : [                      |{ : { :
 
-                   |{ A:1 B:s C { D:true E:[ 2 3 ] }   |{ A:1 B:s C:{ D:true E:[ 2 3 ] } }
-                   +---------------------------------  +-----------------------------------
-                   |{ :                                |</pre>
+                |{ A:1 B:s C { D:true E:[ 2 3 ] }   |{ A:1 B:s C:{ D:true E:[ 2 3 ] } }
+                +---------------------------------  +-----------------------------------
+                |{ :                                |</pre>
   <figcaption id="figure-13-caption">Figure 13: Parsing a JSON expression example containing objects, a number, a string, a pre-defined constant (<code>true</code>) and an array.</figcaption>
   </figure>
 
@@ -998,11 +998,11 @@ TOP(struct memory_stack *stack, uintptr bytes)
 
   <div class="code" id="code-20"><pre><code
 >static void
-reduce_array(struct memory_stack *data_storage, struct memory_stack *queue, struct token *self_token)
+reduce_array(struct memory_stack *data_storage, struct memory_stack *queue, struct token *t)
 {
     void **index = PUSH(data_storage, 0);
     void **index_writer;
-    struct token *delimiter = self_token->data; <span class="comment">// start from the left</span>
+    struct token *delimiter = t->data; <span class="comment">// start from the left</span>
     struct token *member_token = delimiter + 1;
     uint32 type = member_token->type;
     struct token *end = PUSH(queue, 0);
@@ -1028,8 +1028,8 @@ reduce_array(struct memory_stack *data_storage, struct memory_stack *queue, stru
 
   <div class="code" id="code-21"><pre><code
 >static void
-reduce_definition(struct memory_stack *data_storage, struct memory_stack *queue, struct token *self_token)
-{<span class="comment">// "name":value; leave key and value tokens in the output queue to let reduce_object consume them</span>
+reduce_definition(struct memory_stack *, struct memory_stack *queue, struct token *)
+{<span class="comment">// leave key and value tokens for reduce_object</span>
     struct token *value = TOP(queue, sizeof(struct token));
     struct token *key = value - 1;
     assert(key->type == JSON_STRING); <span class="comment">// all key elements are strings</span>
@@ -1039,10 +1039,10 @@ reduce_definition(struct memory_stack *data_storage, struct memory_stack *queue,
 
   <div class="code" id="code-22"><pre><code
 >static void
-reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, struct token *self_token)
+reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, struct token *t)
 {   json_key_value *index = PUSH(data_storage, 0);
     json_key_value *index_writer;
-    struct token *delimiter = self_token->data; // start from the left
+    struct token *delimiter = t->data; // start from the left
     struct token *member_token = delimiter + 1;
     struct token *end = PUSH(queue, 0);
     
@@ -1137,33 +1137,29 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
 
   <figure aria-labelledby="figure-18-caption" id="figure-18">
     <pre role="img"
->            │
-Expression: │           A                  AB                          ABC
-            │
-            │                                                             
-            │       A                    A    B                    A    B    C
-            │   ─>o───> success      ─>o───>o───> success      ─>o───>o───>o───> success          (1)
-   Machine: │     │!A                  │!A  │!B                  │!A  │!B  │!C
-            │     └───> failure        └────┴───> failure        └────┴────┴───> failure
-            │                                                    
-            │
-Expression: │           ABC                                  ABC|DEF
-            │
-            │       A    B    C                    A    B    C
-            │   ─>o───>o───>o───> success      ─>o───>o───>o──────────────────┬─> success         (2)
-   Machine: │     │!A  │!B  │!C                  │!A  │!B  │!C    D    E    F │
-            │     └────┴────┴───> failure        └────┴────┴───>o───>o───>o───┘
-            │                                                   │!D  │!E  │!F
-            │                                                   └────┴────┴─────> failure
-            │
-            │
-Expression: │          A|B                      A|B*                      (A|B*C)*
-            │
-            │        A                        A                         A
-            │    ─>o────┬───> success      ─>o────┬──> success      ─>o─────────┬──┬─> success    (3)
-   Machine: │      │!A  │B                   │!A  │!B                 │!A   !B  │C │
-            │      └───>o───> failure        └──┬>o                   └──┬>o───>o──┘
-            │            !B                     └─┘B                     └─┘B    !C</pre>
+>                A                    AB                          ABC
+
+              A                    A    B                    A    B    C
+  (1)     ─>o───> success      ─>o───>o───> success      ─>o───>o───>o───> success
+            │!A                  │!A  │!B                  │!A  │!B  │!C
+            └───> failure        └────┴───> failure        └────┴────┴───> failure
+
+                ABC                                  ABC|DEF
+             
+              A    B    C                    A    B    C
+  (2)     ─>o───>o───>o───> success      ─>o───>o───>o──────────────────┬─> success
+            │!A  │!B  │!C                  │!A  │!B  │!C    D    E    F │
+            └────┴────┴───> failure        └────┴────┴───>o───>o───>o───┘
+                                                                │!D  │!E  │!F
+                                                                └────┴────┴─────> failure
+
+               A|B                      A|B*                      (A|B*C)*
+
+                     A                        A                         A
+  (3)     ─>o────┬───> success      ─>o────┬──> success      ─>o─────────┬──┬─> success
+            │!A  │B                   │!A  │!B                 │!A   !B  │C │
+            └───>o───> failure        └──┬>o                   └──┬>o───>o──┘
+                  !B                     └─┘B                     └─┘B    !C</pre>
   <figcaption id="figure-18-caption">Figure 18: Examples of building state machines by applying operators that create new connections to encode the expression. (1) applies sequence. (2) applies alternation. (3) applies zero-or-more.</figcaption>
   </figure>
 
@@ -1216,7 +1212,6 @@ match(const char *input, struct state *states, uint32 *_current, uint32 end)
 {   const char *it = input;
     uint32 current = *_current;
     struct state *state;
-
     int is_match;
     do
     {   state = &amp;states[current];
@@ -1226,7 +1221,8 @@ match(const char *input, struct state *states, uint32 *_current, uint32 end)
         else
         {   state->cache = it; <span class="comment">// store current input location</span>
             is_match = state->value == *it;
-            if ((is_match &amp;&amp; state->match_is_success) || (!is_match &amp;&amp; !state->match_is_success))
+            if ((is_match &amp;&amp; state->match_is_success)
+                 || (!is_match &amp;&amp; !state->match_is_success))
             {   it += 1;
                 current = state->next_on_success;
             }
@@ -1236,7 +1232,6 @@ match(const char *input, struct state *states, uint32 *_current, uint32 end)
             }
         }
     } while (current &lt; end); <span class="comment">// while not at failure or success</span>
-
     return it;
 }</code></pre>
   </div>
@@ -1263,13 +1258,13 @@ match_with_counter(const char *it, struct state *states, uint32 *_current)
     while (count_lower)
     {   it_before = it;
         it = match(it, states, &amp;current, loop_success_index); <span class="comment">// recursive call</span>
-        matched_length = PTR_DIST(it_before, it);
+        matched_length = POINTER_DISTANCE(it_before, it);
         if (matched_length)
         {   count_lower -= 1;
         }
         else
         {   *_current = loop->next_on_failure;
-            states[loop->reset].cache = cache; <span class="comment">// loop start should reset to before loop later</span>
+            states[loop->reset].cache = cache; <span class="comment">// before all loops</span>
             return cache; <span class="comment">// reset to before matching</span>
         }
     }
@@ -1287,18 +1282,18 @@ match_with_counter(const char *it, struct state *states, uint32 *_current)
     while (count_upper) <span class="comment">// don't match more than upper bound</span>
     {   it_before = it;
         it = match(it, states, &amp;current, loop_success_index);
-        matched_length = PTR_DIST(it_before, it);
+        matched_length = POINTER_DISTANCE(it_before, it);
         if (matched_length)
         {   count_upper -= 1;
         }
         else
         {   *_current = loop->next_on_success;
-            states[loop->reset].cache = cache; <span class="comment">// loop start should reset to before loop later</span>
+            states[loop->reset].cache = cache; <span class="comment">// before all loops</span>
             return it;
         }
     }
     *_current = loop->next_on_failure;
-    states[loop->reset].cache = cache; <span class="comment">// loop start should reset to before loop later</span>
+    states[loop->reset].cache = cache; <span class="comment">// before all loops</span>
     return cache; <span class="comment">// reset to before matching</span>
 }</code></pre>
   </div>
@@ -1336,11 +1331,12 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
 {   struct memory_stack *state_machine = ...
     init_memory_stack(state_machine, state_machine, stack_size);
 
-    uint8 mem[OPERATOR_STACK_SIZE]; <span class="comment">// store operator stack in call stack (for nested parentheses)</span>
+    uint8 mem[OPERATOR_STACK_SIZE]; <span class="comment">// operator stack (for nested parentheses)</span>
     struct memory_stack *op_stack = (struct memory_stack *)mem;
     init_memory_stack(op_stack, op_stack, OPERATOR_STACK_SIZE);
 
-    struct token *o_sentinel = PUSH_ALIGNED(op_stack, sizeof(struct token), ALIGN_OF(struct token));
+    struct token *o_sentinel =
+        PUSH_ALIGNED(op_stack, sizeof(struct token), ALIGN_OF(struct token));
     o_sentinel->type = DELIM_TOKEN;
     o_sentinel->data = PUSH(state_machine, 0); <span class="comment">// pointer to first state (index 2)</span>
 
@@ -1367,20 +1363,20 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
             case '\t':
             case '\n':
             case '\r':
-            {   // skip whitespace
+            {   <span class="comment">// skip whitespace</span>
             } break;
 
             case '(':
-            {   struct token *operator = push(); // add token to operator stack
+            {   struct token *operator = push(); <span class="comment">// add token to operator stack</span>
                 operator->type = DELIM_TOKEN;
                 operator->data = PUSH(state_machine, 0);
             } break;
 
             case ')':
             {   struct token *op = top();
-                pop(); // remove ( in operator stack
+                pop(); <span class="comment">// remove ( in operator stack</span>
                 prev.type = GROUP_TOKEN;
-                prev.data = op->data; // pointer to beginning of group
+                prev.data = op->data; <span class="comment">// pointer to beginning of group</span>
             } break;
 
             case '*':
@@ -1391,7 +1387,7 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
 
             case '|':
             {   struct token *t = top();
-                while (t->type != DELIM_TOKEN) // scan left for ( to get leftmost state operand
+                while (t->type != DELIM_TOKEN) <span class="comment">// scan left for (</span>
                 {   t -= 1;
                 }
                 struct state *left = t->data;
@@ -1399,7 +1395,7 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
                 prev.type = ALTERNATION_TOKEN;
             } break;
 
-            case '+': // create a repeat state
+            case '+': <span class="comment">// create a repeat state</span>
             {   struct state *left = prev.data;
                 struct state *loop_success = PUSH(state_machine, sizeof(struct state));
                 apply_repeat(state_machine, left, loop_success);
@@ -1409,9 +1405,9 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
                 prev.type = REPEAT_TOKEN;
             } break;
 
-            case '{': // {n,m} or {n,} or {n}
+            case '{': <span class="comment">// {n,m} or {n,} or {n}</span>
             {
-                // parse n and m...
+                <span class="comment">// parse n and m...</span>
 
                 struct state *left = prev.data;
                 struct state *loop_success = PUSH(state_machine, sizeof(struct state));
@@ -1450,7 +1446,7 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
                 prev.data = s;
             } break;
 
-            default: // sequence
+            default: <span class="comment">// sequence</span>
             {   struct state *s = PUSH(state_machine, sizeof(struct state));
                 if (prev.type != ALTERNATION_TOKEN)
                 {   apply_sequence(state_machine, prev.data, s);
@@ -1467,8 +1463,8 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
         ch = *(++input);
     }
 
-    *size_out = (uint32)state_machine->used; // size of states and memory_stack
-    // free unused memory...
+    *size_out = (uint32)state_machine->used; <span class="comment">// size of states and memory_stack</span>
+    <span class="comment">// free unused memory...</span>
     return BOTTOM(state_machine);
 }</code></pre>
   </div>
@@ -1482,7 +1478,7 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
 apply_sequence(struct memory_stack *state_machine, struct state *left, struct state *end)
 {   uint16 next_index = (uint16)ARRAY_COUNT(BOTTOM(state_machine), end, struct state);
     while (left != end)
-    {   // update state connections to go to new state instead of success
+    {   <span class="comment">// update state connections to go to new state instead of success</span>
         if (left->next_on_success == SUCCESS_STATE)
         {   left->next_on_success = next_index;
         }
@@ -1502,7 +1498,7 @@ apply_alternation(struct memory_stack *state_machine, struct state *left, struct
 {   uint16 branch_index = (uint16)ARRAY_COUNT(BOTTOM(state_machine), end, struct state);
     uint16 reset = index_of(left);
     while (left != end)
-    {   // update state connections to go to branch on failure
+    {   <span class="comment">// update state connections to go to branch on failure</span>
         if (left->next_on_failure == FAILURE_STATE)
         {   left->next_on_failure = branch_index;
         }
@@ -1529,7 +1525,7 @@ apply_zero_or_more(struct memory_stack *state_machine, struct state *left, struc
 {   uint16 index_start = (uint16)ARRAY_COUNT(BOTTOM(state_machine), left, struct state);
     uint16 reset = index_of(left);
     while (left != end)
-    {   if (left->next_on_success == SUCCESS_STATE) // change success to loop back to start of sequence
+    {   if (left->next_on_success == SUCCESS_STATE) <span class="comment">// success loops sequence</span>
         {   left->next_on_success = index_start;
         }
         else if (left->next_on_success == FAILURE_STATE)
@@ -1538,11 +1534,11 @@ apply_zero_or_more(struct memory_stack *state_machine, struct state *left, struc
         if (left->next_on_failure == SUCCESS_STATE)
         {   left->next_on_failure = index_start;
         }
-        else if (left->next_on_failure == FAILURE_STATE) // change failures to success
+        else if (left->next_on_failure == FAILURE_STATE) <span class="comment">// change failures to success</span>
         {   left->next_on_failure = SUCCESS_STATE;
         }
-        if (left->reset == 0) // if unmodified revert state
-        {   left->reset = reset; // how many steps back to the revert state
+        if (left->reset == 0) <span class="comment">// if unmodified revert state</span>
+        {   left->reset = reset; <span class="comment">// how many steps back to the revert state</span>
         }
         left += 1;
     }
@@ -1553,24 +1549,22 @@ apply_zero_or_more(struct memory_stack *state_machine, struct state *left, struc
 
   <div class="code" id="code-34"><pre><code
 >static void
-apply_repeat(struct memory_stack *state_machine, struct state *left, struct state *loop_success)
+apply_repeat(struct memory_stack *state_machine, struct state *left,
+             struct state *loop_success)
 {   struct state *loop_failure = PUSH(state_machine, sizeof(struct state));
     uint16 loop_success_index = index_of(loop_success);
     uint16 loop_failure_index = index_of(loop_failure);
     uint16 reset = index_of(left);
-    
     loop_success->value = REPEAT_STATE;
     loop_success->next_on_failure = FAILURE_STATE;
     loop_success->next_on_success = SUCCESS_STATE;
     loop_success->reset = reset;
-
     loop_failure->next_on_failure = FAILURE_STATE;
-    loop_failure->next_on_success = loop_failure_index; // never matches
-    loop_failure->reset = loop_failure_index; // resets to self
-    loop_failure->value = META_STATE; // matches nothing
+    loop_failure->next_on_success = loop_failure_index; <span class="comment">// never matches</span>
+    loop_failure->reset = loop_failure_index; <span class="comment">// resets to self</span>
+    loop_failure->value = META_STATE; <span class="comment">// matches nothing</span>
     loop_failure->match_is_success = 1;
-
-    while (left != loop_success) // apply sequence and apply repeat
+    while (left != loop_success) <span class="comment">// apply sequence and apply repeat</span>
     {   if (left->next_on_success == SUCCESS_STATE)
         {   left->next_on_success = loop_success_index;
         }
@@ -1583,8 +1577,8 @@ apply_repeat(struct memory_stack *state_machine, struct state *left, struct stat
         else if (left->next_on_failure == FAILURE_STATE)
         {   left->next_on_failure = loop_failure_index;
         }
-        if (left->reset == 0) // if unmodified revert state
-        {   left->reset = reset; // how many steps back to the revert state
+        if (left->reset == 0) <span class="comment">// if unmodified revert state</span>
+        {   left->reset = reset; <span class="comment">// how many steps back to the revert state</span>
         }
         left += 1;
     }
@@ -1651,7 +1645,7 @@ struct token
     <label aria-label="button for the side panel's outline-tab" for="tab-0">outline</label>
     <div id="outline-tab">
       <div id="outline">
-        <a href="#title">Parser programming</a>
+        <a href="#title">Programming parsers</a>
         <ul>
           <li><a href="#1-1">Parsing prefix, infix, and postfix</a>
             <ul>
