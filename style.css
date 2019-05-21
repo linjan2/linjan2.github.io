@@ -418,22 +418,15 @@ label
 
 .reference
 { position:relative;
-  padding: 12pt 0 6pt 0;
+  padding: 16pt 6pt 16pt 6pt;
   line-height: 1.5;
   font-size:11pt;
 }
-.reference>div
-{ padding:0 6pt 0 6pt;
+.reference>div:first-child
+{ padding:6pt 6pt 6pt 6pt;
+  color:#666;
 }
-.reference>ul>li
-{ margin:6pt 0 3pt 0;
-}
-
-.reference>div>span
-{ padding:6pt 0 6pt 0;
-  display:block;
-}
-.reference span.four
+.reference>div>div>div:first-child
 { color:#666;
 }
 
@@ -495,125 +488,4 @@ a:active
 
 figure>pre>span
 { color:#E46732;
-}
-
-table
-{ table-layout:fixed;
-  position:relative;
-  border-collapse:separate;
-  margin:16pt auto 16pt auto;
-}
-table>caption
-{ position:absolute;
-  top:-6pt;left:0;
-  width:100%;
-  font-family:sans-serif;
-  font-size:10pt;
-  font-weight:bold;
-}
-
-td,th
-{ vertical-align:middle;
-  text-align:center;
-  font-family:"Liberation Mono", Consolas, monospace;
-  font-size:10pt;
-  /*height:30pt;*/
-  width:30pt;
-  white-space:pre;
-}
-
-th>label
-{ display:block;
-  position:relative;
-  z-index:3;
-  min-height:30pt;
-  color:#999;
-  padding:10pt 2pt;
-  text-align:center;
-}
-td.empty
-{ background-color:#eee;
-}
-
-th.tl>label
-{ display:block;
-  position:absolute;
-  z-index:2;
-}
-th.tl>label:first-of-type
-{ left:30pt;right:0;top:0;
-  height:30pt;
-}
-th.tl>label:last-of-type
-{ left:0;top:30pt;bottom:0;
-  width:30pt;
-}
-
-tr:nth-of-type(2)>td
-{ border-top:1pt solid #666;
-}
-tr>td:first-of-type
-{ border-left:1pt solid #666;
-}
-tr:nth-of-type(2)>td:first-of-type
-{ border-top-left-radius:2pt;
-}
-
-.table>input.tc:nth-of-type(1):checked~table td:nth-of-type(1),
-.table>input.tc:nth-of-type(2):checked~table td:nth-of-type(2),
-.table>input.tc:nth-of-type(3):checked~table td:nth-of-type(3),
-.table>input.tc:nth-of-type(4):checked~table td:nth-of-type(4),
-.table>input.tc:nth-of-type(5):checked~table td:nth-of-type(5),
-.table>input.tc:nth-of-type(6):checked~table td:nth-of-type(6),
-.table>input.tc:nth-of-type(7):checked~table td:nth-of-type(7),
-.table>input.tc:nth-of-type(8):checked~table td:nth-of-type(8),
-.table>input.tc:nth-of-type(9):checked~table td:nth-of-type(9),
-.table>input.tc:nth-of-type(10):checked~table td:nth-of-type(10),
-.table>input.tc:nth-of-type(11):checked~table td:nth-of-type(11),
-.table>input.tc:nth-of-type(12):checked~table td:nth-of-type(12),
-.table>input.tc:nth-of-type(13):checked~table td:nth-of-type(13),
-.table>input.tc:nth-of-type(14):checked~table td:nth-of-type(14),
-.table>input.tc:nth-of-type(15):checked~table td:nth-of-type(15),
-.table>input.tc:nth-of-type(16):checked~table td:nth-of-type(16)
-{ border-left:1pt solid #666;
-  border-right:1pt solid #666;
-}
-.table>input.tr:nth-last-of-type(1):checked~table tr:nth-of-type(2)>td,
-.table>input.tr:nth-last-of-type(2):checked~table tr:nth-of-type(3)>td,
-.table>input.tr:nth-last-of-type(3):checked~table tr:nth-of-type(4)>td,
-.table>input.tr:nth-last-of-type(4):checked~table tr:nth-of-type(5)>td,
-.table>input.tr:nth-last-of-type(5):checked~table tr:nth-of-type(6)>td,
-.table>input.tr:nth-last-of-type(6):checked~table tr:nth-of-type(7)>td,
-.table>input.tr:nth-last-of-type(7):checked~table tr:nth-of-type(8)>td,
-.table>input.tr:nth-last-of-type(8):checked~table tr:nth-of-type(9)>td
-{ border-top:1pt solid #666;
-  border-bottom:1pt solid #666;
-}
-.table>input.tc:nth-of-type(1):checked~table tr:first-of-type>th:nth-of-type(2)>label,
-.table>input.tc:nth-of-type(2):checked~table tr:first-of-type>th:nth-of-type(3)>label,
-.table>input.tc:nth-of-type(3):checked~table tr:first-of-type>th:nth-of-type(4)>label,
-.table>input.tc:nth-of-type(4):checked~table tr:first-of-type>th:nth-of-type(5)>label,
-.table>input.tc:nth-of-type(5):checked~table tr:first-of-type>th:nth-of-type(6)>label,
-.table>input.tc:nth-of-type(6):checked~table tr:first-of-type>th:nth-of-type(7)>label,
-.table>input.tc:nth-of-type(7):checked~table tr:first-of-type>th:nth-of-type(8)>label,
-.table>input.tc:nth-of-type(8):checked~table tr:first-of-type>th:nth-of-type(9)>label,
-.table>input.tc:nth-of-type(9):checked~table tr:first-of-type>th:nth-of-type(10)>label,
-.table>input.tc:nth-of-type(10):checked~table tr:first-of-type>th:nth-of-type(11)>label,
-.table>input.tc:nth-of-type(11):checked~table tr:first-of-type>th:nth-of-type(12)>label,
-.table>input.tc:nth-of-type(12):checked~table tr:first-of-type>th:nth-of-type(13)>label,
-.table>input.tc:nth-of-type(13):checked~table tr:first-of-type>th:nth-of-type(14)>label,
-.table>input.tc:nth-of-type(14):checked~table tr:first-of-type>th:nth-of-type(15)>label,
-.table>input.tc:nth-of-type(15):checked~table tr:first-of-type>th:nth-of-type(16)>label,
-.table>input.tc:nth-of-type(16):checked~table tr:first-of-type>th:nth-of-type(17)>label,
-.table>input.tr:nth-last-of-type(1):checked~table tr:nth-of-type(2)>th>label,
-.table>input.tr:nth-last-of-type(2):checked~table tr:nth-of-type(3)>th>label,
-.table>input.tr:nth-last-of-type(3):checked~table tr:nth-of-type(4)>th>label,
-.table>input.tr:nth-last-of-type(4):checked~table tr:nth-of-type(5)>th>label,
-.table>input.tr:nth-last-of-type(5):checked~table tr:nth-of-type(6)>th>label,
-.table>input.tr:nth-last-of-type(6):checked~table tr:nth-of-type(7)>th>label,
-.table>input.tr:nth-last-of-type(7):checked~table tr:nth-of-type(8)>th>label,
-.table>input.tr:nth-last-of-type(8):checked~table tr:nth-of-type(9)>th>label
-{ z-index:1;
-  color:#000;
-  font-weight:bold;
 }
