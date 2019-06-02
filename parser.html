@@ -1619,13 +1619,18 @@ struct token
 
 <div class="page-odd" data-page-number="23">
 
-  <h3 id="1-2-4"><a href="#1-2-4"></a>Lexeme lookup using a lookup table</h3>
+  <h3 id="1-2-4"><a href="#1-2-4"></a>Notes on token matching optimization</h3>
 
-  <p>Having a big <code>switch-case</code>-block for recognizing tokens can be a bottleneck for the parser's data throughput. When you know every symbol identifier in the syntax lexeme set, you can generate a lookup table and trade the costs of conditionals' branch-mispredictions for the cost of memory space and a key-lookup computation.</p>
+  <p>Having comparison-based jumps for token matching can be a CPU throughput bottleneck for the parser because of branch mispredictions. A <code>switch-case</code>-block for recognizing constant-value tokens can actually be automatically compiled into a jump table, but a sequence of <code>if-else</code>-blocks is probably not.</p>
 
-  <p>The lookup function's time complexity is constant, and with a small lexeme set the lookup table will hopefully avoid CPU cache-misses. If lexeme parsing isn't a tight loop however, the lexeme table is more likely to be ejected from close cache memory. This implies that token generation before parsing may be necessary for any performance improvement by using a lexeme lookup table.</p>
+  <p>To use a jump table, the token identifiers can be hashed into table indexes that are matched in a <code>switch-case</code>-block (i.e. conceptually mapped to jump locations).</p>
 
-  <p>The symbol identifiers are already encoded into unique keys since they're all 8-bit ASCII codes. If you're using symbol identifiers encoded as Unicode codepoints, the keys are decoded from UTF-8 or UTF-16 to 32 bits instead.</p>
+  <p>The table may change and grow dynamically if the expression language allows for new token identifiers to be defined. Since these identifiers are character strings, the application requires a good string-hashing function.</p>
+
+  <p>The goal is to trade the costs of conditionals' branch-mispredictions for the cost of memory space and a lookup computation. The additional complexity is equivalent to the addition of a hash table utility.</p>
+
+  <p>The lookup function's time complexity is constant, and with good table data locality the number of cache-misses are hopefully fewer than without the table. </p>
+
 </div>
 
 </div><!--[ PAGES END ]-->
@@ -1659,7 +1664,7 @@ struct token
                 <li><a href="#1-2-1">Building a calculator</a></li>
                 <li><a href="#1-2-2">Building a JSON-parser</a></li>
                 <li><a href="#1-2-3">Building a regular expression machine</a></li>
-                <li><a href="#1-2-4">Lexeme lookup using a lookup table</a></li>
+                <li><a href="#1-2-4">Notes on token matching optimization</a></li>
               </ul>
           </li>
         </ul>
