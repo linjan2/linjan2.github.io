@@ -15,7 +15,7 @@
 <!--[ PAGES BEGIN ]-->
 <div id="pages" class="clearfix">
 
-<div class="page-even" data-page-number="❦">
+<div class="page-even" data-page-number="0">
   <h1 id="title"><a href="#title"></a>Programming parsers</h1>
   <p>This text explains expression parsers and how one can be built. We want to interpret mathematical notation like <span class="maths">-0.6+12.5×5.5</span> as well as regular expressions like <code>x.|y+</code>.</p>
 
@@ -24,14 +24,11 @@
   <p>A simple parsing algorithm is the <span class="bold">shunting yard algorithm</span>. An expression consisting of a sequence of symbols is treated as a queue that is iterated over from beginning to end. The output is another queue where the symbols have been reordered into postfix notation. The shunting yard parsing algorithm works like this:</p>
   <div class="code" id="code-1"><pre><code
 >For each input symbol:
-
   If it is a number:
     Copy it to output queue.
-
   Else if it is an operator:
     Move all operators with higher or equal precedence from the top of the 
     operator stack to the output queue. Then copy current operator to operator stack.
-
 Until the operator stack is empty, move every operator from the top of the operator stack
 to the output queue. This ends parsing.</code></pre>
   </div>
@@ -78,18 +75,14 @@ Parse tree graphically:                 Parse tree in computer memory:
 >For each input symbol:
   If it is a number:
     Copy it to output queue.
-
   <span class="bold">Else if it is a left parenthesis:
     Copy it to operator stack and give it a precedence of zero.
-
   Else if it is a right parenthesis:
     Move all operators from the top of the operator stack to the output queue until the
     left parenthesis symbol is encountered. Discard both parentheses.</span>
-
   Else if it is an operator:
     Move all operators with higher or equal precedence from the top of the 
     operator stack to the output queue. Then copy current operator to operator stack.
-
 Until the operator stack is empty, move every operator from the top of the operator stack
 to the output queue. This ends parsing.</code></pre>
   </div>
@@ -141,14 +134,14 @@ Postfix notation parse tree: [1 2 3 4 + + +]   equals   ( 1 ( 2 (3 4 +) +) + )
   <figcaption id="figure-3-caption">Figure 3: (A) shows left associative addition. (B) shows right associative addition.</figcaption>
   </figure>
 
+  <p>The associtivity of an operator may be important. The assignment operator in programming languages is right associative so that expressions like <code>a=b=1</code> assigns 1 to <code>b</code> before assigning the new value of <code>b</code> to <code>a</code>. If it were left associative, then the expression would be interpreted as <code>(a=b)=1</code>; this is an invalid assignment to a temporary in C. In C++ it's valid since <code>a=b</code> reduces to a reference to <code>a</code>, though <code>b</code> remains unchanged.</p>
+
 </div>
 
 <div class="page-even" data-page-number="2">
 
-  <p>The associtivity of an operator may be important. The assignment operator in programming languages is right associative so that expressions like <code>a=b=1</code> assigns 1 to <code>b</code> before assigning the new value of <code>b</code> to <code>a</code>. If it were left associative, then the expression would be interpreted as <code>(a=b)=1</code>; this is an invalid assignment to a temporary in C. In C++, it's valid since <code>a=b</code> reduces to a reference to <code>a</code>, but <code>b</code> remains unchanged.</p>
-
   <h2 id="1-1"><a href="#1-1"></a>Parsing prefix, infix, and postfix</h2>
-  <p>The shunting yard algorithm only works as is on infix operators, so throughout the following sections it will be modified into a a more general <input class="side-note left" type="checkbox" id="sn-1-1"><label for="sn-1-1">shift-reduce parser<span>There is much terminology surrounding parsing techniques. By shift-reduce, I mean we iterate only once over the input text (the shift-step) and use an intermediate stack storage before moving symbols to the output (the reduce-step). Operator precedence is used to determine when to reduce.</span></label>.</p>
+  <p>The shunting yard algorithm only works as is on infix operators, so throughout the following sections it will be modified into a a more general <input class="side-note right" type="checkbox" id="sn-1-1"><label for="sn-1-1">shift-reduce parser<span>There is much terminology surrounding parsing techniques. By shift-reduce, I mean we iterate only once over the input text (the shift-step) and use an intermediate stack storage before moving symbols to the output (the reduce-step). Operator precedence is used to determine when to reduce.</span></label>.</p>
 
   <p><a href="#figure-4">Figure 4</a> parses an expression with three prefixes using the shunting yard algorithm. The result is wrong in postfix notation because <code>x</code> would be an operator acting on a function.</p>
 
@@ -219,21 +212,16 @@ Parse tree graphically:                 Parse tree graphically:
 >For each input symbol:
   If it is a number:
     Copy it to output queue.
-
   Else if it is a left parenthesis:
     Copy it to operator stack and give it a precedence of zero.
-
   Else if it is a right parenthesis
     Move all operators from the top of the operator stack to the output queue until the
     left parenthesis symbol is encountered. Discard both parentheses. 
-
   Else if it is an operator:
     Move all operators with higher <span class="strike">or equal</span> precedence from the top of the operator stack
     to the output queue. Then copy current operator to operator stack.
-
     <span class="bold">If the operator is right associative:
       Increment its precedence by 1</span>.
-
 Until the operator stack is empty, move every operator from the top of the operator stack
 to the output queue. This ends parsing.</code></pre>
   </div>
@@ -355,20 +343,16 @@ Graphical parse tree:      ?
 >For each input symbol:
   If it is a number:
     Copy it to output queue.
-
   Else:
     If it is an operator:
       Move all operators with higher precedence from the top of the operator stack
       to the output queue. Then copy current operator to operator stack.
-
       If the operator is right associative:
         Increment its precedence by 1.
-
     If it expects terminating symbol:
       If is not an operator:
         Copy it to the opeartor stack.
       Give it a precedence of zero.
-
     Else if it is a terminating symbol:
       Move all operators from the top of the operator stack to the output queue until the
       corresponding symbol is encountered.
@@ -376,7 +360,6 @@ Graphical parse tree:      ?
         Discard both symbols.
       Else:
         Discard the terminating symbol.
-
 Until the operator stack is empty, move every operator from the top of the operator stack
 to the output queue. This ends parsing.</code></pre>
   </div>
@@ -385,7 +368,7 @@ to the output queue. This ends parsing.</code></pre>
 
   <p>When an operator is moved from the operator stack to the output queue (i.e. the reduce-step), the <input class="side-note right" type="checkbox" id="sn-1-2"><label for="sn-1-2">"arity"<span>nullary, unary/singulary, binary, ternary/trinary, quaternary, quinary, senary, septanary, octonary, nonary/novenary, denary, undenary, duodenary, ternidenary/tridenary, ...,  n-ary.</span></label> of an operator determines how many operands it consumes. A unary operator consumes one operand, a binary operator consumes two operands, and a ternary operator consumes three operands.</p>
 
-  <p>N-ary operators have a variable number of operands -- including allowing no operands. To determine how many operands to consume in the output stack, an extra delimiter symbol in the operator stack can be used. <a href="#figure-11">Figure 11</a> below parses with delimiters.</p>
+  <p>N-ary operators have a variable number of operands—including allowing no operands. To determine how many operands to consume in the output stack, an extra delimiter symbol in the operator stack can be used. <a href="#figure-11">Figure 11</a> below parses with delimiters.</p>
 
   <figure aria-labelledby="figure-11-caption" id="figure-11">
 <pre role="img">Input queue: 1 + f 2 3 4
@@ -1150,8 +1133,8 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
   (2)     ─>o───>o───>o───> success      ─>o───>o───>o──────────────────┬─> success
             │!A  │!B  │!C                  │!A  │!B  │!C    D    E    F │
             └────┴────┴───> failure        └────┴────┴───>o───>o───>o───┘
-                                                                │!D  │!E  │!F
-                                                                └────┴────┴─────> failure
+                                                               │!D  │!E  │!F
+                                                               └────┴────┴─────> failure
 
                A|B                      A|B*                      (A|B*C)*
 
@@ -1636,9 +1619,7 @@ struct token
 </div><!--[ PAGES END ]-->
 
 
-<div id="footer" class="remove-on-print">
-  2019, Linda Jansson.
-</div>
+<div id="footer" class="remove-on-print"><span>2019, Linda Jansson.</span></div>
 
 
 <!--[ SIDE PANEL ]-->
@@ -1777,8 +1758,6 @@ struct token
       <div class="sixteen"><hr/></div>
       <div class="sixteen">
         <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
-
-        <p>I've studied computer engineering and do a lot of hobby programming in C.</p>
 
         <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
 
