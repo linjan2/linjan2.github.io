@@ -543,6 +543,7 @@ th
 }
 td.l,th.l{text-align:left;}
 td.r,th.r{text-align:right;}
+td.w{white-space: nowrap;}
 tr:nth-of-type(2)>td
 { border-top:1pt solid #666;
 }
