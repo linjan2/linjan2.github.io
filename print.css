@@ -38,6 +38,7 @@ a,a:link,a:visited,a:hover,a:active
 }
 td,th
 { background:none !important;
+  color:#000 !important;
 }
 .side-note>span,.side-note>input~label::after
 { display:none;

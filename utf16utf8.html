@@ -64,11 +64,10 @@ convert_utf16_to_utf8(const uint16_t *utf16, uint32 *size)
 {   char *utf8 = ... <span class="comment"> // allocate data to fit the expected output string</span>
     char *beginning = utf8;
     uint32 codepoint;
-    do
+    for (uint32 i = 0; *utf16 && i < MAX; i += 1)
     {   codepoint = utf16_to_codepoint(&utf16);
         codepoint_to_utf8(&utf8, codepoint);
-        assert((utf8 - beginning) < MAX);
-    } while (*utf16);
+    }
     *utf8++ = 0; <span class="comment">// zero-terminate</span>
     *size = (uint32)(utf8 - beginning); <span class="comment">// counts the terminating zero</span>
     return beginning;
@@ -85,11 +84,10 @@ convert_utf8_to_utf16(const char *utf8, uint32_t *size)
 {   uint16_t *utf16 = ... <span class="comment"> // allocate data to fit the expected output string</span>
     uint16_t *beginning = utf16;
     uint32 codepoint;
-    do
+    for (uint32 i = 0; *utf8 && i < MAX; i += 1)
     {   codepoint = utf8_to_codepoint(&utf8);
         codepoint_to_utf16(&utf16, codepoint);
-        assert((utf16 - beginning) * sizeof(uint16) < MAX);
-    } while (*utf8);
+    }
     *utf16++ = 0; <span class="comment">// zero-terminate</span>
     *size = (uint32)(utf16 - beginning) * sizeof(uint16_t); <span class="comment">// counts the terminating zero</span>
     return beginning;
