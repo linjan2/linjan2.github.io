@@ -205,7 +205,7 @@ dumpbin /imports build\main.exe</code></pre>
     <li>
       Specify an entry point with the linker option <code>/entry:myentry</code> or define the default entry point.
       <ul>
-        <li>The signature is: <code>void __stdcall mymain()</code> and it should call <code>ExitProcess(0)</code> to exit.</li>
+        <li>The signature is: <code>void __stdcall myentry()</code> and it should call <code>ExitProcess(0)</code> to exit.</li>
         <li>The default is either <code>WinMainCRTStartup()</code> or <code>mainCRTStartup()</code>.</li>
       </ul>
     </li>
