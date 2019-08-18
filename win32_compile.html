@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=devide-width, initial-scale=1">
+<title>Win32 C/C++ command-line compilation</title>
+<meta name="description" content="How to compile C code with cl.exe from command-line.">
+<link rel="stylesheet" href="unstyle.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="print.css" media="print">
+</head>
+<body>
+
+<div id="pages" class="clearfix">
+
+<div class="page-even" data-page-number="0">
+
+  <h1 id="title"><a href="#title"></a>Win32 C/C++ command-line compilation</h1>
+
+  <p>This text describes C/C++ code compilation for Windows from the command-line. The Visual Studio IDE should be installed to set up the compiler toolchain; it's also used for debugging the executable.</p>
+
+  <p>After the command-line is set up it's shown how to compile without Microsoft's C run-time library followed by build scripts for .EXE executables, .LIB static libraries, and .DLL dynamic link libraries.</p>
+
+  <h2 id="1-1"><a href="#1-1"></a>Set up commmand-line</h2>
+
+  <p>When installing the Visual Studio IDE the build tools and the run-time components for Visual C++ libraries should be installed. A batch file is used here as the build script that directly uses the cl.exe compiler after environment initialization. The IDE is only used as a debugger.</p>
+
+  <p>The environment initialization script for cl.exe is stored in the Microsoft Visual Studio installation folder. To find the script file search for <code>vcvarsall.bat</code>. The location for the 2015 community version on my computer is:</p>
+
+  <figure aria-labelledby="figure-x1-caption">
+  <pre role="img"
+>C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat</pre>
+  <figcaption class="hidden" id="figure-x1-caption">File system path to vcvarsall.bat.<figcaption>
+  </figure>
+
+  <p>The location for the 2017 enterprise version may be:</p>
+
+  <figure aria-labelledby="figure-x2-caption">
+  <pre role="img"
+>C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat</pre>
+  <figcaption class="hidden" id="figure-x2-caption">File system path to vcvarsall.bat.<figcaption>
+  </figure>
+
+  <p>Invoke the script in the console with <code>x64</code> as argument for 64-bit compilation on the x86-64 architecture. Pass <code>x86</code> for 32-bit. The following script invokes <code>vcvarsall.bat</code>:</p>
+
+  <div class="code"><pre><code
+>@echo off
+call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
+cl.exe</code></pre>
+  </div>
+
+  <p>When building, the output files are created in the <code>build</code> folder. The build script is both located and invoked from the directory containing the <code>src</code> and <code>build</code> folders.</p>
+
+  <p>The script shown below compiles <code>src/main.c</code> into <code>build/main.exe</code> with a few optimizations. The C run-time library is linked as a DLL. Default Win32 libraries like <code>kernel32</code> are automatically linked.</p>
+
+  <div class="code"><pre><code
+>@echo off
+setlocal
+
+set warndisables= /wd4100 /wd4127 /wd4189 /wd4201 /wd4295 /wd4324
+set compiler_flags= /nologo /W4 /WX %warndisables% /O2 /fp:fast /Zi /MD /Femain
+set linker_flags= /opt:ref
+set libraries=
+
+<span class="comment">:: output files to build directory</span>
+del /Q build\*
+pushd build
+set files=..\src\main.c
+cl %compiler_flags% %files% /link %linker_flags% %libraries%
+popd
+
+endlocal</code></pre>
+  </div>
+
+  <p><code>pushd</code> and <code>popd</code> together temporarily change the working directory to the <code>build</code> directory.</p>
+
+</div>
+
+<div class="page-odd" data-page-number="1">
+
+
+  <p><code>/W4</code> enables warning level 4. Level 4 warnings are manually disabled with <code>/wd</code>. <code>/WX</code> treats warnings as errors. Using <code>/Wall</code> would include <code>/W4</code> and more, but it triggers warnings in Windows' own headers.</p>
+
+  <div class="note">
+    <code>/wd4100</code>: unreferenced function parameter.<br>
+    <code>/wd4127</code>: constant <code>if</code> or <code>while</code> condition.<br>
+    <code>/wd4189</code>: unreferenced initialized local variable.<br>
+    <code>/wd4201</code>: nameless struct/union.<br>
+    <code>/wd4295</code>: <code>char</code> array too small for adding <code>'\0'</code>.<br>
+    <code>/wd4324</code>: padding added due to <code>__declspec(align(n))</code>.
+  </div>
+
+  <p><code>/O2</code> enables code optimizations and <code>/fp:fast</code> allows the compiler to re-order, combine, and simplify floating-point operations. <code>/Od</code> will disable optimizations.</p>
+
+  <div class="note">
+    <code>/Od</code> disables optimizations and is the default optimization option.<br>
+    <code>/O1</code> (equivalent to: <code>/Og /Os /Oy /Ob2 /GF /Gy</code>) minimizes size.<br>
+    <code>/O2</code> (<code>equivalent to: /Og /Oi /Ot /Oy /Ob2 /GF /Gy</code>) maximizes speed.
+  </div>
+
+  <p><code>/Zi</code> generates debugging data into a PDB file and writes its location inside the executable.</p>
+
+  <p><code>/MD</code> builds with the import library (MSVCRT.LIB) that links to the C library DLL. <code>/MT</code> would build with the static version of the C run-time library (LIBCMT.LIB).</p>
+
+  <p><code>/Femain</code> names the executable <code>main.exe</code>.</p>
+
+  <p><code>/opt:ref</code> strips out unused code.</p>
+
+  <h3 id="1-1-1"><a href="#1-1-1"></a>Compiling C++</h3>
+
+  <p>To compile a C++ program using the C++ standard library with exception handling, use the option <code>/EHsc</code> to catch ISO-standard C++ exceptions and to call destructors.</p>
+
+  <div class="note">
+    It's also possible to disable exceptions by defining <code>_HAS_EXCEPTIONS</code> as 0 before including <code>windows.h</code> and the C++ standard library headers. The <code>/EH</code> option is not used then. Note that the C++ standard library's uses exceptions for error reporting.
+  </div>
+
+  <p>The build script below compiles a C++ console application. <code>/wd4505</code> disables the warning for unused functions being removed. <code>/GR-</code> disables run-time type information (RTTI).</p>
+
+  <div class="code"><pre><code
+>@echo off
+setlocal
+
+set warndisables= /wd4100 /wd4127 /wd4189 /wd4201 /wd4295 /wd4324 /wd4505
+set compiler_flags= /nologo /W4 /WX %warndisables% /O2 /Zi /MD /EHsc /GR-
+set libraries=
+set linker_flags= /opt:ref /subsystem:console
+
+del /Q build\*
+pushd build
+set files=..\src\main.cpp
+cl %compiler_flags% %files% /link %linker_flags% %libraries%
+popd
+
+endlocal</code></pre>
+  </div>
+
+  <p>The C linkage qualifier <code>extern "C"</code> is added on global function and variable identifiers that shouldn't be type-decorated (name-mangled). Identifiers exported to C programs shouldn't be type-decorated.</p>
+
+  <h3 id="1-1-2"><a href="#1-1-2"></a>Extra compiler options</h3>
+
+  <p>The linker option <code>/subsystem:console</code> means to create a console window for process if the executable isn't started from the command-line; this is the default. <code>/subsystem:windows</code> will not create a console window since the process intends to create windows for its interface.</p>
+
+</div>
+
+<div class="page-even" data-page-number="2">
+
+  <p>Compiler option <code>/I path</code> adds a search path for include files. Linker option <code>/libpath:path</code> adds search path for library files. Both can be specified multiple times for multiple paths.</p>
+
+  <p>Compiler option <code>/D name</code> defines a preprocessor constant. <code>/D name=</code> defines it without a value.</p>
+
+  <p>Compiler option <code>/TC</code> specifies that all source files are in C. <code>/TP</code> specifies that they are in C++.</p>
+
+  <h3 id="1-1-3"><a href="#1-1-3"></a>Visual Studio debugging</h3>
+
+  <p>After building the executable, use the <code>devenv</code> command to run the program within Visual Studio. Press F11 to step into the code.</p>
+
+  <div class="code"><pre><code
+>devenv build\main.exe</code></pre>
+  </div>
+
+  <p>This creates a solution file. Arguments and working directory can be set in the solution's properties.</p>
+
+  <p>Change Visual Studio settings to open last solution in tools&gt;options&gt;startup. Running <code>devenv</code> without arguments will then re-open the saved solution file. When closing Visual Studio save the solution file in the project's top directory to later restore the solution's properties, including breakpoints.</p>
+
+  <p>The compiler and linker flags used for a debug build is:</p>
+
+  <div class="code"><pre><code
+>set compiler_flags= /nologo /W4 /WX %warndisables% /Od /fp:fast /Zi /MD /Femain
+set linker_flags= /debug:full /incremental:no /pdbaltpath:main.pdb</code></pre>
+  </div>
+
+  <p>The <code>/debug:full</code> option moves all private symbol information from object files and libraries into a single PDB file. It implies <code>/opt:noref</code> which stops stripping of unreferenced code.</p>
+
+  <p><code>/incremental:no</code> avoids extra padding in object files used for incremental builds. This option was implied when using <code>/opt:ref</code>.</p>
+
+  <p><code>/pdbaltpath:main.pdb</code> writes <code>"main.pdb"</code> inside the binary instead of the PDB's absolute path. The PDB file must then be stored in the same directory as the executable; it's automatically stored there.</p>
+
+  <h3 id="1-1-4"><a href="#1-1-4"></a>Binary utilities</h3>
+
+  <p>Beside the compilation tools, the Visual Studio installation also includes a binary dumper tool called <code>dumpbin</code>. It's brought into the command-line environment by <code>vcvarsall.bat</code>.</p>
+
+  <p>Call <code>dumpbin /exports &lt;BINARY&gt;</code> to display exported symbols. Call <code>dumpbin /imports &lt;BINARY&gt;</code> to display imported symbols.</p>
+
+  <div class="code"><pre><code
+>dumpbin /exports build\main.exe
+dumpbin /imports build\main.exe</code></pre>
+  </div>
+
+  <p>The binary file can be a .EXE executable, a .OBJ object file, a .LIB library, or a .DLL library.</p>
+
+  <p>The program Dependency Walker can also be downloaded at <a href="http://dependencywalker.com/">dependencywalker.com</a> to view a binary's dependencies with a graphical interface. It officially only supports up to Windows 8 though.</p>
+
+</div>
+
+<div class="page-odd" data-page-number="3">
+
+  
+  <h2 id="1-2"><a href="#1-2"></a>Building without C/C++ run-times</h2>
+
+  <p>Compiling executables without the C run-time and C++ standard library requires the following:</p>
+
+  <ul>
+    <li>Add the linker option <code>/nodefaultlib</code>.</li>
+    <li>Explicitly link with Win32 import libraries or load the DLLs at run-time. The kernel32 library exports the Win32 base APIs.</li>
+    <li>
+      Specify an entry point with the linker option <code>/entry:mymain</code> or define the default entry point.
+      <ul>
+        <li>The signature is: <code>void __stdcall mymain()</code> and it should call <code>ExitProcess(0)</code> to exit.</li>
+        <li>The default is either <code>WinMainCRTStartup()</code> or <code>mainCRTStartup()</code>.</li>
+      </ul>
+    </li>
+    <li>
+      <code>Define memset()</code> if the compiler doesn't inline it with an intrinsic version.
+      <ul>
+        <li>a <code>memset()</code> function call is generated for static initialization of arrays and structs.</li>
+        <li>the intrinsic version is requested when passing <code>/O2</code> or <code>/Oi</code> and when not passing <code>/Od</code> to the compiler.</li>
+        <li>the signature is <code>void* memset(void *ptr, int value, size_t num);</code>.</li>
+        <li>prepend the qualifier <code>#pragma function(memset)</code> to the <code>memset()</code> definition to explicitly avoid the intrinsic version.</code></li>
+        <li>similarly, <code>memcpy()</code> might also have to be defined.</li>
+      </ul>
+    </li>
+    <li>Disable buffer overrun security checks with the compiler option <code>/GS-</code> since it otherwise injects C library function calls (like <code>__security_init_cookie()</code>).</li>
+    <li>Remove stack overflow checks (i.e. <input class="side-note right" type="checkbox" id="sn-1-1"><label for="sn-1-1"><code>__chkstk</code>)<span><code>__chkstk()</code> is called when a stack allocation exceeds the page size. One page of memory for the stack is committed at a time by default. <br><br>See the Wayback Machine's archive for Microsoft's description of stack checks at <a href="https://web.archive.org/web/20140805060734/http://support.microsoft.com/kb/100775">web.archive.org/web/20140805060734/http://support.microsoft.com/kb/100775</a>.</label> used for paging stack memory. It's removed by simply increasing the memory threshold with the compiler option <code>/Gs9999999</code>.</li>
+    <li>Set the stack memory allocation to be both reserved and fully committed at process start using the linker option <code>/stack:0x100000,0x100000</code> (1MiB for reserved and committed memory in this case, which is the default stack size).</li>
+    <li>Declare the global variable <code>int _fltused</code> if <code>float</code> types are used.</li>
+    <li>For 64-bit arithmetic in 32-bit programs, define functions for the generated calls that the linker can't find symbols for.</li>
+    <li>Use system functions instead of C/C++ run-time's wrapper functions. E.g. use <code>CreateThread()</code> instead of <code>_beginthreadex()</code>.</li>
+  </ul>
+
+  <p>The required library for a specific Win32 function can be found in the requirements section of its documentation at <a href="https://docs.microsoft.com/en-us/windows/win32/api/">docs.microsoft.com/en-us/windows/win32/api/</a>.</p>
+
+  <p>A build script that avoids linking to the C run-time library is shown below.</p>
+
+  <div class="code"><pre><code
+>@echo off
+setlocal
+
+set warndisables= /wd4100 /wd4127 /wd4189 /wd4201 /wd4295 /wd4324
+set compiler_flags= /nologo /W4 /WX %warndisables% /O2 /fp:fast /Zl /GS- /Gs9999999 /Femain
+set linker_flags= /nodefaultlib /opt:ref /stack:0x100000,0x100000 /entry:mymain
+set libraries=kernel32.lib
+
+del /Q build\*
+pushd build
+set files=..\src\test\*
+cl %compiler_flags% %files% /link %linker_flags% %libraries%
+popd
+
+endlocal</code></pre>
+  </div>
+
+</div>
+
+<div class="page-even" data-page-number="4">
+
+  <p>Compiler option <code>/Zl</code> omits default library names from object files, which saves a small amount of space since default libraries are ignored, but it won't have an effect on the final executable though.</p>
+
+  <p>A simple <code>main.c</code> file is shown below. It contains the entry point <code>entry()</code> which calls <code>mymain()</code>. <code>ExitProcess()</code> is called to pass a return code and also to (forcibly) terminate all threads.</p>
+
+  <div class="code"><pre><code
+>#include &lt;windows.h&gt;
+
+int _fltused;
+
+static int
+mymain(int argc, char **argv)
+{   return 0;
+}
+
+void __stdcall
+entry()
+{   ExitProcess(mymain(0, NULL));
+}</code></pre>
+  </div>
+  
+
+  <h2 id="1-3"><a href="#1-3"></a>Compiling a static library (LIB)</h2>
+
+  <p>A static library is created in two steps. Compile object files without linking with the <code>/c</code> option and then create the LIB file from the object files with the <code>lib.exe</code> tool.</p>
+
+  <p>Below, a single source file is compiled into an object that is put into <code>mylib.lib</code>. <code>/D STATIC=1</code> can be used to conditionally compile differently.</p>
+
+  <div class="code"><pre><code
+>cl /c %compiler_flags% myfile.c /Fomyobj.obj /D STATIC=1
+lib /nologo /WX /nodefaultlib myobj.obj /out:mylib.lib</code></pre>
+  </div>
+
+  <p>Add the LIB file as a linked library to compile it into the final executable.</p>
+
+  <h2 id="1-4"><a href="#1-4"></a>Compiling a dynamic link library (DLL)</h2>
+
+  <p>A dynamic library is created with the <code>/LD</code> compiler option. Both a <code>.lib</code> import library and a <code>.dll</code> library are generated. The compiler invocation is shown below. <code>/Femylib</code> names the output <code>mylib</code>.</p>
+
+  <div class="code"><pre><code
+>cl /LD %compiler_flags% myfile.c /Femylib /link %linker_flags% %libraries% /D EXPORT</code></pre>
+  </div>
+
+  <p></p>
+
+  <p>Defining <code>EXPORT</code> for the library compilation chooses the <code>__declspec(dllexport)</code> attribute in the header file below. When compiling the <code>.exe</code> file <code>__declspec(dllimport)</code> is choosen instead.</p>
+
+  <div class="code"><pre><code
+><span class="comment">// mylib.h</span>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if defined(EXPORT)
+    #define DECLSPEC __declspec(dllexport)
+#else
+    #define DECLSPEC __declspec(dllimport)
+#endif
+
+DECLSPEC int f(); <span class="comment">// exported library function</span>
+
+#undef DECLSPEC
+
+#ifdef __cplusplus
+}
+#endif</code></pre>
+  </div>
+
+
+</div>
+
+<div class="page-odd" data-page-number="5">
+
+  <p>If the DLL is compiled from C source files, but is linked into C++ code then C linkage must be declared for the imported identifiers. The <code>__cplusplus</code> preprocessor constant is defined by the compiler when compiling C++ and it's used to conditionally add <code>extern "C"</code>.</p>
+
+  <p>Alternatively, the C++ code can surround the header include directive with <code>extern "C"</code>.</p>
+
+  <div class="code"><pre><code
+>extern "C" {
+#include "dll_header.h"
+}</code></pre>
+  </div>
+
+  <p>The executable that uses the DLL either includes the LIB import library at compile-time or uses <code>LoadLibrary()</code> to load the DLL functions at run-time.</p>
+
+  <p>Both the import library and <code>LoadLibrary()</code> will search for the DLL in the executable's directory, the current directory, the system's default library paths, and the locations in the <code>PATH</code> environment variable.</p>
+
+</div>
+
+
+</div><!--[ PAGES END ]-->
+<div id="footer" class="remove-on-print"><span>2019, Linda Jansson.</span></div>
+
+
+<!--[ SIDE PANEL ]-->
+<div id="side-panel" class="remove-on-print">
+  <input type="checkbox" id="switch-1"/>
+
+  <div id="tabs">
+    <input type="radio" id="tab-0" name="tab-control" checked>
+    <label aria-label="button for the side panel's outline-tab" for="tab-0">outline</label>
+    <div id="outline-tab">
+      <div id="outline">
+        <a href="#title">Win32 C/C++ command-line compilation</a>
+        <ul>
+          <li><a href="#1-1">Set up commmand-line</a>
+            <ul>
+              <li><a href="#1-1-1">Compiling C++</a></li>
+              <li><a href="#1-1-2">Extra compiler options</a></li>
+              <li><a href="#1-1-3">Visual Studio debugging</a></li>
+              <li><a href="#1-1-4">Binary utilities</a></li>
+            </ul>
+          </li>
+          <li><a href="#1-2">Building without C/C++ run-times</a></li>
+          <li><a href="#1-3">Compiling a static library (LIB)</a></li>
+          <li><a href="#1-4">Compiling a dynamic link library (DLL)</a></li>
+        </ul>
+      </div>
+    </div>
+    
+    <input type="radio" id="tab-1" name="tab-control">
+    <label aria-label="button for the side panel's external-tab" for="tab-1">external</label>
+    <div class="pack16 collapse">     
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <div class="two">[1]</div>
+          <div class="fourteen">Visual C++ build tools documentation.</div>
+        </div>
+        <div class="sixteen">
+          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
+          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>MSVC 2015/2017/2019</div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve">Compiler command-line syntax:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/compiler-command-line-syntax">docs.microsoft.com/en-us/cpp/build/reference/compiler-command-line-syntax</a></div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve">Compiler options:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category">docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category</a></div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve">C/C++ build errors and warnings:<br><a href="https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/c-cpp-build-errors">docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/c-cpp-build-errors</a></div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve">Linker options:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/linker-options">docs.microsoft.com/en-us/cpp/build/reference/linker-options</a></div></div>
+        </div>
+      </div>
+
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <div class="two">[2]</div>
+          <div class="fourteen">Visual C++ command line guide.</div>
+        </div>
+        <div class="sixteen">
+          <div class="pack16"><div class="four">Title:</div><div class="twelve">Use the Microsoft C++ toolset from the command line</div></div>
+          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
+          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>MSVC 2015/2017/2019</div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line">docs.microsoft.com/en-us/cpp/build/building-on-the-command-line</a></div></div>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <div class="two">[3]</div>
+          <div class="fourteen">Win32 system API documentation.</div>
+        </div>
+        <div class="sixteen">
+          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
+          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>Windows XP to Windows 10</div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve">Win32 API:<br><a href="https://docs.microsoft.com/en-us/windows/win32/api/">docs.microsoft.com/en-us/windows/win32/api/</a></div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve">Console reference:<br><a href="https://docs.microsoft.com/en-us/windows/console/console-reference">docs.microsoft.com/en-us/windows/console/console-reference</a></div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve">Windows data types:<br><a href="https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types">docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types</a></div></div>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <div class="two">[4]</div>
+          <div class="fourteen">Documentation for C/C++ run-time libraries.</div>
+        </div>
+        <div class="sixteen">
+          <div class="pack16"><div class="four">Title:</div><div class="twelve">C Run-Time Library Reference</div></div>
+          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
+          <div class="pack16"><div class="four">Version:</div><div class="twelve">2016-11-04</div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference">docs.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference</a></div></div>
+        </div>
+      </div>
+
+      <div class="sixteen pack16 reference">
+        <div class="sixteen pack16">
+          <div class="two">[5]</div>
+          <div class="fourteen"><code>dumpbin.exe</code> options documentation.</div>
+        </div>
+        <div class="sixteen">
+          <div class="pack16"><div class="four">Title:</div><div class="twelve">DUMPBIN Options</div></div>
+          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
+          <div class="pack16"><div class="four">Version:</div><div class="twelve">2016-11-04</div></div>
+          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/build/reference/dumpbin-options">docs.microsoft.com/en-us/cpp/build/reference/dumpbin-options</a></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <input type="radio" id="tab-2" name="tab-control">
+    <label aria-label="button for the side panel's more-tab" for="tab-2">more</label>
+    <div class="pack16 collapse" id="more-tab">
+      <div role="img" aria-label="shrugging emoticon" class="sixteen" id="shrug">╮( ꒪౪꒪)╭</div>
+    </div>
+
+    <input type="radio" id="tab-4" name="tab-control">
+    <label aria-label="button for the side panel's about-tab" for="tab-4">about</label>
+    <div id="about-tab" class="pack16 collapse">
+      <div class="sixteen"></div>
+      <div class="sixteen">
+        <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
+
+        <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
+
+        <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+      </div>
+      <div class="sixteen"></div>
+    </div>
+
+  </div>
+  <label aria-label="toggle button for side panel" for="switch-1" id="side-panel-icon"></label>
+</div>
+
+</body>
