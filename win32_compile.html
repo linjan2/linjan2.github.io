@@ -203,7 +203,7 @@ dumpbin /imports build\main.exe</code></pre>
     <li>Add the linker option <code>/nodefaultlib</code>.</li>
     <li>Explicitly link with Win32 import libraries or load the DLLs at run-time. The kernel32 library exports the Win32 base APIs.</li>
     <li>
-      Specify an entry point with the linker option <code>/entry:mymain</code> or define the default entry point.
+      Specify an entry point with the linker option <code>/entry:myentry</code> or define the default entry point.
       <ul>
         <li>The signature is: <code>void __stdcall mymain()</code> and it should call <code>ExitProcess(0)</code> to exit.</li>
         <li>The default is either <code>WinMainCRTStartup()</code> or <code>mainCRTStartup()</code>.</li>
@@ -237,7 +237,7 @@ setlocal
 
 set warndisables= /wd4100 /wd4127 /wd4189 /wd4201 /wd4295 /wd4324
 set compiler_flags= /nologo /W4 /WX %warndisables% /O2 /fp:fast /Zl /GS- /Gs9999999 /Femain
-set linker_flags= /nodefaultlib /opt:ref /stack:0x100000,0x100000 /entry:mymain
+set linker_flags= /nodefaultlib /opt:ref /stack:0x100000,0x100000 /entry:myentry
 set libraries=kernel32.lib
 
 del /Q build\*
@@ -255,7 +255,7 @@ endlocal</code></pre>
 
   <p>Compiler option <code>/Zl</code> omits default library names from object files, which saves a small amount of space since default libraries are ignored, but it won't have an effect on the final executable though.</p>
 
-  <p>A simple <code>main.c</code> file is shown below. It contains the entry point <code>entry()</code> which calls <code>mymain()</code>. <code>ExitProcess()</code> is called to pass a return code and also to (forcibly) terminate all threads.</p>
+  <p>A simple <code>main.c</code> file is shown below. It contains the entry point <code>myentry()</code> which calls <code>mymain()</code>. <code>ExitProcess()</code> is called to pass a return code and also to (forcibly) terminate all threads.</p>
 
   <div class="code"><pre><code
 >#include &lt;windows.h&gt;
@@ -268,7 +268,7 @@ mymain(int argc, char **argv)
 }
 
 void __stdcall
-entry()
+myentry()
 {   ExitProcess(mymain(0, NULL));
 }</code></pre>
   </div>
