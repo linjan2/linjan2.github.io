@@ -798,16 +798,17 @@ init_circular_buffer(struct circular_buffer* buf, void *memory, uint32 capacity_
 buf_write(struct circular_buffer *buf, struct buf_message *msg)
 {   int result = 0;
     uint32 hi = buf->hi;
+    uint32 next = (hi+1) & (buf->capacity-1);
     uint32 lo = __atomic_load_n(&buf->lo, __ATOMIC_ACQUIRE);
     <span class="comment">// load lo is before store out->data</span>
-    if (hi+1 != lo)
+    if (next != lo)
     {   struct buf_message *out = buf->data + hi;
         out->data0 = msg->data0;
         out->data1 = msg->data1;
         out->data2 = msg->data2;
         out->data3 = msg->data3;
         <span class="comment">// store out->data is before store buf->hi</span>
-        __atomic_store_n(&buf->hi, (hi+1) & (buf->capacity-1), __ATOMIC_RELEASE);
+        __atomic_store_n(&buf->hi, next, __ATOMIC_RELEASE);
         result = 1; <span class="comment">// success</span>
     }
     return result;
