@@ -20,7 +20,7 @@
 
   <p>The first part of a parser translates a string of characters into pre-defined symbols of specific types. E.g. the character sequence <code>"12+3"</code> can be translated into the symbols <span class="maths">12</span>, <span class="maths">+</span>, and <span class="maths">3</span>; a number, an addition operator, and another number. Together, they are interpreted as <span class="maths">12+3</span>, which is an expression that can be reduced mathematically to <span class="maths">15</span>. This is a translation from an expression given as a character sequence (a string) to an expression given as a symbol sequence—it isn't interpreted yet.</p>
   <p>The second part of a parser interprets a sequence of symbols to build a data structure which encodes the expression's order of evaluation. The rules for how to evaluate expressions is just like how you parse <span class="maths">12+3×4</span> as <span class="maths">12+(3×4)=24</span> and not as <span class="maths">(12+3)×4=60</span>. I.e. multiplication has a higher precedence than addition, so it's evaluated first.</p>
-  <p>A simple parsing algorithm is the <span class="bold">shunting yard algorithm</span>. An expression consisting of a sequence of symbols is treated as a queue that is iterated over from beginning to end. The output is another queue where the symbols have been reordered into postfix notation. The shunting yard parsing algorithm works like this:</p>
+  <p>A simple parsing algorithm is the <span class="em">shunting yard algorithm</span>. An expression consisting of a sequence of symbols is treated as a queue that is iterated over from beginning to end. The output is another queue where the symbols have been reordered into postfix notation. The shunting yard parsing algorithm works like this:</p>
   <div class="code" id="code-1"><pre><code
 >For each input symbol:
   If it is a number:
@@ -74,7 +74,7 @@ Parse tree graphically:                 Parse tree in computer memory:
 >For each input symbol:
   If it is a number:
     Copy it to output queue.
-  <span class="bold">Else if it is a left parenthesis:
+  <span class="em">Else if it is a left parenthesis:
     Copy it to operator stack and give it a precedence of zero.
   Else if it is a right parenthesis:
     Move all operators from the top of the operator stack to the output queue until the
@@ -113,7 +113,7 @@ Parse tree graphically:                 Parse tree in computer memory:
   <figcaption id="figure-2-caption">Figure 2: Example of shunting yard algorithm for mathematical expression with parentheses.</figcaption>
   </figure>
 
-  <p>An operator can be <span class="bold">left associative</span> or <span class="bold">right associative</span>. When greater-than-or-equal (<code>&gt;=</code>) precedence is used to conditionally move operators from the operator stack, then the operator is left associative. If greater-than (<code>&gt;</code>) precedence is used, then the operator would be right associative. <a href="#figure-3">Figure 3</a> demonstrates the difference for the addition operator.</p>
+  <p>An operator can be <span class="em">left associative</span> or <span class="em">right associative</span>. When greater-than-or-equal (<code>&gt;=</code>) precedence is used to conditionally move operators from the operator stack, then the operator is left associative. If greater-than (<code>&gt;</code>) precedence is used, then the operator would be right associative. <a href="#figure-3">Figure 3</a> demonstrates the difference for the addition operator.</p>
 
   <figure aria-labelledby="figure-3-caption" id="figure-3">
 <pre role="img">Input queue: 1+2+3+4
@@ -219,7 +219,7 @@ Parse tree graphically:                 Parse tree graphically:
   Else if it is an operator:
     Move all operators with higher <span class="strike">or equal</span> precedence from the top of the operator stack
     to the output queue. Then copy current operator to operator stack.
-    <span class="bold">If the operator is right associative:
+    <span class="em">If the operator is right associative:
       Increment its precedence by 1</span>.
 Until the operator stack is empty, move every operator from the top of the operator stack
 to the output queue. This ends parsing.</code></pre>
@@ -365,7 +365,7 @@ to the output queue. This ends parsing.</code></pre>
 
   <h3 id="1-1-3"><a href="#1-1-3"></a>Variable number of operands</h3>
 
-  <p>When an operator is moved from the operator stack to the output queue (i.e. the reduce-step), the <input class="side-note right" type="checkbox" id="sn-1-2"><label for="sn-1-2">"arity"<span>nullary, unary/singulary, binary, ternary/trinary, quaternary, quinary, senary, septanary, octonary, nonary/novenary, denary, undenary, duodenary, ternidenary/tridenary, ...,  n-ary.</span></label> of an operator determines how many operands it consumes. A unary operator consumes one operand, a binary operator consumes two operands, and a ternary operator consumes three operands.</p>
+  <p>When an operator is moved from the operator stack to the output queue (i.e. the reduce-step), the <input class="side-note left" type="checkbox" id="sn-1-2"><label for="sn-1-2">"arity"<span>nullary, unary/singulary, binary, ternary/trinary, quaternary, quinary, senary, septanary, octonary, nonary/novenary, denary, undenary, duodenary, ternidenary/tridenary, ...,  n-ary.</span></label> of an operator determines how many operands it consumes. A unary operator consumes one operand, a binary operator consumes two operands, and a ternary operator consumes three operands.</p>
 
   <p>N-ary operators have a variable number of operands—including allowing no operands. To determine how many operands to consume in the output stack, an extra delimiter symbol in the operator stack can be used. <a href="#figure-11">Figure 11</a> below parses with delimiters.</p>
 
@@ -606,7 +606,7 @@ struct token
 <div class="page-odd" data-page-number="9">
   <h3 id="1-2-2"><a href="#1-2-2"></a>Building a JSON-parser</h3>
 
-  <p>A <input class="side-note right" type="checkbox" id="sn-1-3"><label for="sn-1-3">JSON<span>A comprehensive definition of JavaScript Object Notation (JSON) can be found at <a href="https://www.json.org">json.org</a>.</span></label> expression declares a tree structure of elements. Elements can be objects, arrays, strings, numbers, and the constants <code>true</code>, <code>false</code>, and <code>null</code>.</p>
+  <p>A JSON expression declares a tree structure of elements. Elements can be objects, arrays, strings, numbers, and the constants <code>true</code>, <code>false</code>, and <code>null</code>.</p>
 
   <p>The parser will build a separate tree-like data structure as it parses its input. An example of a valid JSON expression and how it's parsed is shown below in <a href="#figure-13">figure 13</a>; the generated tree structure is not shown. Both objects and arrays have a variable number of members, so delimiter symbols are added to the output queue to aid in reducing these.</p>
 
@@ -1056,7 +1056,7 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
 
   <h3 id="1-2-3"><a href="#1-2-3"></a>Building a regular expression machine</h3>
 
-  <p>Regular expression parsing generates a <span class="bold">state machine</span>. The machine encodes a multi-path progression across states when matching input text.</p>
+  <p>Regular expression parsing generates a <span class="em">state machine</span>. The machine encodes a multi-path progression across states when matching input text.</p>
 
   <p>To match text, the machine is started at the designated starting state. The next part of the input is compared to the data within the current state. The path taken is either along the "match-path" or "not-match-path". A successful match is achieved when the path leads to the success state. Failure to match is when the path taken is to the failure state.</p>
 
@@ -1109,11 +1109,10 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
 
   <p>Replication uses more memory and every copied state's paths must be updated. Using a counter complicates the runtime logic since the program must check for a counter condition.</p>
 
-  <p>By using a counter however, all repetition loops can be encoded as a special case of <code>A{n,m}</code>. <code>A{n}</code> equals <code>A{n,n}</code>; <code>A{n,}</code> equals <code>A{n,UINT_MAX}</code>; <code>A+</code> equals <code>A{1,UINT_MAX}</code>.</p>
-  
-
 </div>
 <div class="page-even" data-page-number="16">
+
+  <p>By using a counter however, all repetition loops can be encoded as a special case of <code>A{n,m}</code>. <code>A{n}</code> equals <code>A{n,n}</code>; <code>A{n,}</code> equals <code>A{n,UINT_MAX}</code>; <code>A+</code> equals <code>A{1,UINT_MAX}</code>.</p>
 
   <p>The state machine is built by applying the operations above on it. Examples of building state machines by applying operators are shown below in <a href="#figure-18">figure 18</a>.</p>
 
@@ -1407,7 +1406,7 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
 
   <p>When characters or the any-value (<code>.</code>) are encountered, new states are created as next in sequence. The any-value state will succeed when it doesn't match the input, since it should match everything.</p>
 
-  <p>The parse function ends by calculating the memory used for the state machine and freeing up unused space. It returns a pointer to the first state of the state array.</p>
+  <p>The parse function ends below by calculating the memory used for the state machine and freeing up unused space. It returns a pointer to the first state of the state array.</p>
 
 </div>
 
@@ -1617,155 +1616,101 @@ struct token
 
 </div><!--[ PAGES END ]-->
 
-
 <div id="footer" class="remove-on-print"><span>2019, Linda Jansson.</span></div>
 
-
 <!--[ SIDE PANEL ]-->
+<input type="checkbox" id="side-panel-switch" aria-hidden="true">
 <div id="side-panel" class="remove-on-print">
-  <input type="checkbox" id="switch-1"/>
+  <label id="side-panel-icon" for="side-panel-switch" aria-label="side panel toggle"></label>
+  <div id="tabs" class="pack16">
 
-  <div id="tabs">
-    <input type="radio" id="tab-0" name="tab-control" checked>
-    <label aria-label="button for the side panel's outline-tab" for="tab-0">outline</label>
-    <div id="outline-tab">
-      <div id="outline">
-        <a href="#title">Programming parsers</a>
-        <ul>
-          <li><a href="#1-1">Parsing prefix, infix, and postfix</a>
+    <input type="radio" id="tab-1" name="tab-control" aria-hidden="true" checked>
+    <input type="radio" id="tab-2" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-3" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-4" name="tab-control" aria-hidden="true">
+
+    <label for="tab-1" class="four" aria-label="side panel outline button">outline</label>
+    <label for="tab-2" class="four" aria-label="side panel external button">external</label>
+    <label for="tab-3" class="four" aria-label="side panel more button">more</label>
+    <label for="tab-4" class="four" aria-label="side panel about button">about</label>
+
+    <div class="sixteen" id="outline-tab">
+      <a href="#title">Programming parsers</a>
+      <ul>
+        <li><a href="#1-1">Parsing prefix, infix, and postfix</a>
+          <ul>
+            <li><a href="#1-1-1">Non-unary operators</a></li>
+            <li><a href="#1-1-2">Expression-terminating symbols</a></li>
+            <li><a href="#1-1-3">Variable number of operands</a></li>
+          </ul>
+        </li>
+        <li><a href="#1-2">Translation into code</a>
             <ul>
-              <li><a href="#1-1-1">Non-unary operators</a></li>
-              <li><a href="#1-1-2">Expression-terminating symbols</a></li>
-              <li><a href="#1-1-3">Variable number of operands</a></li>
+              <li><a href="#1-2-1">Building a calculator</a></li>
+              <li><a href="#1-2-2">Building a JSON-parser</a></li>
+              <li><a href="#1-2-3">Building a regular expression machine</a></li>
+              <li><a href="#1-2-4">Notes on token matching optimization</a></li>
             </ul>
-          </li>
-          <li><a href="#1-2">Translation into code</a>
-              <ul>
-                <li><a href="#1-2-1">Building a calculator</a></li>
-                <li><a href="#1-2-2">Building a JSON-parser</a></li>
-                <li><a href="#1-2-3">Building a regular expression machine</a></li>
-                <li><a href="#1-2-4">Notes on token matching optimization</a></li>
-              </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <input type="radio" id="tab-1" name="tab-control">
-    <label aria-label="button for the side panel's external-tab" for="tab-1">external</label>
-    <div class="pack16 collapse">
-      
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[1]</div>
-          <div class="fourteen">A recursive parsing algorithm.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Top Down Operator Precedence</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Douglas Crockford</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2007-02-21</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="http://crockford.com/javascript/tdop/tdop.html">crockford.com/javascript/tdop/tdop.html</a></div></div>
-        
-        </div>
-      </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[2]</div>
-          <div class="fourteen">About syntax and top down operator precedence parsing.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Syntaxation, goto; conference</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Douglas Crockford</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2013-09-30</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://www.youtube.com/watch?v=Nlqv6NtBXcA">YouTube, GOTO Conferences</a></div></div>
-        
-        </div>
-      </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[3]</div>
-          <div class="fourteen">About performance improvements to the expression input scanner.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title: </div><div class="twelve">Some Strategies For Fast Lexical Analysis when Parsing Programming Languages</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Sean Barrett</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2015-05-01</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://nothings.org/computer/lexing.html">nothings.org/computer/lexing.html</a></div></div>
-        
-        </div>
-      </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[4]</div>
-          <div class="fourteen">The source code for Chromium's V8 JavaScript engine parser.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Chromium's V8 JavaScript Engine parser</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve"></div>V8 project contributors</div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">fetched 2019-04-29</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://cs.chromium.org/chromium/src/v8/src/parsing/">cs.chromium.org/chromium/src/v8/src/parsing/</a></div></div>
-        
-        </div>
-      </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[5]</div>
-          <div class="fourteen">About the performance of the V8 engine's scanner.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title: </div><div class="twelve">Blazingly fast parsing, part 1: optimizing the scanner</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve"></div>Toon Verwaest</div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2019-03-25</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://v8.dev/blog/scanner">v8.dev/blog/scanner</a></div></div>
-        
-        </div>
-      </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[6]</div>
-          <div class="fourteen">About the performance of the V8 engine's parser.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title: </div><div class="twelve">Blazingly fast parsing, part 2: lazy parsing</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve"></div>Toon Verwaest, Marja Hölttä</div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2019-04-15</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://v8.dev/blog/preparser">v8.dev/blog/preparser</a></div></div>
-        
-        </div>
-      </div>
-
-    </div>
-    <input type="radio" id="tab-2" name="tab-control">
-    <label aria-label="button for the side panel's more-tab" for="tab-2">more</label>
-    <div class="pack16 collapse" id="more-tab">
-      <div role="img" aria-label="shrugging emoticon" class="sixteen" id="shrug">╮( ꒪౪꒪)╭</div>
+        </li>
+      </ul>
     </div>
 
-    <input type="radio" id="tab-4" name="tab-control">
-    <label aria-label="button for the side panel's about-tab" for="tab-4">about</label>
-    <div id="about-tab" class="pack16 collapse">
-      <div class="sixteen"><hr/></div>
-      <div class="sixteen">
-        <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
-
-        <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
-
-        <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+    <div class="sixteen" id="reference-tab">
+      <div class="reference pack16">
+        <div class="two">[1]</div><div class="fourteen">A recursive parsing algorithm.</div>
+        <div class="four">Title:</div><div class="twelve">Top Down Operator Precedence</div>
+        <div class="four">Author:</div><div class="twelve">Douglas Crockford</div>
+        <div class="four">Version:</div><div class="twelve">2007-02-21</div>
+        <div class="four">Link:</div><div class="twelve"><a href="http://crockford.com/javascript/tdop/tdop.html">crockford.com/javascript/tdop/tdop.html</a></div>
       </div>
-      <div class="sixteen"><hr/></div>
+      <div class="pack16 reference">
+        <div class="two">[2]</div><div class="fourteen">About syntax and top down operator precedence parsing.</div>
+        <div class="four">Title:</div><div class="twelve">Syntaxation, goto; conference</div>
+        <div class="four">Author:</div><div class="twelve">Douglas Crockford</div>
+        <div class="four">Version:</div><div class="twelve">2013-09-30</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://www.youtube.com/watch?v=Nlqv6NtBXcA">YouTube, GOTO Conferences</a></div>
+      </div>
+      <div class="pack16 reference">
+        <div class="two">[3]</div><div class="fourteen">About performance improvements to the expression input scanner.</div>
+        <div class="four">Title:</div><div class="twelve">Some Strategies For Fast Lexical Analysis when Parsing Programming Languages</div>
+        <div class="four">Author:</div><div class="twelve">Sean Barrett</div>
+        <div class="four">Version:</div><div class="twelve">2015-05-01</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://nothings.org/computer/lexing.html">nothings.org/computer/lexing.html</a></div>
+      </div>
+      <div class="pack16 reference">
+        <div class="two">[4]</div><div class="fourteen">The source code for Chromium's V8 JavaScript engine parser.</div>
+        <div class="four">Title:</div><div class="twelve">Chromium's V8 JavaScript Engine parser</div>
+        <div class="four">Author:</div><div class="twelve">V8 project contributors</div>
+        <div class="four">Version:</div><div class="twelve">fetched 2019-04-29</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://cs.chromium.org/chromium/src/v8/src/parsing/">cs.chromium.org/chromium/src/v8/src/parsing/</a></div>
+      </div>
+      <div class="pack16 reference">
+        <div class="two">[5]</div><div class="fourteen">About the performance of the V8 engine's scanner.</div>
+        <div class="four">Title:</div><div class="twelve">Blazingly fast parsing, part 1: optimizing the scanner</div>
+        <div class="four">Author:</div><div class="twelve">Toon Verwaest</div>
+        <div class="four">Version:</div><div class="twelve">2019-03-25</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://v8.dev/blog/scanner">v8.dev/blog/scanner</a></div>
+      </div>
+      <div class="pack16 reference">
+        <div class="two">[6]</div><div class="fourteen">About the performance of the V8 engine's parser.</div>
+        <div class="four">Title:</div><div class="twelve">Blazingly fast parsing, part 2: lazy parsing</div>
+        <div class="four">Author:</div><div class="twelve">Toon Verwaest, Marja Hölttä</div>
+        <div class="four">Version:</div><div class="twelve">2019-04-15</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://v8.dev/blog/preparser">v8.dev/blog/preparser</a></div>
+      </div>
     </div>
+    
+    <div id="more-tab">
+      <span role="img" aria-label="warning icon" class="icon">⚠</span>
+    </div>
+
+    <div id="about-tab">
+      <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
+      <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
+      <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+    </div>
+
   </div>
-  <label aria-label="toggle button for side panel" for="switch-1" id="side-panel-icon"></label>
 </div>
 
 </body>

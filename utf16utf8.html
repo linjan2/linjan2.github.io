@@ -332,7 +332,7 @@ utf8_to_codepoint(const char **chars)
 
   <h2 id="1-3"><a href="#1-3"></a>Character tables</h2>
 
-  <p>The first 128 Unicode codepoints is equal to the 7-bit US-ASCII characters. The set is shown in <a href="#table-1">table 1</a> with some as the C string escape characters.</p>
+  <p>The first 128 Unicode codepoints match the 7-bit ASCII character values. UTF-8 encodes codepoints <code>0x00-0x7F</code> with eight bits and <code>0x80-0xFF</code> with sixteen bits. The extended ASCII encoding latin1 encodes the range <code>0x00-0xFF</code> with eight bits. Latin1 is shown in <a href="#table-1">table 1</a>.</p>
 
   <div class="table">
     <input class="tc" type="checkbox" id="t1cc1" name="t1cc" aria-hidden="true">
@@ -352,6 +352,14 @@ utf8_to_codepoint(const char **chars)
     <input class="tc" type="checkbox" id="t1cc15" name="t1cc" aria-hidden="true">
     <input class="tc" type="checkbox" id="t1cc16" name="t1cc" aria-hidden="true">
 
+    <input class="tr" type="checkbox" id="t1rc16" name="t1rc" aria-hidden="true">
+    <input class="tr" type="checkbox" id="t1rc15" name="t1rc" aria-hidden="true">
+    <input class="tr" type="checkbox" id="t1rc14" name="t1rc" aria-hidden="true">
+    <input class="tr" type="checkbox" id="t1rc13" name="t1rc" aria-hidden="true">
+    <input class="tr" type="checkbox" id="t1rc12" name="t1rc" aria-hidden="true">
+    <input class="tr" type="checkbox" id="t1rc11" name="t1rc" aria-hidden="true">
+    <input class="tr" type="checkbox" id="t1rc10" name="t1rc" aria-hidden="true">
+    <input class="tr" type="checkbox" id="t1rc9" name="t1rc" aria-hidden="true">
     <input class="tr" type="checkbox" id="t1rc8" name="t1rc" aria-hidden="true">
     <input class="tr" type="checkbox" id="t1rc7" name="t1rc" aria-hidden="true">
     <input class="tr" type="checkbox" id="t1rc6" name="t1rc" aria-hidden="true">
@@ -362,7 +370,7 @@ utf8_to_codepoint(const char **chars)
     <input class="tr" type="checkbox" id="t1rc1" name="t1rc" aria-hidden="true">
 
     <table id="table-1" class="c mono click">
-      <caption>Table 1: US-ASCII</caption>
+      <caption>Table 1: Latin1 extended ASCII</caption>
       <tr>
         <th class="tl"></th>
         <th><label aria-label="button" for="t1cc1">0x0</label></th>
@@ -415,12 +423,43 @@ utf8_to_codepoint(const char **chars)
         <th><label aria-label="button" for="t1rc8">0x70</label></th>
         <td>p</td><td>q</td><td>r</td><td>s</td><td>t</td><td>u</td><td>v</td><td>w</td><td>x</td><td>y</td><td>z</td><td>{</td><td>|</td><td>}</td><td>~</td><td>DEL</td>
       </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc9">0x80</label></th>
+        <td>XXX</td><td>XXX</td><td>BPH;</td><td>NBH</td><td>IND</td><td>NEL</td><td>SSA</td><td>ESA</td><td>HTS</td><td>HTJ</td><td>VTS</td><td>PLD</td><td>PLU</td><td>RI</td><td>SS2</td><td>SS3</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc10">0x90</label></th>
+        <td>DOS</td><td>PU1</td><td>PU2</td><td>STS</td><td>CCH</td><td>MW</td><td>SPA</td><td>EPA</td><td>SOS</td><td>XXX</td><td>SCI</td><td>CSI</td><td>ST</td><td>OSC</td><td>PM</td><td>APC</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc11">0xA0</label></th>
+        <td>NBSP</td><td>¡</td><td>¢</td><td>£</td><td>¤</td><td>¥</td><td>¦</td><td>§</td><td>¨</td><td>©</td><td>ª</td><td>«</td><td>¬</td><td>SHY</td><td>®</td><td>¯</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc12">0xB0</label></th>
+        <td>°</td><td>±</td><td>²</td><td>³</td><td>´</td><td>µ</td><td>¶</td><td>·</td><td>¸</td><td>¹</td><td>º</td><td>»</td><td>¼</td><td>½</td><td>¾</td><td>¿</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc13">0xC0</label></th>
+        <td>À</td><td>Á</td><td>Â</td><td>Ã</td><td>Ä</td><td>Å</td><td>Æ</td><td>Ç</td><td>È</td><td>É</td><td>Ê</td><td>Ë</td><td>Ì</td><td>Í</td><td>Í</td><td>Ï</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc14">0xD0</label></th>
+        <td>Ð</td><td>Ñ</td><td>Ò</td><td>Ó</td><td>Ô</td><td>Õ</td><td>Ö</td><td>×</td><td>Ø</td><td>Ù</td><td>Ú</td><td>Û</td><td>Ü</td><td>Ý</td><td>Þ</td><td>ß</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc15">0xE0</label></th>
+        <td>à</td><td>á</td><td>â</td><td>ã</td><td>ä</td><td>å</td><td>æ</td><td>ç</td><td>è</td><td>é</td><td>ê</td><td>ë</td><td>ì</td><td>í</td><td>î</td><td>ï</td>
+      </tr>
+      <tr>
+        <th><label aria-label="button" for="t1rc16">0xF0</label></th>
+        <td>ð</td><td>ñ</td><td>ò</td><td>ó</td><td>ô</td><td>õ</td><td>ö</td><td>÷</td><td>ø</td><td>ù</td><td>ú</td><td>û</td><td>ü</td><td>ý</td><td>þ</td><td>ÿ</td>
+      </tr>
 
     </table>
   </div>
 
-  
-  <p>The next 128 Unicode codepoints are shown in <a href="#table-2">table 2</a>.</p>
+  <p>Windows-1252 characters differ from latin1 in range <code>0x80-0xFF</code>. Characters in range <code>0x80-0xFF</code> of windows-1252 is shown in <a href="#table-2">table 2</a>.</p>
 
   <div class="table">
     <input class="tc" type="checkbox" id="t2cc1" name="t2cc" aria-hidden="true">
@@ -450,7 +489,7 @@ utf8_to_codepoint(const char **chars)
     <input class="tr" type="checkbox" id="t2rc1" name="t2rc" aria-hidden="true">
 
     <table id="table-2" class="c mono click">
-      <caption>Table 2: Latin-1 Supplement (<code>0x80-0xFF</code>)</caption>
+      <caption>Table 2: Windows-1252 extended ASCII in range <code>0x80-0xFF</code></caption>
       <tr>
         <th class="tl"></th>
         <th><label aria-label="button" for="t2cc1">0x0</label></th>
@@ -473,11 +512,11 @@ utf8_to_codepoint(const char **chars)
 
       <tr>
         <th><label aria-label="button" for="t2rc1">0x80</label></th>
-        <td>XXX</td><td>XXX</td><td>BPH;</td><td>NBH</td><td>IND</td><td>NEL</td><td>SSA</td><td>ESA</td><td>HTS</td><td>HTJ</td><td>VTS</td><td>PLD</td><td>PLU</td><td>RI</td><td>SS2</td><td>SS3</td>
+        <td>€</td><td class="empty"></td><td>‚</td><td>ƒ</td><td>„</td><td>…</td><td>†</td><td>‡</td><td>ˆ</td><td>‰</td><td>Š</td><td>‹</td><td>Œ</td><td class="empty"></td><td>Ž</td><td class="empty"></td>
       </tr>
       <tr>
         <th><label aria-label="button" for="t2rc2">0x90</label></th>
-        <td>DOS</td><td>PU1</td><td>PU2</td><td>STS</td><td>CCH</td><td>MW</td><td>SPA</td><td>EPA</td><td>SOS</td><td>XXX</td><td>SCI</td><td>CSI</td><td>ST</td><td>OSC</td><td>PM</td><td>APC</td>
+        <td class="empty"></td><td>‘</td><td>’</td><td>“</td><td>”</td><td>•</td><td>–</td><td>—</td><td>˜</td><td>™</td><td>š</td><td>›</td><td>œ</td><td class="empty"></td><td>ž</td><td>Ÿ</td>
       </tr>
       <tr>
         <th><label aria-label="button" for="t2rc3">0xA0</label></th>
@@ -507,234 +546,91 @@ utf8_to_codepoint(const char **chars)
     </table>
   </div>
 
-  <p>Codepoints <code>0x00-0xFF</code> is a combination of the ISO 8859-1 (a.k.a. latin1) characters and the C0 and C1 control characters (including <code>DEL</code>). UTF-8 and UTF-16 encode codepoints <code>0x80-0xFF</code> with 16 bits.</p>
-
-  <p>Windows-1252 defines the characters that ISO 8859-1 left undefined on <code>0x80-0x9F</code> and keeps the rest. <a href="#table-3">Table 3</a> shows windows-1252 characters on range <code>0x80-0xFF</code>. Empty cells are undefined.
-  </p>
-
-  <div class="table">
-    <input class="tc" type="checkbox" id="t3cc1" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc2" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc3" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc4" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc5" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc6" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc7" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc8" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc9" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc10" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc11" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc12" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc13" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc14" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc15" name="t3cc" aria-hidden="true">
-    <input class="tc" type="checkbox" id="t3cc16" name="t3cc" aria-hidden="true">
-
-    <input class="tr" type="checkbox" id="t3rc8" name="t3rc" aria-hidden="true">
-    <input class="tr" type="checkbox" id="t3rc7" name="t3rc" aria-hidden="true">
-    <input class="tr" type="checkbox" id="t3rc6" name="t3rc" aria-hidden="true">
-    <input class="tr" type="checkbox" id="t3rc5" name="t3rc" aria-hidden="true">
-    <input class="tr" type="checkbox" id="t3rc4" name="t3rc" aria-hidden="true">
-    <input class="tr" type="checkbox" id="t3rc3" name="t3rc" aria-hidden="true">
-    <input class="tr" type="checkbox" id="t3rc2" name="t3rc" aria-hidden="true">
-    <input class="tr" type="checkbox" id="t3rc1" name="t3rc" aria-hidden="true">
-
-    <table id="table-3" class="c mono click">
-      <caption>Table 3: Windows-1252 extension to US-ASCII (<code>0x80-0xFF</code>)</caption>
-      <tr>
-        <th class="tl"></th>
-        <th><label aria-label="button" for="t3cc1">0x0</label></th>
-        <th><label aria-label="button" for="t3cc2">0x1</label></th>
-        <th><label aria-label="button" for="t3cc3">0x2</label></th>
-        <th><label aria-label="button" for="t3cc4">0x3</label></th>
-        <th><label aria-label="button" for="t3cc5">0x4</label></th>
-        <th><label aria-label="button" for="t3cc6">0x5</label></th>
-        <th><label aria-label="button" for="t3cc7">0x6</label></th>
-        <th><label aria-label="button" for="t3cc8">0x7</label></th>
-        <th><label aria-label="button" for="t3cc9">0x8</label></th>
-        <th><label aria-label="button" for="t3cc10">0x9</label></th>
-        <th><label aria-label="button" for="t3cc11">0xA</label></th>
-        <th><label aria-label="button" for="t3cc12">0xB</label></th>
-        <th><label aria-label="button" for="t3cc13">0xC</label></th>
-        <th><label aria-label="button" for="t3cc14">0xD</label></th>
-        <th><label aria-label="button" for="t3cc15">0xE</label></th>
-        <th><label aria-label="button" for="t3cc16">0xF</label></th>
-      </tr>
-
-      <tr>
-        <th><label aria-label="button" for="t3rc1">0x80</label></th>
-        <td>€</td><td class="empty"></td><td>‚</td><td>ƒ</td><td>„</td><td>…</td><td>†</td><td>‡</td><td>ˆ</td><td>‰</td><td>Š</td><td>‹</td><td>Œ</td><td class="empty"></td><td>Ž</td><td class="empty"></td>
-      </tr>
-      <tr>
-        <th><label aria-label="button" for="t3rc2">0x90</label></th>
-        <td class="empty"></td><td>‘</td><td>’</td><td>“</td><td>”</td><td>•</td><td>–</td><td>—</td><td>˜</td><td>™</td><td>š</td><td>›</td><td>œ</td><td class="empty"></td><td>ž</td><td>Ÿ</td>
-      </tr>
-      <tr>
-        <th><label aria-label="button" for="t3rc3">0xA0</label></th>
-        <td>NBSP</td><td>¡</td><td>¢</td><td>£</td><td>¤</td><td>¥</td><td>¦</td><td>§</td><td>¨</td><td>©</td><td>ª</td><td>«</td><td>¬</td><td>SHY</td><td>®</td><td>¯</td>
-      </tr>
-      <tr>
-        <th><label aria-label="button" for="t3rc4">0xB0</label></th>
-        <td>°</td><td>±</td><td>²</td><td>³</td><td>´</td><td>µ</td><td>¶</td><td>·</td><td>¸</td><td>¹</td><td>º</td><td>»</td><td>¼</td><td>½</td><td>¾</td><td>¿</td>
-      </tr>
-      <tr>
-        <th><label aria-label="button" for="t3rc5">0xC0</label></th>
-        <td>À</td><td>Á</td><td>Â</td><td>Ã</td><td>Ä</td><td>Å</td><td>Æ</td><td>Ç</td><td>È</td><td>É</td><td>Ê</td><td>Ë</td><td>Ì</td><td>Í</td><td>Í</td><td>Ï</td>
-      </tr>
-      <tr>
-        <th><label aria-label="button" for="t3rc6">0xD0</label></th>
-        <td>Ð</td><td>Ñ</td><td>Ò</td><td>Ó</td><td>Ô</td><td>Õ</td><td>Ö</td><td>×</td><td>Ø</td><td>Ù</td><td>Ú</td><td>Û</td><td>Ü</td><td>Ý</td><td>Þ</td><td>ß</td>
-      </tr>
-      <tr>
-        <th><label aria-label="button" for="t3rc7">0xE0</label></th>
-        <td>à</td><td>á</td><td>â</td><td>ã</td><td>ä</td><td>å</td><td>æ</td><td>ç</td><td>è</td><td>é</td><td>ê</td><td>ë</td><td>ì</td><td>í</td><td>î</td><td>ï</td>
-      </tr>
-      <tr>
-        <th><label aria-label="button" for="t3rc8">0xF0</label></th>
-        <td>ð</td><td>ñ</td><td>ò</td><td>ó</td><td>ô</td><td>õ</td><td>ö</td><td>÷</td><td>ø</td><td>ù</td><td>ú</td><td>û</td><td>ü</td><td>ý</td><td>þ</td><td>ÿ</td>
-      </tr>
-
-    </table>
-  </div>
-
 </div>
 
 </div><!--[ PAGES END ]-->
 <div id="footer" class="remove-on-print"><span>2019, Linda Jansson.</span></div>
 
 <!--[ SIDE PANEL ]-->
+<input type="checkbox" id="side-panel-switch" aria-hidden="true">
 <div id="side-panel" class="remove-on-print">
-  <input type="checkbox" id="switch-1"/>
+  <label id="side-panel-icon" for="side-panel-switch" aria-label="side panel toggle"></label>
+  <div id="tabs" class="pack16">
 
-  <div id="tabs">
-    <input type="radio" id="tab-0" name="tab-control" checked>
-    <label aria-label="button for the side panel's outline-tab" for="tab-0">outline</label>
-    <div id="outline-tab">
-      <div id="outline">
-        <a href="#title">UTF-16 and UTF-8 in C</a>
-        <ul>
-          <li><a href="#1-1">Unicode and UTF-16 conversion</a></li>
-          <li><a href="#1-2">Unicode and UTF-8 conversion</a></li>
-          <li><a href="#1-3">Character tables</a></li>
-        </ul>
-      </div>
+    <input type="radio" id="tab-1" name="tab-control" aria-hidden="true" checked>
+    <input type="radio" id="tab-2" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-3" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-4" name="tab-control" aria-hidden="true">
+
+    <label for="tab-1" class="four" aria-label="side panel outline button">outline</label>
+    <label for="tab-2" class="four" aria-label="side panel external button">external</label>
+    <label for="tab-3" class="four" aria-label="side panel more button">more</label>
+    <label for="tab-4" class="four" aria-label="side panel about button">about</label>
+
+    <div class="sixteen" id="outline-tab">
+      <a href="#title">UTF-16 and UTF-8 in C</a>
+      <ul>
+        <li><a href="#1-1">Unicode and UTF-16 conversion</a></li>
+        <li><a href="#1-2">Unicode and UTF-8 conversion</a></li>
+        <li><a href="#1-3">Character tables</a></li>
+      </ul>
     </div>
     
-    <input type="radio" id="tab-1" name="tab-control">
-    <label aria-label="button for the side panel's external-tab" for="tab-1">external</label>
-    <div class="pack16 collapse">
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[1]</div>
-          <div class="fourteen">Unicode Implementation Guidelines.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">The Unicode Standard Version 12.0 – Core Specification, Chapter 5: Implementation Guidelines</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">The Unicode Consortium</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Version 12.0, 2019-03-XX</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://www.unicode.org/versions/Unicode12.0.0/ch05.pdf">www.unicode.org/versions/Unicode12.0.0/ch05.pdf</a></div></div>
-        
-        </div>
+    <div class="sixteen" id="reference-tab">
+      <div class="reference pack16">
+        <div class="two">[1]</div><div class="fourteen">Unicode Implementation Guidelines.</div>
+        <div class="four">Title:</div><div class="twelve">The Unicode Standard Version 12.0 – Core Specification, Chapter 5: Implementation Guidelines</div>
+        <div class="four">Author:</div><div class="twelve">The Unicode Consortium</div>
+        <div class="four">Version:</div><div class="twelve">Version 12.0, 2019-03-XX</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://www.unicode.org/versions/Unicode12.0.0/ch05.pdf">www.unicode.org/versions/Unicode12.0.0/ch05.pdf</a></div>
       </div>
-      
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16"><div class="two">[2]</div>
-        <div class="fourteen">FAQ UTF-8, UTF-16, UTF-32 & BOM.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">General questions, relating to UTF or Encoding Form</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">The Unicode Consortium</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2017-06-26</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://www.unicode.org/faq/utf_bom.html">www.unicode.org/faq/utf_bom.html</a></div></div>
-        
-        </div>
+      <div class="reference pack16">
+        <div class="two">[2]</div><div class="fourteen">FAQ UTF-8, UTF-16, UTF-32 & BOM.</div>
+        <div class="four">Title:</div><div class="twelve">General questions, relating to UTF or Encoding Form</div>
+        <div class="four">Author:</div><div class="twelve">The Unicode Consortium</div>
+        <div class="four">Version:</div><div class="twelve">2017-06-26</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://www.unicode.org/faq/utf_bom.html">www.unicode.org/faq/utf_bom.html</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[3]</div>
-          <div class="fourteen">RFC 2781, UTF-16.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">UTF-16, an encoding of ISO 10646</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">P. Hoffman</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2000-14-XX</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://tools.ietf.org/html/rfc2781">tools.ietf.org/html/rfc2781</a></div></div>
-        
-        </div>
+      <div class="reference pack16">
+        <div class="two">[3]</div><div class="fourteen">RFC 2781, UTF-16.</div>
+        <div class="four">Title:</div><div class="twelve">UTF-16, an encoding of ISO 10646</div>
+        <div class="four">Author:</div><div class="twelve">P. Hoffman</div>
+        <div class="four">Version:</div><div class="twelve">2000-14-XX</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://tools.ietf.org/html/rfc2781">tools.ietf.org/html/rfc2781</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[4]</div>
-          <div class="fourteen">RFC 3629, UTF-8.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title: </div><div class="twelve">UTF-8, a transformation format of ISO 10646</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">F. Yergeau</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2003-11-XX</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://tools.ietf.org/html/rfc3629">tools.ietf.org/html/rfc3629</a></div></div>
-        
-        </div>
+      <div class="reference pack16">
+        <div class="two">[4]</div><div class="fourteen">RFC 3629, UTF-8.</div>
+        <div class="four">Title: </div><div class="twelve">UTF-8, a transformation format of ISO 10646</div>
+        <div class="four">Author:</div><div class="twelve">F. Yergeau</div>
+        <div class="four">Version:</div><div class="twelve">2003-11-XX</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://tools.ietf.org/html/rfc3629">tools.ietf.org/html/rfc3629</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[5]</div>
-          <div class="fourteen">RFC 20, ASCII; explains control characters.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">ASCII format for Network Interchange</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Vint Cerf</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">1969-10-16</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://tools.ietf.org/html/rfc20">tools.ietf.org/html/rfc20</a></div></div>
-        
-        </div>
+      <div class="reference pack16">
+        <div class="two">[5]</div><div class="fourteen">RFC 20, ASCII; explains control characters.</div>
+        <div class="four">Title:</div><div class="twelve">ASCII format for Network Interchange</div>
+        <div class="four">Author:</div><div class="twelve">Vint Cerf</div>
+        <div class="four">Version:</div><div class="twelve">1969-10-16</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://tools.ietf.org/html/rfc20">tools.ietf.org/html/rfc20</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[6]</div>
-          <div class="fourteen">All Unicode symbols with names and descriptions.</div>
-        </div>
-        <div class="sixteen">
-        
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Unicode Character Table</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">@unicodetable</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2019-01-30</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://unicode-table.com">unicode-table.com</a></div></div>
-        
-        </div>
+      <div class="reference pack16">
+        <div class="two">[6]</div><div class="fourteen">All Unicode symbols with names and descriptions.</div>
+        <div class="four">Title:</div><div class="twelve">Unicode Character Table</div>
+        <div class="four">Author:</div><div class="twelve">@unicodetable</div>
+        <div class="four">Version:</div><div class="twelve">2019-01-30</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://unicode-table.com">unicode-table.com</a></div>
       </div>
-
-    </div>
-    <input type="radio" id="tab-2" name="tab-control">
-    <label aria-label="button for the side panel's more-tab" for="tab-2">more</label>
-    <div class="pack16 collapse" id="more-tab">
-      <div role="img" aria-label="shrugging emoticon" class="sixteen" id="shrug">╮( ꒪౪꒪)╭</div>
     </div>
 
-    <input type="radio" id="tab-4" name="tab-control">
-    <label aria-label="button for the side panel's about-tab" for="tab-4">about</label>
-    <div id="about-tab" class="pack16 collapse">
-      <div class="sixteen"><hr/></div>
-      <div class="sixteen">
-        <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
+    <div id="more-tab">
+      <span role="img" aria-label="warning icon" class="icon">⚠</span>
+    </div>
 
-        <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
-
-        <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
-      </div>
-      <div class="sixteen"><hr/></div>
+    <div id="about-tab">
+      <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
+      <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
+      <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
     </div>
   </div>
-  <label aria-label="toggle button for side panel" for="switch-1" id="side-panel-icon"></label>
 </div>
 
 </body>

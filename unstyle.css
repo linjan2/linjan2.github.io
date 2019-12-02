@@ -11,15 +11,9 @@ table,caption,tbody,tfoot,thead,tr,th,td
   font:inherit;
   vertical-align:baseline;
 }
-html
-{ font-size:12pt;
-}
 body
-{ font:100%/1.5em Verdana, Arial, sans-serif;
+{ font:100%/1 Verdana, Arial, sans-serif;
   color:#000;
-  line-height:1;
-  margin:0;
-  padding:0;
   box-sizing:border-box;
 }
 *,*:before,*:after
@@ -29,9 +23,6 @@ hr
 { box-sizing:content-box;
   height:0;
   overflow:visible;
-}
-p
-{ line-height:1.1;
 }
 ol,ul
 { list-style:none;
@@ -64,15 +55,15 @@ a
 { background-color:transparent;
 }
 a,a:link,a:visited,a:hover,a:active
-{ text-decoration: none;
+{ text-decoration:none;
 }
 .clearfix:after
-{ content: '';
-  display: block;
-  overflow: hidden;
-  visibility: hidden;
-  width: 0;
-  clear: both;
+{ content:'';
+  display:block;
+  overflow:hidden;
+  visibility:hidden;
+  width:0;
+  clear:both;
 }
 textarea
 { overflow:auto;

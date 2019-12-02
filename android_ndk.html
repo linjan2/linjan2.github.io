@@ -90,7 +90,7 @@ endlocal</code></pre>
 
   <h2 id="1-1"><a href="#1-1"></a>Compiling an APK</h2>
 
-  <p>The APK archive won't contain DEX files when Java isn't compiled. The APK is packaged with:</p>
+  <p>The APK will contain:</p>
 
   <ul>
     <li>the compiled shared libraries for the supported architectures.</li>
@@ -775,7 +775,7 @@ init_circular_buffer(struct circular_buffer* buf, void *memory, uint32 capacity_
     <li>The reader must copy the message before allowing it to be overwritten.</li>
     <li>The writer mustn't write the message before loading the reader position.</li>
     <li>The compiler mustn't optimize away loads of the other thread's position.</li>
-  <ul>
+  </ul>
 
   <p>Thus, when a thread is done with a message it inserts a memory fence before storing its new position, and when a thread loads the other's position it inserts a memory fence before accessing the message.</p>
 
@@ -1052,191 +1052,124 @@ onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue)
 
 
 <!--[ SIDE PANEL ]-->
+<input type="checkbox" id="side-panel-switch" aria-hidden="true">
 <div id="side-panel" class="remove-on-print">
-  <input type="checkbox" id="switch-1"/>
+  <label id="side-panel-icon" for="side-panel-switch" aria-label="side panel toggle"></label>
+  <div id="tabs" class="pack16">
 
-  <div id="tabs">
-    <input type="radio" id="tab-0" name="tab-control" checked>
-    <label aria-label="button for the side panel's outline-tab" for="tab-0">outline</label>
-    <div id="outline-tab">
-      <div id="outline">
-        <a href="#title">Android NDK programming in C</a>
-        <ul>
-          <li><a href="#1-1">Compiling an APK</a>
-            <ul>
-              <li><a href="#1-1-1">Launch icons for different PPI levels</a></li>
-              <li><a href="#1-1-2">Build scripts</a></li>
-              <li><a href="#1-1-3">ADB debugging</a></li>
-            </ul>
-          </li>
-          <li><a href="#1-2">Native C source code</a>
-            <ul>
-              <li><a href="#1-2-1">Circular buffer and synchronization</a></li>
-              <li><a href="#1-2-2">Android activity life cycle events and state changes</a></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
+    <input type="radio" id="tab-1" name="tab-control" aria-hidden="true" checked>
+    <input type="radio" id="tab-2" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-3" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-4" name="tab-control" aria-hidden="true">
+
+    <label for="tab-1" class="four" aria-label="side panel outline button">outline</label>
+    <label for="tab-2" class="four" aria-label="side panel external button">external</label>
+    <label for="tab-3" class="four" aria-label="side panel more button">more</label>
+    <label for="tab-4" class="four" aria-label="side panel about button">about</label>
+
+    <div class="sixteen" id="outline-tab">
+      <a href="#title">Android NDK programming in C</a>
+      <ul>
+        <li><a href="#1-1">Compiling an APK</a>
+          <ul>
+            <li><a href="#1-1-1">Launch icons for different PPI levels</a></li>
+            <li><a href="#1-1-2">Build scripts</a></li>
+            <li><a href="#1-1-3">ADB debugging</a></li>
+          </ul>
+        </li>
+        <li><a href="#1-2">Native C source code</a>
+          <ul>
+            <li><a href="#1-2-1">Circular buffer and synchronization</a></li>
+            <li><a href="#1-2-2">Android activity life cycle events and state changes</a></li>
+          </ul>
+        </li>
+      </ul>
     </div>
     
-    <input type="radio" id="tab-1" name="tab-control">
-    <label aria-label="button for the side panel's external-tab" for="tab-1">external</label>
-    <div class="pack16 collapse">
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[1]</div>
-          <div class="fourteen">Android NDK downloads, documentation, and guides.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Android NDK | Android Developers</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Access 2019-08</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/ndk">developer.android.com/ndk</a></div></div>
-        </div>
+    <div class="sixteen" id="reference-tab">
+      <div class="reference pack16">
+        <div class="two">[1]</div><div class="fourteen">Android NDK downloads, documentation, and guides.</div>
+        <div class="four">Title:</div><div class="twelve">Android NDK | Android Developers</div>
+        <div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div>
+        <div class="four">Version:</div><div class="twelve">Access 2019-08</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/ndk">developer.android.com/ndk</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[2]</div>
-          <div class="fourteen">Android SDK and Android Studio downloads.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Download Android Studio and SDK tools | Android Studio | Android Developers</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Access 2019-08</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/studio/#downloads">developer.android.com/studio/#downloads</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[2]</div><div class="fourteen">Android SDK and Android Studio downloads.</div>
+        <div class="four">Title:</div><div class="twelve">Download Android Studio and SDK tools | Android Studio | Android Developers</div>
+        <div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div>
+        <div class="four">Version:</div><div class="twelve">Access 2019-08</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/studio/#downloads">developer.android.com/studio/#downloads</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[3]</div>
-          <div class="fourteen">Android command-line tools documentation.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Android developers user guide: Command line tools</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Access 2019-08</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/studio/command-line">developer.android.com/studio/command-line</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[3]</div><div class="fourteen">Android command-line tools documentation.</div>
+        <div class="four">Title:</div><div class="twelve">Android developers user guide: Command line tools</div>
+        <div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div>
+        <div class="four">Version:</div><div class="twelve">Access 2019-08</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/studio/command-line">developer.android.com/studio/command-line</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[4]</div>
-          <div class="fourteen">AndroidManifest.xml documentation.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">App Manifest Overview | Android Developers</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-08</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/guide/topics/manifest/manifest-intro">developer.android.com/guide/topics/manifest/manifest-intro</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[4]</div><div class="fourteen">AndroidManifest.xml documentation.</div>
+        <div class="four">Title:</div><div class="twelve">App Manifest Overview | Android Developers</div>
+        <div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2019-08</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/guide/topics/manifest/manifest-intro">developer.android.com/guide/topics/manifest/manifest-intro</a></div>
       </div>
-      
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[5]</div>
-          <div class="fourteen">Activity theme style documentation.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">R.attr | Android Developers</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-08</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/reference/android/R.attr.html">developer.android.com/reference/android/R.attr</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[5]</div><div class="fourteen">Activity theme style documentation.</div>
+        <div class="four">Title:</div><div class="twelve">R.attr | Android Developers</div>
+        <div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2019-08</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/reference/android/R.attr.html">developer.android.com/reference/android/R.attr</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[6]</div>
-          <div class="fourteen">Pixel density metrics for different devices.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Device Metrics - Material Design</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Google</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2019-08-13</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://material.io/resources/devices/">material.io/resources/devices/</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[6]</div><div class="fourteen">Pixel density metrics for different devices.</div>
+        <div class="four">Title:</div><div class="twelve">Device Metrics - Material Design</div>
+        <div class="four">Author:</div><div class="twelve">Google</div>
+        <div class="four">Version:</div><div class="twelve">2019-08-13</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://material.io/resources/devices/">material.io/resources/devices/</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[7]</div>
-          <div class="fourteen">GCC command-line options documentation.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">GCC Command Options</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Free Software Foundation, Inc.</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-08</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://gcc.gnu.org/onlinedocs/gcc/Invoking-GCC.html">gcc.gnu.org/onlinedocs/gcc/Invoking-GCC.html</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[7]</div><div class="fourteen">GCC command-line options documentation.</div>
+        <div class="four">Title:</div><div class="twelve">GCC Command Options</div>
+        <div class="four">Author:</div><div class="twelve">Free Software Foundation, Inc.</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2019-08</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://gcc.gnu.org/onlinedocs/gcc/Invoking-GCC.html">gcc.gnu.org/onlinedocs/gcc/Invoking-GCC.html</a></div>
       </div>
-      
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[8]</div>
-          <div class="fourteen">Acquire and release semantics for memory fences.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Acquire and Release Semantics</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Jeff Preshing</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2012-09-13</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://preshing.com/20120913/acquire-and-release-semantics/">preshing.com/20120913/acquire-and-release-semantics/</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[8]</div><div class="fourteen">Acquire and release semantics for memory fences.</div>
+        <div class="four">Title:</div><div class="twelve">Acquire and Release Semantics</div>
+        <div class="four">Author:</div><div class="twelve">Jeff Preshing</div>
+        <div class="four">Version:</div><div class="twelve">2012-09-13</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://preshing.com/20120913/acquire-and-release-semantics/">preshing.com/20120913/acquire-and-release-semantics/</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[9]</div>
-          <div class="fourteen">Guide to Android life cycle events and state changes.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Android Lifecycle for application developers: Guidelines and Tips</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">NVIDIA Corporation</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2012-05</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="http://developer.download.nvidia.com/assets/mobile/docs/android_lifecycle_app_note.pdf">developer.download.nvidia.com/assets/mobile/docs/android_lifecycle_app_note.pdf</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[9]</div><div class="fourteen">Guide to Android life cycle events and state changes.</div>
+        <div class="four">Title:</div><div class="twelve">Android Lifecycle for application developers: Guidelines and Tips</div>
+        <div class="four">Author:</div><div class="twelve">NVIDIA Corporation</div>
+        <div class="four">Version:</div><div class="twelve">2012-05</div>
+        <div class="four">Link:</div><div class="twelve"><a href="http://developer.download.nvidia.com/assets/mobile/docs/android_lifecycle_app_note.pdf">developer.download.nvidia.com/assets/mobile/docs/android_lifecycle_app_note.pdf</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[10]</div>
-          <div class="fourteen">Android life cycle events documentation.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Understand the Activity Lifecycle | Android Developers</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-08</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/guide/components/activities/activity-lifecycle">developer.android.com/guide/components/activities/activity-lifecycle</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[10]</div><div class="fourteen">Android life cycle events documentation.</div>
+        <div class="four">Title:</div><div class="twelve">Understand the Activity Lifecycle | Android Developers</div>
+        <div class="four">Author:</div><div class="twelve">Google, Android Open Source Project</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2019-08</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://developer.android.com/guide/components/activities/activity-lifecycle">developer.android.com/guide/components/activities/activity-lifecycle</a></div>
       </div>
-      
     </div>
 
-    <input type="radio" id="tab-2" name="tab-control">
-    <label aria-label="button for the side panel's more-tab" for="tab-2">more</label>
-    <div class="pack16 collapse" id="more-tab">
-      <div role="img" aria-label="shrugging emoticon" class="sixteen" id="shrug">╮( ꒪౪꒪)╭</div>
+    <div id="more-tab">
+      <span role="img" aria-label="warning icon" class="icon">⚠</span>
     </div>
 
-    <input type="radio" id="tab-4" name="tab-control">
-    <label aria-label="button for the side panel's about-tab" for="tab-4">about</label>
-    <div id="about-tab" class="pack16 collapse">
-      <div class="sixteen"><hr/></div>
-      <div class="sixteen">
-        <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
-
-        <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
-
-        <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
-      </div>
-      <div class="sixteen"><hr/></div>
+    <div id="about-tab">
+      <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
+      <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
+      <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
     </div>
 
   </div>
-  <label aria-label="toggle button for side panel" for="switch-1" id="side-panel-icon"></label>
 </div>
 
 </body>

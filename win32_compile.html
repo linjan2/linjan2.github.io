@@ -227,7 +227,7 @@ dumpbin /imports build\main.exe</code></pre>
     <li>Use system functions instead of C/C++ run-time's wrapper functions. E.g. use <code>CreateThread()</code> instead of <code>_beginthreadex()</code>.</li>
   </ul>
 
-  <p>The required library for a specific Win32 function can be found in the requirements section of its documentation at <a href="https://docs.microsoft.com/en-us/windows/win32/api/">docs.microsoft.com/en-us/windows/win32/api/</a>.</p>
+  <p>The required library for a specific Win32 function can be found in the requirements section of its documentation.</p>
 
   <p>A build script that avoids linking to the C run-time library is shown below.</p>
 
@@ -348,128 +348,89 @@ DECLSPEC int f(); <span class="comment">// exported library function</span>
 
 
 <!--[ SIDE PANEL ]-->
+<input type="checkbox" id="side-panel-switch" aria-hidden="true">
 <div id="side-panel" class="remove-on-print">
-  <input type="checkbox" id="switch-1"/>
+  <label id="side-panel-icon" for="side-panel-switch" aria-label="side panel toggle"></label>
+  <div id="tabs" class="pack16">
 
-  <div id="tabs">
-    <input type="radio" id="tab-0" name="tab-control" checked>
-    <label aria-label="button for the side panel's outline-tab" for="tab-0">outline</label>
-    <div id="outline-tab">
-      <div id="outline">
-        <a href="#title">Win32 C/C++ command-line compilation</a>
-        <ul>
-          <li><a href="#1-1">Set up commmand-line</a>
-            <ul>
-              <li><a href="#1-1-1">Compiling C++</a></li>
-              <li><a href="#1-1-2">Extra compiler options</a></li>
-              <li><a href="#1-1-3">Visual Studio debugging</a></li>
-              <li><a href="#1-1-4">Binary utilities</a></li>
-            </ul>
-          </li>
-          <li><a href="#1-2">Building without C/C++ run-times</a></li>
-          <li><a href="#1-3">Compiling a static library (LIB)</a></li>
-          <li><a href="#1-4">Compiling a dynamic link library (DLL)</a></li>
-        </ul>
-      </div>
+    <input type="radio" id="tab-1" name="tab-control" aria-hidden="true" checked>
+    <input type="radio" id="tab-2" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-3" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-4" name="tab-control" aria-hidden="true">
+
+    <label for="tab-1" class="four" aria-label="side panel outline button">outline</label>
+    <label for="tab-2" class="four" aria-label="side panel external button">external</label>
+    <label for="tab-3" class="four" aria-label="side panel more button">more</label>
+    <label for="tab-4" class="four" aria-label="side panel about button">about</label>
+
+    <div class="sixteen" id="outline-tab">
+      <a href="#title">Win32 C/C++ command-line compilation</a>
+      <ul>
+        <li><a href="#1-1">Set up commmand-line</a>
+          <ul>
+            <li><a href="#1-1-1">Compiling C++</a></li>
+            <li><a href="#1-1-2">Extra compiler options</a></li>
+            <li><a href="#1-1-3">Visual Studio debugging</a></li>
+            <li><a href="#1-1-4">Binary utilities</a></li>
+          </ul>
+        </li>
+        <li><a href="#1-2">Building without C/C++ run-times</a></li>
+        <li><a href="#1-3">Compiling a static library (LIB)</a></li>
+        <li><a href="#1-4">Compiling a dynamic link library (DLL)</a></li>
+      </ul>
     </div>
     
-    <input type="radio" id="tab-1" name="tab-control">
-    <label aria-label="button for the side panel's external-tab" for="tab-1">external</label>
-    <div class="pack16 collapse">     
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[1]</div>
-          <div class="fourteen">Visual C++ build tools documentation.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>MSVC 2015/2017/2019</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve">Compiler command-line syntax:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/compiler-command-line-syntax">docs.microsoft.com/en-us/cpp/build/reference/compiler-command-line-syntax</a></div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve">Compiler options:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category">docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category</a></div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve">C/C++ build errors and warnings:<br><a href="https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/c-cpp-build-errors">docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/c-cpp-build-errors</a></div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve">Linker options:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/linker-options">docs.microsoft.com/en-us/cpp/build/reference/linker-options</a></div></div>
-        </div>
+    <div class="sixteen" id="reference-tab">
+      <div class="reference pack16">
+        <div class="two">[1]</div><div class="fourteen">Visual C++ build tools documentation.</div>
+        <div class="four">Author:</div><div class="twelve">Microsoft</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>MSVC 2015/2017/2019</div>
+        <div class="four">Link:</div><div class="twelve">Compiler command-line syntax:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/compiler-command-line-syntax">docs.microsoft.com/en-us/cpp/build/reference/compiler-command-line-syntax</a></div>
+        <div class="four">Link:</div><div class="twelve">Compiler options:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category">docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category</a></div>
+        <div class="four">Link:</div><div class="twelve">C/C++ build errors and warnings:<br><a href="https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/c-cpp-build-errors">docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/c-cpp-build-errors</a></div>
+        <div class="four">Link:</div><div class="twelve">Linker options:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/linker-options">docs.microsoft.com/en-us/cpp/build/reference/linker-options</a></div>
       </div>
-
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[2]</div>
-          <div class="fourteen">Visual C++ command line guide.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">Use the Microsoft C++ toolset from the command line</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>MSVC 2015/2017/2019</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line">docs.microsoft.com/en-us/cpp/build/building-on-the-command-line</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[2]</div><div class="fourteen">Visual C++ command line guide.</div>
+        <div class="four">Title:</div><div class="twelve">Use the Microsoft C++ toolset from the command line</div>
+        <div class="four">Author:</div><div class="twelve">Microsoft</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>MSVC 2015/2017/2019</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line">docs.microsoft.com/en-us/cpp/build/building-on-the-command-line</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[3]</div>
-          <div class="fourteen">Win32 system API documentation.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>Windows XP to Windows 10</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve">Win32 API:<br><a href="https://docs.microsoft.com/en-us/windows/win32/api/">docs.microsoft.com/en-us/windows/win32/api/</a></div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve">Console reference:<br><a href="https://docs.microsoft.com/en-us/windows/console/console-reference">docs.microsoft.com/en-us/windows/console/console-reference</a></div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve">Windows data types:<br><a href="https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types">docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[3]</div><div class="fourteen">Win32 system API documentation.</div>
+        <div class="four">Author:</div><div class="twelve">Microsoft</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>Windows XP to Windows 10</div>
+        <div class="four">Link:</div><div class="twelve">Win32 API:<br><a href="https://docs.microsoft.com/en-us/windows/win32/api/">docs.microsoft.com/en-us/windows/win32/api/</a></div>
+        <div class="four">Link:</div><div class="twelve">Console reference:<br><a href="https://docs.microsoft.com/en-us/windows/console/console-reference">docs.microsoft.com/en-us/windows/console/console-reference</a></div>
+        <div class="four">Link:</div><div class="twelve">Windows data types:<br><a href="https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types">docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[4]</div>
-          <div class="fourteen">Documentation for C/C++ run-time libraries.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">C Run-Time Library Reference</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2016-11-04</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference">docs.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[4]</div><div class="fourteen">Documentation for C/C++ run-time libraries.</div>
+        <div class="four">Title:</div><div class="twelve">C Run-Time Library Reference</div>
+        <div class="four">Author:</div><div class="twelve">Microsoft</div>
+        <div class="four">Version:</div><div class="twelve">2016-11-04</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference">docs.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference</a></div>
       </div>
-
-      <div class="sixteen pack16 reference">
-        <div class="sixteen pack16">
-          <div class="two">[5]</div>
-          <div class="fourteen"><code>dumpbin.exe</code> options documentation.</div>
-        </div>
-        <div class="sixteen">
-          <div class="pack16"><div class="four">Title:</div><div class="twelve">DUMPBIN Options</div></div>
-          <div class="pack16"><div class="four">Author:</div><div class="twelve">Microsoft</div></div>
-          <div class="pack16"><div class="four">Version:</div><div class="twelve">2016-11-04</div></div>
-          <div class="pack16"><div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/build/reference/dumpbin-options">docs.microsoft.com/en-us/cpp/build/reference/dumpbin-options</a></div></div>
-        </div>
+      <div class="reference pack16">
+        <div class="two">[5]</div><div class="fourteen"><code>dumpbin.exe</code> options documentation.</div>
+        <div class="four">Title:</div><div class="twelve">DUMPBIN Options</div>
+        <div class="four">Author:</div><div class="twelve">Microsoft</div>
+        <div class="four">Version:</div><div class="twelve">2016-11-04</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/build/reference/dumpbin-options">docs.microsoft.com/en-us/cpp/build/reference/dumpbin-options</a></div>
       </div>
-
     </div>
 
-    <input type="radio" id="tab-2" name="tab-control">
-    <label aria-label="button for the side panel's more-tab" for="tab-2">more</label>
-    <div class="pack16 collapse" id="more-tab">
-      <div role="img" aria-label="shrugging emoticon" class="sixteen" id="shrug">╮( ꒪౪꒪)╭</div>
+    <div id="more-tab">
+      <span role="img" aria-label="warning icon" class="icon">⚠</span>
     </div>
 
-    <input type="radio" id="tab-4" name="tab-control">
-    <label aria-label="button for the side panel's about-tab" for="tab-4">about</label>
-    <div id="about-tab" class="pack16 collapse">
-      <div class="sixteen"></div>
-      <div class="sixteen">
-        <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
-
-        <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
-
-        <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
-      </div>
-      <div class="sixteen"></div>
+    <div id="about-tab">
+      <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
+      <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
+      <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
     </div>
 
   </div>
-  <label aria-label="toggle button for side panel" for="switch-1" id="side-panel-icon"></label>
 </div>
-
 </body>

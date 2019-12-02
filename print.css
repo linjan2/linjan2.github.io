@@ -43,10 +43,6 @@ td,th
 .side-note>span,.side-note>input~label::after
 { display:none;
 }
-.note::after
-{ background:none;
-  border-left-width:2px;
-}
 .code,.code-ln
 { border-left-width:2px;
 }
