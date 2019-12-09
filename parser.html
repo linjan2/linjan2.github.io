@@ -113,7 +113,7 @@ Parse tree graphically:                 Parse tree in computer memory:
   <figcaption id="figure-2-caption">Figure 2: Example of shunting yard algorithm for mathematical expression with parentheses.</figcaption>
   </figure>
 
-  <p>An operator can be <span class="em">left associative</span> or <span class="em">right associative</span>. When greater-than-or-equal (<code>&gt;=</code>) precedence is used to conditionally move operators from the operator stack, then the operator is left associative. If greater-than (<code>&gt;</code>) precedence is used, then the operator would be right associative. <a href="#figure-3">Figure 3</a> demonstrates the difference for the addition operator.</p>
+  <p>An operator can be <span class="em">left associative</span> or <span class="em">right associative</span>. When greater-than-or-equal (<code>&gt;=</code>) precedence is used to conditionally move operators from the operator stack the operator is left associative. If greater-than (<code>&gt;</code>) precedence is used it would be right associative. <a href="#figure-3">Figure 3</a> demonstrates the difference for the addition operator.</p>
 
   <figure aria-labelledby="figure-3-caption" id="figure-3">
 <pre role="img">Input queue: 1+2+3+4
@@ -133,7 +133,7 @@ Postfix notation parse tree: [1 2 3 4 + + +]   equals   ( 1 ( 2 (3 4 +) +) + )
   <figcaption id="figure-3-caption">Figure 3: (A) shows left associative addition. (B) shows right associative addition.</figcaption>
   </figure>
 
-  <p>The associtivity of an operator may be important. The assignment operator in programming languages is right associative so that expressions like <code>a=b=1</code> assigns 1 to <code>b</code> before assigning the new value of <code>b</code> to <code>a</code>. If it were left associative, then the expression would be interpreted as <code>(a=b)=1</code>; this is an invalid assignment to a temporary in C. In C++ it's valid since <code>a=b</code> reduces to a reference to <code>a</code>, though <code>b</code> remains unchanged.</p>
+  <p>The assignment operator in programming languages is right associative so that expressions like <code>a=b=1</code> assign 1 to <code>b</code> before assigning <code>b</code> to <code>a</code>. If it were left associative <code>a=b=1</code> would be interpreted as <code>(a=b)=1</code> which is an invalid assignment to a temporary in C. In C++ it's valid since <code>a=b</code> reduces to a reference to <code>a</code>; <code>b</code> remains unchanged.</p>
 
 </div>
 
@@ -671,12 +671,12 @@ int main()
     int *E1 = json_array_get(E, 1);                     <span class="comment">// {3}</span>
 }</code></pre></div>
 
-  <p>The memory layout of a parsed JSON tree is shown in <a href="#figure-14">figure 14</a>.</p>
 
 </div>
 
-
 <div class="page-even" data-page-number="10">
+
+  <p>The memory layout of a parsed JSON tree is shown in <a href="#figure-14">figure 14</a>.</p>
 
   <figure aria-labelledby="figure-14-caption" id="figure-14">
 <pre role="img">JSON: {A:s B:[2 3]}
@@ -1042,7 +1042,6 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
     
     uint32 member_count = ARRAY_COUNT(index, PUSH(data_storage, 0), json_key_value);
     POP(queue, 2 * member_count * sizeof(struct token));
-
     json_object *self = delimiter->data;
     self->count = member_count;
     self->index = member_count ? index : 0;
@@ -1058,7 +1057,7 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
 
   <p>Regular expression parsing generates a <span class="em">state machine</span>. The machine encodes a multi-path progression across states when matching input text.</p>
 
-  <p>To match text, the machine is started at the designated starting state. The next part of the input is compared to the data within the current state. The path taken is either along the "match-path" or "not-match-path". A successful match is achieved when the path leads to the success state. Failure to match is when the path taken is to the failure state.</p>
+  <p>To match text, the machine is started at the designated starting state. The next part of the input is compared to the data within the current state. The path taken is either along the "match-path" or "not-match-path". A successful match is achieved when the path leads to the success state. Failure to match leads to the failure state.</p>
 
   <p>Multi-path connections encode specific operations. Two simple operations are sequence (<code>AND</code>) and alternation (<code>OR</code>). The machine encodings for these are shown in <a href="#figure-15">figure 15</a>.</p>
 
@@ -1072,7 +1071,7 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
   <figcaption id="figure-15-caption">Figure 15: State machine connections that encode sequence- and alternation-matching of input to the internal state data <code>A</code> and <code>B</code>. The logic has diverging paths at <code>o</code>, and the path taken depends on the input.</figcaption>
   </figure>
 
-  <p>Besides sequence and alternation, regular expression syntax also has converging paths and loops. These can be encoded with only sequences and alternations, but it's convenient to use the special encodings like the ones shown in <a href="#figure-16">figure 16</a>.</p>
+  <p>Besides sequence and alternation, regular expression syntax also has converging paths and loops. These can be encoded with only sequences and alternations, but it's convenient to use the special encodings in <a href="#figure-16">figure 16</a>.</p>
 
   <figure aria-labelledby="figure-16-caption" id="figure-16">
     <pre role="img"
@@ -1164,7 +1163,6 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
 main(int argc, char **argv)
 {
     struct memory_stack *stack = ...
-
     const char *text = "derehtobebtndluoci";
     const char *regex = "(a|de)+r";
     uint32 count;
