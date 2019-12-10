@@ -30,7 +30,7 @@
   <figure aria-labelledby="figure-x1-caption">
   <pre role="img"
 >C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat</pre>
-  <figcaption class="hidden" id="figure-x1-caption">File system path to vcvarsall.bat.<figcaption>
+  <figcaption class="hidden" id="figure-x1-caption">File system path to vcvarsall.bat.</figcaption>
   </figure>
 
   <p>The location for the 2017 enterprise version may be:</p>
@@ -38,7 +38,7 @@
   <figure aria-labelledby="figure-x2-caption">
   <pre role="img"
 >C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat</pre>
-  <figcaption class="hidden" id="figure-x2-caption">File system path to vcvarsall.bat.<figcaption>
+  <figcaption class="hidden" id="figure-x2-caption">File system path to vcvarsall.bat.</figcaption>
   </figure>
 
   <p>Invoke the script in the console with <code>x64</code> as argument for 64-bit compilation on the x86-64 architecture. Pass <code>x86</code> for 32-bit. The following script invokes <code>vcvarsall.bat</code>:</p>
@@ -220,7 +220,7 @@ dumpbin /imports build\main.exe</code></pre>
       </ul>
     </li>
     <li>Disable buffer overrun security checks with the compiler option <code>/GS-</code> since it otherwise injects C library function calls (like <code>__security_init_cookie()</code>).</li>
-    <li>Remove stack overflow checks (i.e. <input class="side-note right" type="checkbox" id="sn-1-1"><label for="sn-1-1"><code>__chkstk</code>)<span><code>__chkstk()</code> is called when a stack allocation exceeds the page size. One page of memory for the stack is committed at a time by default. <br><br>See the Wayback Machine's archive for Microsoft's description of stack checks at <a href="https://web.archive.org/web/20140805060734/http://support.microsoft.com/kb/100775">web.archive.org/web/20140805060734/http://support.microsoft.com/kb/100775</a>.</label> used for paging stack memory. It's removed by simply increasing the memory threshold with the compiler option <code>/Gs9999999</code>.</li>
+    <li>Remove stack overflow checks (i.e. <input class="side-note right" type="checkbox" id="sn-1-1"><label for="sn-1-1"><code>__chkstk</code>)<span><code>__chkstk()</code> is called when a stack allocation exceeds the page size. One page of memory for the stack is committed at a time by default. <br><br>See the Wayback Machine's archive for Microsoft's description of stack checks at <a href="https://web.archive.org/web/20140805060734/http://support.microsoft.com/kb/100775">web.archive.org/web/20140805060734/http://support.microsoft.com/kb/100775</a>.</span></label> used for paging stack memory. It's removed by simply increasing the memory threshold with the compiler option <code>/Gs9999999</code>.</li>
     <li>Set the stack memory allocation to be both reserved and fully committed at process start using the linker option <code>/stack:0x100000,0x100000</code> (1MiB for reserved and committed memory in this case, which is the default stack size).</li>
     <li>Declare the global variable <code>int _fltused</code> if <code>float</code> types are used.</li>
     <li>For 64-bit arithmetic in 32-bit programs, define functions for the generated calls that the linker can't find symbols for.</li>
@@ -382,7 +382,7 @@ DECLSPEC int f(); <span class="comment">// exported library function</span>
     
     <div class="sixteen" id="reference-tab">
       <div class="reference pack16">
-        <div class="two">[1]</div><div class="fourteen">Visual C++ build tools documentation.</div>
+        <div class="two">[1]</div><div class="fourteen em">Visual C++ build tools documentation.</div>
         <div class="four">Author:</div><div class="twelve">Microsoft</div>
         <div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>MSVC 2015/2017/2019</div>
         <div class="four">Link:</div><div class="twelve">Compiler command-line syntax:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/compiler-command-line-syntax">docs.microsoft.com/en-us/cpp/build/reference/compiler-command-line-syntax</a></div>
@@ -391,14 +391,14 @@ DECLSPEC int f(); <span class="comment">// exported library function</span>
         <div class="four">Link:</div><div class="twelve">Linker options:<br><a href="https://docs.microsoft.com/en-us/cpp/build/reference/linker-options">docs.microsoft.com/en-us/cpp/build/reference/linker-options</a></div>
       </div>
       <div class="reference pack16">
-        <div class="two">[2]</div><div class="fourteen">Visual C++ command line guide.</div>
+        <div class="two">[2]</div><div class="fourteen em">Visual C++ command line guide.</div>
         <div class="four">Title:</div><div class="twelve">Use the Microsoft C++ toolset from the command line</div>
         <div class="four">Author:</div><div class="twelve">Microsoft</div>
         <div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>MSVC 2015/2017/2019</div>
         <div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line">docs.microsoft.com/en-us/cpp/build/building-on-the-command-line</a></div>
       </div>
       <div class="reference pack16">
-        <div class="two">[3]</div><div class="fourteen">Win32 system API documentation.</div>
+        <div class="two">[3]</div><div class="fourteen em">Win32 system API documentation.</div>
         <div class="four">Author:</div><div class="twelve">Microsoft</div>
         <div class="four">Version:</div><div class="twelve">Accessed 2019-07-19<br>Windows XP to Windows 10</div>
         <div class="four">Link:</div><div class="twelve">Win32 API:<br><a href="https://docs.microsoft.com/en-us/windows/win32/api/">docs.microsoft.com/en-us/windows/win32/api/</a></div>
@@ -406,14 +406,14 @@ DECLSPEC int f(); <span class="comment">// exported library function</span>
         <div class="four">Link:</div><div class="twelve">Windows data types:<br><a href="https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types">docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types</a></div>
       </div>
       <div class="reference pack16">
-        <div class="two">[4]</div><div class="fourteen">Documentation for C/C++ run-time libraries.</div>
+        <div class="two">[4]</div><div class="fourteen em">Documentation for C/C++ run-time libraries.</div>
         <div class="four">Title:</div><div class="twelve">C Run-Time Library Reference</div>
         <div class="four">Author:</div><div class="twelve">Microsoft</div>
         <div class="four">Version:</div><div class="twelve">2016-11-04</div>
         <div class="four">Link:</div><div class="twelve"><a href="https://docs.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference">docs.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference</a></div>
       </div>
       <div class="reference pack16">
-        <div class="two">[5]</div><div class="fourteen"><code>dumpbin.exe</code> options documentation.</div>
+        <div class="two">[5]</div><div class="fourteen em"><code>dumpbin.exe</code> options documentation.</div>
         <div class="four">Title:</div><div class="twelve">DUMPBIN Options</div>
         <div class="four">Author:</div><div class="twelve">Microsoft</div>
         <div class="four">Version:</div><div class="twelve">2016-11-04</div>
@@ -426,11 +426,12 @@ DECLSPEC int f(); <span class="comment">// exported library function</span>
     </div>
 
     <div id="about-tab">
-      <p> This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by me, Linda Jansson.</p>
-      <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—including future me.</p>
-      <p>Notify me of any issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+      <p>This text was written for learning purposes in 2019. The website's text, HTML, and CSS were created by Linda Jansson.</p>
+      <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—and myself.</p>
+      <p>Notify me of issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
     </div>
 
   </div>
 </div>
 </body>
+</html>
