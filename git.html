@@ -390,31 +390,31 @@ set -o noglob     <span class="comment"># don't replace *</span>
 CMD=${1:-status}  <span class="comment"># defaults to status</span>
 
 case ${CMD} in
-   status) git status --short --branch ${2:-.} ;;     <span class="comment"># defaults to .</span>
-   +)      git add --patch -- ${@:2} ;;               <span class="comment"># add files with interactive patch</span>
-   ++)     git add -- ${@:2} ;;
-   -)      git reset --patch HEAD -- ${@:2} ;;        <span class="comment"># unadd files with interactive patch</span>
-   --)     git reset HEAD -- ${@:2} ;;
-   ---)    git rm --cached -r -- ${@:2} ;;            <span class="comment"># untrack files</span>
+  status) git status --short --branch ${2:-.} ;;     <span class="comment"># defaults to .</span>
+  +)      git add --patch -- ${@:2} ;;               <span class="comment"># add files with interactive patch</span>
+  ++)     git add -- ${@:2} ;;
+  -)      git reset --patch HEAD -- ${@:2} ;;        <span class="comment"># unadd files with interactive patch</span>
+  --)     git reset HEAD -- ${@:2} ;;
+  ---)    git rm --cached -r -- ${@:2} ;;            <span class="comment"># untrack files</span>
             <span class="comment"># diff between index or commits; adds -- before file(s)</span>
-   diff)   git diff ${2/INDEX/--staged} ${3} ${4:+-- ${4} ${5:-}} ;;
+  diff)   git diff ${2/INDEX/--staged} ${3} ${4:+-- ${4} ${5:-}} ;;
             <span class="comment"># log ancestors of $2</span>
-   log)    git log --oneline --decorate --graph ${2:-HEAD} ;;
+  log)    git log --graph ${2:-HEAD} --format='%C(auto)%h %s; %C(white)%an %C(auto)%d' ;;
             <span class="comment"># log descendants of $2</span>
-   map)    git log --oneline --decorate --graph --boundary --all --ancestry-path ${2:-HEAD}.. ;;
+  map)    git log --oneline --decorate --graph --boundary --all --ancestry-path ${2:-HEAD}.. ;;
             <span class="comment"># log descandants of $2, including orphans in reflog</span>
-   map!)   git log --oneline --decorate --graph --boundary --reflog --ancestry-path ${2:-HEAD}.. ;;
-   snap)   git commit -m "${2}" ;;
-   edit)   git rebase --interactive ${2:-HEAD}^ ;;    <span class="comment"># edit from $2, inclusive</span>
+  map!)   git log --oneline --decorate --graph --boundary --reflog --ancestry-path ${2:-HEAD}.. ;;
+  snap)   git commit -m "${2}" ;;
+  edit)   git rebase --interactive ${2:-HEAD}^ ;;    <span class="comment"># edit from $2, inclusive</span>
             <span class="comment"># detach, then move HEAD to $2 with working tree; -q for quiet about detaching</span>
-   move)   git checkout -q --detach HEAD && git reset --soft ${2} ;;
-   attach) git checkout -q ${2} ;;                    <span class="comment"># attach HEAD</span>
+  move)   git checkout -q --detach HEAD && git reset --soft ${2} ;;
+  attach) git checkout -q ${2} ;;                    <span class="comment"># attach HEAD</span>
             <span class="comment"># restore a file from commit or index</span>
-   get)    git checkout --patch ${3/INDEX} -- ${3} ${@:4} ;;
-   !)      git tag ${2} ${3:-HEAD} ;;                 <span class="comment"># create tag at $3</span>
-   -!)     git tag -d ${@:2} ;;                       <span class="comment"># delete tag</span>
+  get)    git checkout --patch ${3/INDEX} -- ${3} ${@:4} ;;
+  !)      git tag ${2} ${3:-HEAD} ;;                 <span class="comment"># create tag at $3</span>
+  -!)     git tag -d ${@:2} ;;                       <span class="comment"># delete tag</span>
 
-   *)      echo "unrecognized command '${CMD}'" ;;
+  *)      echo "unrecognized command '${CMD}'" ;;
 esac</code></pre>
   </div>
 
@@ -441,8 +441,9 @@ else if "%CMD%"=="++"     (git add -- %ARGV%) ^
 else if "%CMD%"=="-"      (git reset HEAD --patch -- %ARGV%) ^
 else if "%CMD%"=="--"     (git reset HEAD -- %ARGV%) ^
 else if "%CMD%"=="---"    (git rm --cached -r -- %ARGV%) ^
-else if "%CMD%"=="diff"   (call git diff %2 %3 -- %4 %5) ^
-else if "%CMD%"=="log"    (git log --oneline --decorate --graph %ARGV%) ^
+else if "%CMD%"=="diff"   (git diff %2 %3 -- %4 %5) ^
+else if "%CMD%"=="log"    (git log --graph %ARGV% ^
+                            --format="%%C(auto)%%h %%s; %%C(white)%%an %%C(auto)%%d") ^
 else if "%CMD%"=="map"    (if "%~2"=="" (git log --oneline --decorate --graph --boundary --all ^
                               --ancestry-path HEAD..) ^
                            else (git log --oneline --decorate --graph --boundary --all ^
