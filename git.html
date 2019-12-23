@@ -443,7 +443,7 @@ else if "%CMD%"=="--"     (git reset HEAD -- %ARGV%) ^
 else if "%CMD%"=="---"    (git rm --cached -r -- %ARGV%) ^
 else if "%CMD%"=="diff"   (git diff %2 %3 -- %4 %5) ^
 else if "%CMD%"=="log"    (git log --graph %ARGV% ^
-                            --format="%%C(auto)%%h %%s; %%C(white)%%an %%C(auto)%%d") ^
+                            --format="%%C(auto)%%h %%s; %%C(white)%%an %%cr %%C(auto)%%D") ^
 else if "%CMD%"=="map"    (if "%~2"=="" (git log --oneline --decorate --graph --boundary --all ^
                               --ancestry-path HEAD..) ^
                            else (git log --oneline --decorate --graph --boundary --all ^
