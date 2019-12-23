@@ -52,11 +52,11 @@ body
 }
 
 #pages
-{ width:52rem;
+{ width:56rem;
   margin:0 auto;
 }
 .page-even,.page-odd
-{ width:52rem;
+{ width:56rem;
   height:80rem;
   background-color:#fff;
   padding:4rem;
@@ -64,9 +64,9 @@ body
   margin-top:0.5rem;
   position:relative;
 }
-@media only screen and (min-width:106em)
+@media only screen and (min-width:113em)
 { #pages
-  { width:105rem;
+  { width:113rem;
   }
   .page-even,.page-odd
   { float:left;
@@ -107,7 +107,7 @@ h4
 h1>a::before,h2>a::before,h3>a::before
 { position:absolute;
   color:#ddd;
-  content:'ᛪ';
+  content:'#';
   left:-1em;
 }
 h1>a:hover::before,h2>a:hover::before,h3>a:hover::before
@@ -377,8 +377,6 @@ label
 #side-panel-switch:checked+#side-panel>#side-panel-icon
 { float:left;
   width:12.5%;
-  background-color:#000;
-  color:#fff;
 }
 #side-panel-icon::after
 { content:'❮';
@@ -386,7 +384,6 @@ label
 }
 #side-panel-switch:checked+#side-panel>#side-panel-icon::after
 { content:'❯';
-  color:#fff;
 }
 #tabs
 { display:none;
