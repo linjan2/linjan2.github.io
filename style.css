@@ -297,6 +297,9 @@ table.click th>label:hover
 .code .comment
 { color:#82A4B3;
 }
+p code, ul code
+{ background-color:#eee;
+}
 
 .note
 { position:relative;
