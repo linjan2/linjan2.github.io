@@ -78,6 +78,12 @@ endlocal</code></pre>
 
 <div class="page-odd" data-page-number="1">
 
+  <p>Alternatively, first compile objects and then invoke the linker <code>link.exe</code> to build the executable.</p>
+
+<div class="code"><pre><code
+>cl /c %compiler_flags% main.c
+link main.obj %linker_flags% %libraries%</code></pre>
+  </div>  
 
   <p><code>/W4</code> enables warning level 4. Level 4 warnings are manually disabled with <code>/wd</code>. <code>/WX</code> treats warnings as errors. Using <code>/Wall</code> would include <code>/W4</code> and more, but it triggers warnings in Windows' own headers.</p>
 
@@ -136,13 +142,21 @@ endlocal</code></pre>
 
   <p>The C linkage qualifier <code>extern "C"</code> is added on global function and variable identifiers that shouldn't be type-decorated (name-mangled). Identifiers exported to C programs shouldn't be type-decorated.</p>
 
-  <h3 id="1-1-2"><a href="#1-1-2"></a>Extra compiler options</h3>
+  <p>C++ code that imports C code can surround a header include directive with <code>extern "C"</code>.</p>
 
-  <p>The linker option <code>/subsystem:console</code> means to create a console window for process if the executable isn't started from the command-line; this is the default. <code>/subsystem:windows</code> will not create a console window since the process intends to create windows for its interface.</p>
+  <div class="code"><pre><code
+>extern "C" {
+#include "header.h"
+}</code></pre>
+  </div>
 
 </div>
 
 <div class="page-even" data-page-number="2">
+
+  <h3 id="1-1-2"><a href="#1-1-2"></a>Extra compiler options</h3>
+
+  <p>The linker option <code>/subsystem:console</code> will create a console window for process if the executable isn't started from the command-line; this is the default. It also sets the default entry point to <code>mainCRTStartup</code>. <code>/subsystem:windows</code> will not create a console window since the process intends to create windows itself. It also sets the default entry point to <code>WinMainCRTStartup</code>.</p>
 
   <p>Compiler option <code>/I path</code> adds a search path for include files. Linker option <code>/libpath:path</code> adds search path for library files. Both can be specified multiple times for multiple paths.</p>
 
@@ -179,14 +193,7 @@ set linker_flags= /debug:full /incremental:no /pdbaltpath:main.pdb</code></pre>
 
   <p>Beside the compilation tools, the Visual Studio installation also includes a binary dumper tool called <code>dumpbin</code>. It's brought into the command-line environment by <code>vcvarsall.bat</code>.</p>
 
-  <p>Call <code>dumpbin /exports &lt;BINARY&gt;</code> to display exported symbols. Call <code>dumpbin /imports &lt;BINARY&gt;</code> to display imported symbols.</p>
-
-  <div class="code"><pre><code
->dumpbin /exports build\main.exe
-dumpbin /imports build\main.exe</code></pre>
-  </div>
-
-  <p>The binary file can be a <code>.exe</code> executable, a <code>.obj</code> object file, a <code>.lib</code> library, or a <code>.dll</code> library.</p>
+  <p>Display exported symbols with <code>dumpbin /exports &lt;BINARY&gt;</code>. Display imported symbols with <code>dumpbin /imports &lt;BINARY&gt;</code>. If linked with linker option <code>/debug</code>, diplay COFF symbol table with <code>dumpin /symbols &lt;BINARY&gt;</code>. The binary file can be a <code>.exe</code> executable, a <code>.obj</code> object file, a <code>.lib</code> library, or a <code>.dll</code> library.</p>
 
   <p>The program Dependency Walker can also be downloaded at <a href="http://dependencywalker.com/">dependencywalker.com</a> to view a binary's dependencies with a graphical interface. It officially only supports up to Windows 8 though.</p>
 
@@ -206,7 +213,8 @@ dumpbin /imports build\main.exe</code></pre>
       Specify an entry point with the linker option <code>/entry:myentry</code> or define the default entry point.
       <ul>
         <li>The signature is: <code>void __stdcall myentry()</code> and it should call <code>ExitProcess(0)</code> to exit.</li>
-        <li>The default is either <code>WinMainCRTStartup()</code> or <code>mainCRTStartup()</code>.</li>
+        <li>The default entry point for executables is <code>mainCRTStartup</code> for console applications and <code>WinMainCRTStartup</code> for windows applications—as decided by the linker option <code>subsystem</code>.</li>
+        <li>The default entry point for DLL libraries is <code>_DllMainCRTStartup</code>.</li>
       </ul>
     </li>
     <li>
@@ -297,10 +305,10 @@ lib /nologo /WX /nodefaultlib myobj.obj /out:mylib.lib</code></pre>
 
   <p></p>
 
-  <p>Defining <code>EXPORT</code> for the library compilation chooses the <code>__declspec(dllexport)</code> attribute in the header file below. When compiling the <code>.exe</code> file <code>__declspec(dllimport)</code> is choosen instead.</p>
+  <p>Defining <code>EXPORT</code> for the library compilation chooses the <code>__declspec(dllexport)</code> attribute in the header file below. When compiling the <code>.exe</code> file <code>__declspec(dllimport)</code> is chosen instead.</p>
 
   <div class="code"><pre><code
-><span class="comment">// mylib.h</span>
+><span class="comment">// mydll.h</span>
 
 #ifdef __cplusplus
 extern "C" {
@@ -312,7 +320,7 @@ extern "C" {
     #define DECLSPEC __declspec(dllimport)
 #endif
 
-DECLSPEC int f(); <span class="comment">// exported library function</span>
+DECLSPEC extern int f(); <span class="comment">// exported library function</span>
 
 #undef DECLSPEC
 
@@ -321,24 +329,144 @@ DECLSPEC int f(); <span class="comment">// exported library function</span>
 #endif</code></pre>
   </div>
 
-
 </div>
 
 <div class="page-odd" data-page-number="5">
 
-  <p>If the DLL is compiled from C source files, but is linked into C++ code then C linkage must be declared for the imported identifiers. The <code>__cplusplus</code> preprocessor constant is defined by the compiler when compiling C++ and it's used to conditionally add <code>extern "C"</code>.</p>
+  <p>When compiling a DLL without the C/C++ run-times the entry point must be defined. The default entry point symbol is <code>_DllMainCRTStartup</code> and it's called when the process loads and unloads the library and also when a thread starts or exits after that. In the definition below the function <code>DisableThreadLibraryCalls</code> disables invocation for threads.</p>
 
-  <p>Alternatively, the C++ code can surround the header include directive with <code>extern "C"</code>.</p>
-
-  <div class="code"><pre><code
->extern "C" {
-#include "dll_header.h"
+<div class="code"><pre><code
+>BOOL WINAPI
+_DllMainCRTStartup(HANDLE hDllModule, DWORD reason, LPVOID lpReserved)
+{   switch (reason)
+    {   case DLL_PROCESS_ATTACH:
+        {   BOOL ret = DisableThreadLibraryCalls(hDllModule);
+        } break;
+        case DLL_THREAD_ATTACH:
+        case DLL_THREAD_DETACH:
+        case DLL_PROCESS_DETACH: break;
+    }
+    return TRUE; <span class="comment">// TRUE signals successful load</span>
 }</code></pre>
   </div>
 
-  <p>The executable that uses the DLL either includes the LIB import library at compile-time or uses <code>LoadLibrary()</code> to load the DLL functions at run-time.</p>
+  <p>Link to the DLL at compile time by passing the LIB import library to the compiler. Link at run-time with <code>LoadLibrary()</code>. The linker searches for the DLL in: the executable's directory, the current directory, the system's default library paths, and locations in the <code>PATH</code> environment variable.</p>
 
-  <p>Both the import library and <code>LoadLibrary()</code> will search for the DLL in the executable's directory, the current directory, the system's default library paths, and the locations in the <code>PATH</code> environment variable.</p>
+  <h2 id="1-5"><a href="#1-5"></a>Build scripts</h2>
+
+  <p>Here are build scripts for executables and libraries that don't link to the C run-times. The directory structure is as shown in <a href="#figure-1">figure 1</a>. Output binaries are created in the <code>build</code> directory.</p>
+
+  <figure aria-labelledby="figure-1-caption" id="figure-1">
+<pre role="img">├─ build/               ├─ build/                ├─ build/
+│  ├─ main.exe          │  ├─ mylib.lib          │  ├─ mydll.dll
+│  ├─ main.obj          │  ├─ mylib.obj          │  ├─ mydll.exp
+│  └─ main.pdb          │  └─ mylib.pdb          │  ├─ mydll.lib
+├─ src/                 ├─ src/                  │  ├─ mydll.obj
+│  └─ main.c            │  ├─ mylib.c            │  ├─ mydll.pdb
+├─ libs/                │  └─ mylib.h            │  └─ src/
+└─ build.bat            ├─ libs/                 │     ├─ mydll.c
+                        └─ build_lib.bat         │     └─ mydll.h
+                                                 ├─ libs/
+                                                 └─ build_dll.bat</pre>
+<figcaption id="figure-1-caption">Figure 1: Directory structures for building an executable, a static library, and a dynamic library. The output is in the <code>build</code> directory.<figcaption>
+</figure>
+
+  <h3 id="1-5-1"><a href="#1-5-1"></a>Build script for executable</h3>
+
+  <div class="code"><pre><code
+>@echo off
+setlocal
+
+set NAME=main
+set SRC=src\main.c
+set OUT_DIR=build
+set WARNDISABLES=/wd4100 /wd4101 /wd4127 /wd4189 /wd4201 /wd4295 /wd4324
+set CFLAGS=/nologo /TC /W4 /WX %WARNDISABLES% /fp:fast /Zl /GS- /Gs9999999 ^
+    /Fo%OUT_DIR%/%NAME%
+set LIBS=kernel32.lib
+set LFLAGS=/nologo /subsystem:console /nodefaultlib /stack:0x100000,0x100000 ^
+    /entry:entry /libpath:libs %LIBS% /out:%OUT_DIR%\%NAME%.exe
+
+if "%~1"=="release" (
+    set CFLAGS=%CFLAGS% /O2
+    set LFLAGS=%LFLAGS% /opt:ref
+) else (
+    set CFLAGS=%CFLAGS% /Od /Oi /Zi /Fd%OUT_DIR%\%NAME%.pdb /D DEBUG=1
+    set LFLAGS=%LFLAGS% /debug:full /incremental:no /pdbaltpath:%NAME%.pdb
+)
+
+del /Q %OUT_DIR%\%NAME%.*
+
+cl /c %CFLAGS% %SRC% || goto :eof
+link %LFLAGS% %OUT_DIR%\%NAME%.obj || goto :eof
+
+endlocal</code></pre>
+  </div>
+
+</div>
+
+<div class="page-even" data-page-number="6">
+
+  <h3 id="1-5-2"><a href="#1-5-2"></a>Build script for static library</h3>
+
+  <div class="code"><pre><code
+>@echo off
+setlocal
+
+set NAME=mylib
+set SRC=src\x.c
+set OUT_DIR=build
+set WARNDISABLES=/wd4100 /wd4101 /wd4127 /wd4189 /wd4201 /wd4295 /wd4324
+set CFLAGS=/nologo /TC /W4 /WX %WARNDISABLES% /fp:fast /Zl /GS- /Gs9999999 ^
+    /Fo%OUT_DIR%\%NAME% /D STATIC=1
+set LIBS=kernel32.lib
+set LFLAGS=/nologo /WX /nodefaultlib %LIBS% /out:%OUT_DIR%\%NAME%.lib
+
+if "%~1"=="release" (
+    set CFLAGS=%CFLAGS% /O2
+) else (
+    set CFLAGS=%CFLAGS% /Od /Oi /Zi /Fd%OUT_DIR%\%NAME%.pdb /D DEBUG=1
+)
+
+del /Q %OUT_DIR%\%NAME%.*
+
+cl /c %CFLAGS% %SRC% || goto :eof
+lib %LFLAGS% %OUT_DIR%\%NAME%.obj || goto :eof
+
+endlocal</code></pre>
+  </div>
+
+  <h3 id="1-5-2"><a href="#1-5-2"></a>Build script for dynamic library</h3>
+
+  <div class="code"><pre><code
+>@echo off
+setlocal
+
+set NAME=mydll
+set SRC=src\x.c
+set OUT_DIR=build
+set WARNDISABLES=/wd4100 /wd4101 /wd4127 /wd4189 /wd4201 /wd4295 /wd4324
+set CFLAGS=/nologo /TC /W4 /WX %WARNDISABLES% /fp:fast /Zl /GS- /Gs9999999 ^
+    /Fo%OUT_DIR%\%NAME% /D EXPORT=1
+set LIBS=kernel32.lib
+set LFLAGS=/nologo /subsystem:console /nodefaultlib /stack:0x100000,0x100000 ^
+    /entry:entry /libpath:libs %LIBS% /out:%OUT_DIR%\%NAME%.dll
+
+if "%~1"=="release" (
+    set CFLAGS=%CFLAGS% /O2
+    set LFLAGS=%LFLAGS% /opt:ref
+) else (
+    set CFLAGS=%CFLAGS% /Od /Oi /Zi /Fd%OUT_DIR%\%NAME%.pdb /D DEBUG=1
+    set LFLAGS=%LFLAGS% /debug:full /incremental:no /pdbaltpath:%NAME%.pdb /PDB:%OUT_DIR%\%NAME%.pdb
+)
+
+del /Q %OUT_DIR%\%NAME%.*
+
+cl /c %CFLAGS% %SRC% || goto :eof
+link /DLL %LFLAGS% %OUT_DIR%\%NAME%.obj || goto :eof
+
+endlocal</code></pre>
+  </div>
 
 </div>
 
@@ -377,6 +505,13 @@ DECLSPEC int f(); <span class="comment">// exported library function</span>
         <li><a href="#1-2">Building without C/C++ run-times</a></li>
         <li><a href="#1-3">Compiling a static library (LIB)</a></li>
         <li><a href="#1-4">Compiling a dynamic link library (DLL)</a></li>
+        <li><a href="#1-5">Build scripts</a>
+          <ul>
+            <li><a href="#1-5-1">Build script for executable</a></li>
+            <li><a href="#1-5-2">Build script for static library</a></li>
+            <li><a href="#1-5-3">Build script for dynamic library</a></li>
+          </ul>
+        </li>
       </ul>
     </div>
     
