@@ -392,7 +392,7 @@ if "%~1"=="release" (
     set LFLAGS=%LFLAGS% /opt:ref
 ) else (
     set CFLAGS=%CFLAGS% /Od /Oi /Zi /Fd%OUT_DIR%\%NAME%.pdb /D DEBUG=1
-    set LFLAGS=%LFLAGS% /debug:full /incremental:no /pdbaltpath:%NAME%.pdb
+    set LFLAGS=%LFLAGS% /debug:full /incremental:no /pdb:%OUT_DIR%\%NAME%.pdb /pdbaltpath:%NAME%.pdb
 )
 
 del /Q %OUT_DIR%\%NAME%.*
@@ -457,7 +457,7 @@ if "%~1"=="release" (
     set LFLAGS=%LFLAGS% /opt:ref
 ) else (
     set CFLAGS=%CFLAGS% /Od /Oi /Zi /Fd%OUT_DIR%\%NAME%.pdb /D DEBUG=1
-    set LFLAGS=%LFLAGS% /debug:full /incremental:no /pdbaltpath:%NAME%.pdb /PDB:%OUT_DIR%\%NAME%.pdb
+    set LFLAGS=%LFLAGS% /debug:full /incremental:no /pdb:%OUT_DIR%\%NAME%.pdb /pdbaltpath:%NAME%.pdb
 )
 
 del /Q %OUT_DIR%\%NAME%.*
