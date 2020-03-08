@@ -875,11 +875,11 @@ sig_destroy(struct sig_t *sig)
   <div class="code"><pre><code
 >static void
 sig_wait(struct sig_t *sig)
-{   sig->condition = 0;
-    int ret = pthread_mutex_lock(&sig->lock); assert(ret==0);
+{   int ret = pthread_mutex_lock(&sig->lock); assert(ret==0);
     while (!sig->condition)
     {   ret = pthread_cond_wait(&sig->cond, &sig->lock); assert(ret==0);
     }
+    sig->condition = 0;
     ret = pthread_mutex_unlock(&sig->lock); assert(ret==0);
 }</code></pre>
   </div>

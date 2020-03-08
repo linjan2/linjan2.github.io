@@ -382,7 +382,7 @@ set SRC=src\main.c
 set OUT_DIR=build
 set WARNDISABLES=/wd4100 /wd4101 /wd4127 /wd4189 /wd4201 /wd4295 /wd4324
 set CFLAGS=/nologo /TC /W4 /WX %WARNDISABLES% /fp:fast /Zl /GS- /Gs9999999 ^
-    /Fo%OUT_DIR%/%NAME%
+    /Fo%OUT_DIR%\%NAME%
 set LIBS=kernel32.lib
 set LFLAGS=/nologo /subsystem:console /nodefaultlib /stack:0x100000,0x100000 ^
     /entry:entry /libpath:libs %LIBS% /out:%OUT_DIR%\%NAME%.exe
