@@ -404,7 +404,7 @@ case ${CMD} in
   <span class="em">diff</span>)   git diff ${2/INDEX/--staged} ${3} ${4:+-- ${4} ${5:-}} ;;
             <span class="comment"># log ancestors of $2</span>
   <span class="em">log</span>)    git log --graph ${2:-HEAD} \
-            --format='%C(auto)%h %s; %C(white)%an %C(auto)%d' ;;
+            --format='%C(auto)%h %s; %C(yellow)%ar %C(auto)%an %D' ;;
             <span class="comment"># log descendants of $2</span>
   <span class="em">map</span>)    git log --oneline --decorate --graph --boundary --all \
             --ancestry-path ${2:-HEAD}.. ;;
@@ -450,7 +450,7 @@ else if "%CMD%"=="<span class="em">--</span>"     (git reset HEAD -- %ARGV%) ^
 else if "%CMD%"=="<span class="em">---</span>"    (git rm --cached -r -- %ARGV%) ^
 else if "%CMD%"=="<span class="em">diff</span>"   (call git diff %2 %3 -- %4 %5) ^
 else if "%CMD%"=="<span class="em">log</span>"    (^
-    git log --graph %ARGV% --format="%%C(auto)%%h %%s; %%C(yellow)%%an %%cr %%C(auto)%%D") ^
+    git log --graph %ARGV% --format="%%C(auto)%%h %%s; %%C(yellow)%%ar %%C(auto)%%an %%D") ^
 else if "%CMD%"=="<span class="em">map</span>"    (^
     if "%~2"=="" (git log --oneline --decorate --graph --boundary --all
         --ancestry-path HEAD..) ^
