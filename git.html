@@ -45,9 +45,9 @@ git commit -m "initial commit"</code></pre>
 
   <p>To display the current state of the working tree and the index use <code>`git status`</code>. Display a more compact view with the current branch with <code>`git status --short --branch`</code>. Use <code>`git status &lt;directory&gt;`</code> to scan the directory and its subdirectories instead of the entire repository.</p>
 
-  <p><code>HEAD</code> is reference to the commit with the initial state of the current working tree. As new commits are created, <code>HEAD</code> moves to them. Usually, <code>HEAD</code> is attached to a branch which also reference a commit and also moves with <code>HEAD</code>. Attach <code>HEAD</code> to a branch with <code>`git checkout &lt;branch-name&gt;`</code>; this leaves the previously attached branch where it was, at the end of a commit history chain.</p>
+  <p><code>HEAD</code> is a reference to the commit with the current state of the local repository files. As new commits are created (locally) <code>HEAD</code> will update to the newest commit. Usually, <code>HEAD</code> is attached to a branch reference (a.k.a. "the current branch") so both will update to the newest commit. Using <code>`git checkout &lt;branch-name&gt;`</code>  will attach <code>HEAD</code> to a different branch reference; this leaves the previously attached-to branch reference where it was.</p>
 
-  <p>A new branch referencing <code>HEAD</code>'s commit is created with <code>`git branch &lt;branch-name&gt;`</code>. Delete a branch with <code>`git branch -D &lt;branch-name&gt;`</code>.</p>
+  <p>A new branch reference created with <code>`git branch &lt;branch-name&gt;`</code> will reference the commit that <code>HEAD</code> is currently referencing. Delete a branch with <code>`git branch -D &lt;branch-name&gt;`</code>.</p>
 
   <h2 id="1-2"><a href="#1-2"></a>Viewing and moving between commits</h2>
 
