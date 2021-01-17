@@ -14,7 +14,7 @@
 
 <div id="pages" class="clearfix">
 
-<div class="page-even" data-page-number="0">
+<div>
 
   <h1 id="title"><a href="#title"></a>Android NDK programming in C</h1>
 
@@ -80,7 +80,7 @@ endlocal</code></pre>
 </div>
 
 
-<div class="page-odd" data-page-number="1">
+<div>
 
   <p>Download the tools and platforms with the <code>sdkmanager.bat</code> script as shown. The version is part of the package name. Enter <code>y</code> when prompted to accept the license agreement.</p>
 
@@ -147,7 +147,7 @@ call %ZIPALIGN% -p -f 4 unsigned.unaligned.apk unsigned.apk
 
 </div>
 
-<div class="page-even" data-page-number="2">
+<div>
 
   <p>Sign the APK using <code>apksigner.jar</code>. This outputs <code>app.apk</code> containing the directory <code>META-INF</code> which includes signature data files. The following script is used instead of the SDK's <code>apksigner.bat</code> file in order to explicitly set the path to <code>java.exe</code>.</p>
 
@@ -214,7 +214,7 @@ call %JAVAEXE% -jar %APKSIGNER% sign --in unsigned.apk --out app.apk ^
 
 </div>
 
-<div class="page-odd" data-page-number="3">
+<div>
 
   <p>The <code>strings.xml</code> file is shown below.</p>
 
@@ -276,7 +276,7 @@ call %JAVAEXE% -jar %APKSIGNER% sign --in unsigned.apk --out app.apk ^
   
 </div>
 
-<div class="page-even" data-page-number="4">
+<div>
 
   <h3 id="1-1-2"><a href="#1-1-2"></a>Build scripts</h3>
 
@@ -344,7 +344,7 @@ endlocal</code></pre>
 
 </div>
 
-<div class="page-odd" data-page-number="5">
+<div>
 
   <h4>64-bit ARMv8-A</h4>
 
@@ -422,7 +422,7 @@ endlocal</code></pre>
 
 </div>
 
-<div class="page-even" data-page-number="6">
+<div>
 
   <div class="code"><pre><code
 >@echo off
@@ -482,7 +482,7 @@ call %ADB% logcat libc:E APP:V *:S</code></pre>
 
   </div>
 
-<div class="page-odd" data-page-number="7">
+<div>
   
   <table id="table-2">
     <caption>Table 2: <code>logcat</code> priority levels.</caption>
@@ -554,7 +554,7 @@ ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t sav
 
 </div>
 
-<div class="page-even" data-page-number="8">
+<div>
 
   <p>The <code>app_data</code> structure shown below is passed to the application thread. Its <code>memory</code> member is a flexible array for accessing the rest of the allocated heap memory.</p>
 
@@ -639,7 +639,7 @@ MAIN(void *argument)
 
   </div>
 
-<div class="page-odd" data-page-number="9">
+<div>
 
   <p>The callback and <code>onCreate()</code> function signatures are declared in the <code>native_activity</code> header file. All the signatures are shown below.</p>
 
@@ -723,7 +723,7 @@ onStop(ANativeActivity* activity)
 
 </div>
 
-<div class="page-even" data-page-number="10">
+<div>
 
   <h3 id="1-2-1"><a href="#1-2-1"></a>Circular buffer and synchronization</h3>
 
@@ -789,7 +789,7 @@ init_circular_buffer(struct circular_buffer* buf, void *memory, uint32 capacity_
 
 </div>
 
-<div class="page-odd" data-page-number="11">
+<div>
 
   <p>The writer uses <code>buf_write()</code> and the reader uses <code>buf_read()</code>. These are shown below.</p>
 
@@ -870,7 +870,7 @@ sig_destroy(struct sig_t *sig)
 
 </div>
 
-<div class="page-even" data-page-number="12">
+<div>
 
   <div class="code"><pre><code
 >static void
@@ -929,12 +929,12 @@ onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue)
 
   <figure aria-labelledby="figure-3-caption" id="figure-3">
 <pre role="img"
-> ┌>Create ───────────────────┬──────────────┬────────────────┬───────────────┬─────────────┐
- ├>Start                     v              v                v               v             v
- │ Resume<┐             ┌>FocusGain   ┌>WindowCreate   ContentRect<┐   ┌>InputCreate  ConfigChange<┐
- │ Pause ─┴────v        └ FocusLost   │ WindowResize             └─┘   └ InputDestroy            └─┘
- ├ Stop     SaveState                 │ Redraw
- └ Destroy                            └ WindowDestroy</pre>
+> ┌>Create ────────────────┬─────────────┬──────────────┬────────────┬───────────────┐
+ ├>Start                  v             v              v            v               v
+ │ Resume<┐          ┌>FocusGain ┌>WindowCreate ┌>ContentRect ┌>InputCreate  ┌>ConfigChange
+ │ Pause ─┴─v        └ FocusLost │ WindowResize └──┘          └ InputDestroy └──┘
+ ├ Stop    SaveState             │ Redraw
+ └ Destroy                       └ WindowDestroy</pre>
   <figcaption id="figure-3-caption">Figure 3: Sequencing of events. Events happen downwards and along the arrows, independently of other columns. <code>LowMemory</code> is left out, but like <code>ContentRect</code> and <code>ConfigChange</code> it's dependent only on <code>Create</code>. Note that focus changes and <code>ContentRect</code> events can come before or after <code>WindowDestroy</code> and <code>Stop</code>.</figcaption>
   </figure>
 
@@ -944,7 +944,7 @@ onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue)
 
 </div>
 
-<div class="page-odd" data-page-number="13">
+<div>
 
   <table id="table-3">
     <caption>Table 3: Native activity event handling.</caption>

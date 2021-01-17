@@ -14,7 +14,7 @@
 
 <div id="pages" class="clearfix">
 
-<div class="page-even" data-page-number="0">
+<div>
   <h1 id="title"><a href="#title"></a>Basic Git usage</h1>
   <p>This text describes a set of useful Git commands for managing commits both locally and distributed in remote repositories. Basic Git commands are first described and then a simple script is presented (a batch script for Windows and a shell script for Linux).</p>
   
@@ -55,7 +55,7 @@ git commit -m "initial commit"</code></pre>
 
 </div>
 
-<div class="page-odd" data-page-number="1">
+<div>
 
   <p><a href="#figure-1">Figure 1</a> displays a repository's commits in graph format.</p>
 
@@ -111,7 +111,7 @@ git checkout branch-2</code></pre>
 
 </div>
 
-<div class="page-even" data-page-number="2">
+<div>
 
 
   <p>Another way to move parts of a commit is to apply its patch onto the working tree with <code>`git checkout &lt;commit&gt; --patch`</code>. The patch editor is opened to selectively overwrite parts of the working tree and the index. Apply the patch for a single file with <code>`git checkout &lt;commit&gt; --patch -- &lt;file&gt;`</code>.</p>
@@ -177,7 +177,7 @@ git apply &lt;file3&gt;.patch    <span class="comment"># apply changes from patc
 
 </div>
 
-<div class="page-odd" data-page-number="3">
+<div>
 
   <h2 id="1-4"><a href="#1-4"></a>Managing the commit graph</h2>
 
@@ -234,7 +234,7 @@ squash a1bfa50 commit 4
 
 </div>
 
-<div class="page-even" data-page-number="4">
+<div>
 
   <figure aria-labelledby="figure-6-caption" id="figure-6">
 <pre role="img"
@@ -296,7 +296,7 @@ squash a1bfa50 commit 4
 
 </div>
 
-<div class="page-odd" data-page-number="5">
+<div>
 
   <p>When the branches don't form a fork (i.e. the branch is a descendant of <code>HEAD</code>) a fast-forward merge occurs. A fast-forward merge just moves <code>HEAD</code> to the merged-from branch. Avoid fast-forwarding with <code>git merge --no-ff &lt;branch-name&gt;</code>. Only allow a fast-forward merge with <code>git merge --ff-only &lt;branch-name&gt;</code>.</p>
 
@@ -354,7 +354,7 @@ squash a1bfa50 commit 4
 
 </div>
 
-<div class="page-even" data-page-number="6">
+<div>
 
   <p>To set a configuration value use <code>`git config &lt;section.name&gt; &lt;value&gt;`</code> (<code>--local</code> is the default). To unset a configuration value use <code>`git config --unset &lt;section.name&gt;`</code>. Below are some useful configuration settings.</p>
 
@@ -427,7 +427,7 @@ esac</code></pre>
 
 </div>
 
-<div class="page-odd" data-page-number="7">
+<div>
 
   <h3 id="1-7-2"><a href="#1-7-2"></a>Windows batch script</h3>
   

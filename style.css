@@ -1,7 +1,7 @@
 body
 { position:relative;
   font-family:serif;
-  background-color:#bbb;
+  background-color:#fff;
 }
 
 .pack16
@@ -54,33 +54,46 @@ body
 #pages
 { width:56rem;
   margin:0 auto;
+  counter-reset:pages-counter 0;
 }
-.page-even,.page-odd
+#pages>div
 { width:56rem;
-  height:80rem;
   background-color:#fff;
   padding:4rem;
-  box-shadow:0 0 5px 0 #666;
   margin-top:0.5rem;
   position:relative;
+  counter-increment:pages-counter;
+  min-height:80rem;
 }
 @media only screen and (min-width:113em)
 { #pages
   { width:113rem;
   }
-  .page-even,.page-odd
+  #pages>div
   { float:left;
     margin:0.5rem 0.25rem;
   }
 }
-.page-even::after,.page-odd::after
-{ content:attr(data-page-number);
+#pages>div:nth-child(odd)
+{ clear:both;
+}
+#pages>div::before
+{ content: "p. " counter(pages-counter);
   position:absolute;
-  left:0;
-  bottom:2rem;
-  width:100%;
-  text-align:center;
+  left:4rem;
+  top:0;
+  padding-top:1rem;
   font-size:0.8rem;
+  color:#999;
+}
+#pages>div::after
+{ content: "p. " counter(pages-counter);
+  position:absolute;
+  right:4rem;
+  bottom:0;
+  padding-bottom:1rem;
+  font-size:0.8rem;
+  color:#999;
 }
 
 h1,h2,h3,h4,h5

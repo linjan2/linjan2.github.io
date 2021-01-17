@@ -14,7 +14,7 @@
 
 <div id="pages" class="clearfix">
 
-<div class="page-even" data-page-number="0">
+<div>
   <h1 id="title"><a href="#title"></a>Programming parsers</h1>
   <p>This text explains expression parsers and how one can be built. We want to interpret mathematical notation like <span class="maths">-0.6+12.5×5.5</span> as well as regular expressions like <code>x.|y+</code>.</p>
 
@@ -65,7 +65,7 @@ Parse tree graphically:                 Parse tree in computer memory:
 </div>
 
 
-<div class="page-odd" data-page-number="1">
+<div>
 
   <p>
     To change the order of evaluation, you can use parentheses. <span class="maths">(12+3)×4</span> will evaluate addition before multiplication. Symbols representing left parenthesis and right parenthesis are handled specially in the shunting yard algorithm, so we add two other cases. The shunting yard algorithm now looks like this:
@@ -137,7 +137,7 @@ Postfix notation parse tree: [1 2 3 4 + + +]   equals   ( 1 ( 2 (3 4 +) +) + )
 
 </div>
 
-<div class="page-even" data-page-number="2">
+<div>
 
   <h2 id="1-1"><a href="#1-1"></a>Parsing prefix, infix, and postfix</h2>
   <p>The shunting yard algorithm only works as is on infix operators, so throughout the following sections it will be modified into a a more general <input class="side-note right" type="checkbox" id="sn-1-1"><label for="sn-1-1">shift-reduce parser<span>There is much terminology surrounding parsing techniques. By shift-reduce, I mean we iterate only once over the input text (the shift-step) and use an intermediate stack storage before moving symbols to the output (the reduce-step). Operator precedence is used to determine when to reduce.</span></label>.</p>
@@ -193,7 +193,7 @@ Parse tree graphically:                 Parse tree graphically:
 </div>
 
 
-<div class="page-odd" data-page-number="3">
+<div>
   
   <p>To achieve right associative prefixes and left associative postfixes, the precedence of a postfix is incremented after it is pushed to the operator stack. The expression from <a href="#figure-5">figure 5</a> is parsed again in <a href="#figure-7">figure 7</a>, but with two additional prefixes.</p>
 
@@ -255,7 +255,7 @@ Parse tree:  1 2 - 3 4 # $  =>  (1 (2 -) (3 4 #) $)</pre>
 </div>
 
 
-<div class="page-even" data-page-number="4">
+<div>
 
   <figure aria-labelledby="figure-9-caption" id="figure-9">
 <pre role="img">Input queue: $ 1 -2 # 3 4 \!
@@ -327,7 +327,7 @@ Graphical parse tree:      ?
 </div>
 
 
-<div class="page-odd" data-page-number="5">
+<div>
 
   <p>When updating the algorithm to account for terminals, we can replace the parentheses cases to be general logic for all terminating symbols.</p>
 
@@ -384,7 +384,7 @@ to the output queue. This ends parsing.</code></pre>
 </div>
 
 
-<div class="page-even" data-page-number="6">
+<div>
 
   <h2 id="1-2"><a href="#1-2"></a>Translation into code</h2>
   
@@ -449,7 +449,7 @@ parse(void* memory, const char *input)
 </div>
 
 
-<div class="page-odd" data-page-number="7">
+<div>
 
   <p>The parse function continues by iterating over the input to recognize tokens. Numbers in the expression are interpreted as floating points.</p>
 
@@ -526,7 +526,7 @@ parse(void* memory, const char *input)
 </div>
 
 
-<div class="page-even" data-page-number="8">
+<div>
 
   <div class="code"><pre><code
 >...
@@ -603,7 +603,7 @@ struct token
 </div>
 
 
-<div class="page-odd" data-page-number="9">
+<div>
   <h3 id="1-2-2"><a href="#1-2-2"></a>Building a JSON-parser</h3>
 
   <p>A JSON expression declares a tree structure of elements. Elements can be objects, arrays, strings, numbers, and the constants <code>true</code>, <code>false</code>, and <code>null</code>.</p>
@@ -674,7 +674,7 @@ int main()
 
 </div>
 
-<div class="page-even" data-page-number="10">
+<div>
 
   <p>The memory layout of a parsed JSON tree is shown in <a href="#figure-14">figure 14</a>.</p>
 
@@ -752,7 +752,7 @@ json_array_get(json_array *arr, uint32 i)
 
 </div>
 
-<div class="page-odd" data-page-number="11">
+<div>
 
   <p>An additional API function finds object members by their key string.</p>
 
@@ -829,7 +829,7 @@ parse(void *memory, const char *input)
 
 </div>
 
-<div class="page-even" data-page-number="12">
+<div>
   <p>When the terminating tokens of objects and arrays (<code>} ]</code>) are encountered, all operators in the operator stack are reduced up to and including the <code>LEFT_PAREN_TOKEN</code> delimiter token.</p>
 
   <div class="code" id="code-12"><pre><code
@@ -902,7 +902,7 @@ parse(void *memory, const char *input)
     ...</code></pre></div>
 </div>
 
-<div class="page-odd" data-page-number="13">
+<div>
   <p>The input is shifted at the of the loop.</p>
 
   <div class="code" id="code-16"><pre><code
@@ -972,7 +972,7 @@ TOP(struct memory_stack *stack, uintptr bytes)
 
 </div>
 
-<div class="page-even" data-page-number="14">
+<div>
 
   <h4>Reduce functions</h4>
 
@@ -1051,7 +1051,7 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
 
 </div>
 
-<div class="page-odd" data-page-number="15">
+<div>
 
   <h3 id="1-2-3"><a href="#1-2-3"></a>Building a regular expression machine</h3>
 
@@ -1109,7 +1109,7 @@ reduce_object(struct memory_stack *data_storage, struct memory_stack *queue, str
   <p>Replication uses more memory and every copied state's paths must be updated. Using a counter complicates the runtime logic since the program must check for a counter condition.</p>
 
 </div>
-<div class="page-even" data-page-number="16">
+<div>
 
   <p>By using a counter however, all repetition loops can be encoded as a special case of <code>A{n,m}</code>. <code>A{n}</code> equals <code>A{n,n}</code>; <code>A{n,}</code> equals <code>A{n,UINT_MAX}</code>; <code>A+</code> equals <code>A{1,UINT_MAX}</code>.</p>
 
@@ -1183,7 +1183,7 @@ main(int argc, char **argv)
 <p>The <code>match</code> function is shown below. It calls <code>match_with_counter</code> if it detects a counter-based loop-state.</p>
 
 </div>
-<div class="page-odd" data-page-number="17">
+<div>
 
   <div class="code" id="code-24"><pre><code
 >static const char*
@@ -1253,7 +1253,7 @@ match_with_counter(const char *it, struct state *states, uint32 *_current)
   <p>The second part matches input until either the counter reaches the upper bound or a failed match occurs. A failed match means the loop succeeded in matching <code>n</code> to <code>m</code> times. If the loop exceeds the upper bound, it fails and returns the cached input iterator.</p>
 
 </div>
-<div class="page-even" data-page-number="18">
+<div>
 
 
   <div class="code" id="code-26"><pre><code
@@ -1330,7 +1330,7 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
 
   </div>
 
-<div class="page-odd" data-page-number="19">  
+<div>  
 
   <p>Next in the parse function, the regular expression input is iterated and for each detected type an apply-function is called to create and manipulate states in the state machine.</p>
 
@@ -1408,7 +1408,7 @@ parse(struct memory_stack *stack, const char *input, uint32 *size_out)
 
 </div>
 
-<div class="page-even" data-page-number="20">
+<div>
 
   <div class="code" id="code-30"><pre><code
 >            case '.':
@@ -1494,7 +1494,7 @@ apply_alternation(struct memory_stack *state_machine, struct state *left, struct
 
 </div>
 
-<div class="page-odd" data-page-number="21">
+<div>
 
   <p>The apply-function for zero-or-more is:</p>
 
@@ -1579,7 +1579,7 @@ struct token
 
 </div>
 
-<div class="page-even" data-page-number="22">
+<div>
 
   <h4>Extra notes</h4>
 
@@ -1596,7 +1596,7 @@ struct token
 
 </div>
 
-<div class="page-odd" data-page-number="23">
+<div>
 
   <h3 id="1-2-4"><a href="#1-2-4"></a>Notes on token matching optimization</h3>
 

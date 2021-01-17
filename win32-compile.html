@@ -13,7 +13,7 @@
 
 <div id="pages" class="clearfix">
 
-<div class="page-even" data-page-number="0">
+<div>
 
   <h1 id="title"><a href="#title"></a>Win32 C/C++ command-line compilation</h1>
 
@@ -76,7 +76,7 @@ endlocal</code></pre>
 
 </div>
 
-<div class="page-odd" data-page-number="1">
+<div>
 
   <p>Alternatively, first compile objects and then invoke the linker <code>link.exe</code> to build the executable.</p>
 
@@ -152,7 +152,7 @@ endlocal</code></pre>
 
 </div>
 
-<div class="page-even" data-page-number="2">
+<div>
 
   <h3 id="1-1-2"><a href="#1-1-2"></a>Extra compiler options</h3>
 
@@ -199,7 +199,7 @@ set linker_flags= /debug:full /incremental:no /pdbaltpath:main.pdb</code></pre>
 
 </div>
 
-<div class="page-odd" data-page-number="3">
+<div>
 
   
   <h2 id="1-2"><a href="#1-2"></a>Building without C/C++ run-times</h2>
@@ -259,7 +259,7 @@ endlocal</code></pre>
 
 </div>
 
-<div class="page-even" data-page-number="4">
+<div>
 
   <p>Compiler option <code>/Zl</code> omits default library names from object files, which saves a small amount of space since default libraries are ignored, but it won't have an effect on the final executable though.</p>
 
@@ -331,7 +331,7 @@ DECLSPEC extern int f(); <span class="comment">// exported library function</spa
 
 </div>
 
-<div class="page-odd" data-page-number="5">
+<div>
 
   <p>When compiling a DLL without the C/C++ run-times the entry point must be defined. The default entry point symbol is <code>_DllMainCRTStartup</code> and it's called when the process loads and unloads the library and also when a thread starts or exits after that. In the definition below the function <code>DisableThreadLibraryCalls</code> disables invocation for threads.</p>
 
@@ -405,7 +405,7 @@ endlocal</code></pre>
 
 </div>
 
-<div class="page-even" data-page-number="6">
+<div>
 
   <h3 id="1-5-2"><a href="#1-5-2"></a>Build script for static library</h3>
 

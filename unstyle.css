@@ -60,7 +60,7 @@ a
 a,a:link,a:visited,a:hover,a:active
 { text-decoration:none;
 }
-.clearfix:after
+.clearfix::after
 { content:'';
   display:block;
   overflow:hidden;
