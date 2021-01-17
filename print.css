@@ -7,9 +7,8 @@ body
   overflow:hidden;
   margin:auto;
 }
-.page-even,.page-odd
+#pages>div
 { width:595.4pt;
-  height:842pt;
   float:none;
   background-color:#fff;
   box-shadow:none;
