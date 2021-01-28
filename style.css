@@ -457,6 +457,15 @@ label
   overflow:hidden;
 }
 
+#reference-tab
+{ counter-reset:references-counter 0;
+}
+#reference-tab>div
+{ counter-increment:references-counter;
+}
+#reference-tab>div>div:first-child::before
+{ content: "[" counter(references-counter) "]";
+}
 .reference
 { padding:0.5rem;
   line-height:1.5;
