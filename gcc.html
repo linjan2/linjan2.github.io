@@ -189,7 +189,7 @@ strip --strip-unneeded obj/lib${NAME}.a  <span class="comment"># discard non-glo
   <ul>
     <li>Specify <code>libsomelibrary.a</code> with full path as an object (and not with <code>-l</code>).</li>
     <li>Use: <code>-l:libsomelibrary.a</code>.</li>
-    <li>Use: <code>-Wl,-Bstatic -lsomelibrary --Wl,-Bdynamic</code>.</li>
+    <li>Use: <code>-Wl,-Bstatic -lsomelibrary -Wl,-Bdynamic</code>.</li>
   </ul>
 
   <h2 id="1-4"><a href="#1-4"></a>Example code</h2>
@@ -338,6 +338,26 @@ gdb -batch -ex "disassemble/rs global_function" main  <span class="comment"># vi
         <div class="four">Author:</div><div class="twelve">David Corvoysier</div>
         <div class="four">Version:</div><div class="twelve">2015-01-08</div>
         <div class="four">Link:</div><div class="twelve"><a href="http://www.kaizou.org/2015/01/linux-libraries.html">www.kaizou.org/2015/01/linux-libraries.html</a></div>
+      </div>
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">More about writing ELF shared libraries.</div>
+        <div class="four">Title:</div><div class="twelve">How To Write Shared Libraries</div>
+        <div class="four">Author:</div><div class="twelve">Ulrich Drepper</div>
+        <div class="four">Version:</div><div class="twelve">2011-12-10</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://akkadia.org/drepper/dsohowto.pdf">akkadia.org/drepper/dsohowto.pdf</a></div>
+      </div>
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">How to build PIEs.</div>
+        <div class="four">Title:</div><div class="twelve">The Curious Case of Position Independent Executables</div>
+        <div class="four">Author:</div><div class="twelve">Evan Klitzke</div>
+        <div class="four">Version:</div><div class="twelve">2016-05-10</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://eklitzke.org/position-independent-executables">eklitzke.org/position-independent-executables</a></div>
+      </div>
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">About <code>__attribute__(( visibility ("hidden")))</code>.</div>
+        <div class="four">Title:</div><div class="twelve">Visibility - GCC Wiki</div>
+        <div class="four">Version:</div><div class="twelve">2016-10-12</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://gcc.gnu.org/wiki/Visibility">gcc.gnu.org/wiki/Visibility</a></div>
       </div>
       <div class="reference pack16">
         <div class="two"></div><div class="fourteen em">Usage of <code>extern "C"</code> to mix C and C++.</div>
