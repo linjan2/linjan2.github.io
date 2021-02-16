@@ -274,7 +274,9 @@ nm --defined-only libsomelibrary.a       <span class="comment"># view only defin
 nm --undefined-only libsomelibrary.a     <span class="comment"># view only undefined (external) symbols</span>
 
 objdump --disassemble main.o                          <span class="comment"># view disassembly code</span>
-gdb -batch -ex "disassemble/rs global_function" main  <span class="comment"># view function's disassembly code</span></code></pre>
+gdb -batch -ex "disassemble/rs global_function" main  <span class="comment"># view function's disassembly code</span>
+
+ldconfig -p  <span class="comment"># view libraries and their locations found by ld</span></code></pre>
   </div>
 
 </div>
