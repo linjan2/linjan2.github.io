@@ -272,11 +272,13 @@ nm --dynamic libsomelibrary.so           <span class="comment"># view dynamic sy
 nm --extern-only main                    <span class="comment"># view symbols that are extern</span>
 nm --defined-only libsomelibrary.a       <span class="comment"># view only defined (local) symbols</span>
 nm --undefined-only libsomelibrary.a     <span class="comment"># view only undefined (external) symbols</span>
+nm --demangle cppbinary                  <span class="comment"># view symbols with unmangled C++ names</span>
 
 objdump --disassemble main.o                          <span class="comment"># view disassembly code</span>
 gdb -batch -ex "disassemble/rs global_function" main  <span class="comment"># view function's disassembly code</span>
 
-ldconfig -p  <span class="comment"># view libraries and their locations found by ld</span></code></pre>
+ldconfig -p  <span class="comment"># view libraries and their locations found by ld</span>
+ldd --data-relocs --function-relocs libsomelibrary.so  <span class="comment"># find missing symbols (causing run-time errors)</span></code></pre>
   </div>
 
 </div>
