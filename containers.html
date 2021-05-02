@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Containers</title>
+<meta name="description" content="Using containers with podman, buildah, and skopeo">
+<meta name="viewport" content="width=devide-width, initial-scale=1">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="stylesheet" href="unstyle.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="print.css" media="print">
+</head>
+<body>
+
+<div id="pages" class="clearfix">
+
+<div>
+  <h1 id="title"><a href="#title"></a>Using containers with Podman, Buildah, and Skopeo</h1>
+
+  <p>This text shows basic usage of the container management tools Podman, Buildah, and Skopeo.</p>
+
+  <p>As a short introduction: containers are processes with a re-mapped view of the system's capabilities (e.g. process IDs, the file system, user access control, and network interfaces). Additionally, these processes are limited on what system resources they can use — including CPU time, RAM, network, and disk I/O. These are features of Linux namespaces and cgroups.</p>
+
+  <p>Throughout this text, the container tools are run as non-root (a.k.a. unprivileged user). Podman and Buildah create namespaces when executing and then run seemingly as root inside the user namespace. When starting the containers the user can be set to a non-root user within the user namespace.</p>
+
+  <h2 id="1-1"><a href="#1-1"></a>Using Buildah (or a Buildah build image)</h2>
+
+  <p>The Buildah examples here use <code>dnf</code> on Fedora. A pre-built Fedora image with Buildah can be downloaded from Quay.io as shown below. It's used to build other images that are then made accessible to the host. Buildah could also be installed directly on the host instead.</p>
+
+  <p>Images built inside the Buildah container can be pushed to a repository or stored to a host-mounted volume. The container is run with the pre-configured user <code>build</code>. Since the host user's UID is mapped to 0 (root) inside the user namespace, the volumes' directories are <code>chown</code>:ed to build's user namespace UID to allow write-access. The volume directories are also re-labeled with <code>:Z</code> for SELinux context access control.</p>
+
+  <div class="code"><pre><code
+>podman pull quay.io/buildah/stable:latest                  <span class="comment"># download Buildah image</span>
+podman run --rm -ti --user build buildah/stable:latest id  <span class="comment"># build's UID:GID is 1000:1000</span>
+
+<span class="comment"># set up shared directories</span>
+mkdir ${HOME}/images/
+mkdir ${HOME}/working_directory
+<span class="comment"># download a base image to be mounted into the buildah container</span>
+skopeo copy docker://docker.io/library/hello-world:latest oci:${HOME}/images/base:latest
+
+<span class="comment"># create a buildah build script</span>
+cat > ${HOME}/working_directory/build.sh &lt;&lt;&lt; '#!/bin/sh
+set -o errexit
+buildah from --name working-container oci:/home/build/images/base:latest \
+&& buildah commit working-container oci:/home/build/images/myimage:latest'
+chmod +x ${HOME}/working_directory/build.sh
+
+<span class="comment"># change owner to build within user namespace</span>
+podman unshare chown -R 1000:1000 ${HOME}/images/
+podman unshare chown -R 1000:1000 ${HOME}/working_directory/
+
+<span class="comment"># start script in the Buildah container to build an image into mounted volume</span>
+podman run --rm \
+  --user build \
+  -v ${HOME}/images:/home/build/images:Z \
+  -v ${HOME}/working_directory:/home/build/working_directory:Z \
+  buildah/stable:latest \
+  /home/build/working_directory/build.sh
+
+<span class="comment"># change owner back to host user (i.e. root in user namespace)</span>
+podman unshare chown -R 0:0 ${HOME}/images/
+podman unshare chown -R 0:0 ${HOME}/working_directory/
+
+podman run --rm oci:${HOME}/images/myimage:latest  <span class="comment"># test-run (pulls to local storage)</span>
+podman rmi myimage:latest                          <span class="comment"># removes pulled image</span>
+rm -rf ${HOME}/images/myimage/
+rm -rf ${HOME}/images/base/</code></pre>
+  </div>
+
+</div>
+
+<div>
+  <p>If the container is run with <code>--user build:0</code>, to set the group to root, then volume write-access can be granted with <code>chmod g+rwx</code> instead of using <code>podman unshare chown</code>.</p>
+
+  <div class="code"><pre><code
+>chmod g+rwx ${HOME}/containers/
+chmod g+rwx ${HOME}/working_directory/
+
+podman run --rm \
+  --user build:0 \
+  -v ${HOME}/containers:/home/build/containers:Z \
+  -v ${HOME}/working_directory:/home/build/working_directory:Z \
+  buildah/stable:latest</span></code></pre>
+  </div>
+
+  <p>In the examples after this, Buildah and <code>dnf</code> are run directly on the host machine.</p>
+
+  <h3 id="1-1-1"><a href="#1-1-1"></a>Mount overlay dnf cache for faster re-builds</h3>
+
+  <p>If <code>dnf install</code> runs inside a container where the image's dnf cache is out of date, it will update every time the container is run. To avoid this, an updated cache from the host is injected into the container using an overlay volume mount.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># create dnf cache for Fedora 31</span>
+dnf -y makecache --releasever=31 --setopt=cachedir=${HOME}/dnfcache31
+chcon --reference /var/cache/dnf -R ${HOME}/dnfcache31  <span class="comment">SELinux type=rpm_var_cache_t</span>
+
+ctr=$(buildah from registry.fedoraproject.org/fedora:31)
+buildah run -v ${HOME}/dnfcache31:/var/cache/dnf:O ${ctr} \
+  dnf -y install \
+  --nodocs \
+  --setopt=install_weak_deps=False \
+  httpd
+
+buildah copy ${ctr} index.html /var/www/html/index.html
+buildah config --entrypoint '/usr/sbin/httpd -D FOREGROUND' ${ctr}
+buildah commit ${ctr} myhttpimage
+buildah rm ${ctr}
+
+<span class="comment"># run container as root within namespace (for default configuration to work)</span>
+podman run --rm --publish 8080:80 myhttpimage
+podman rmi myhttpimage
+
+<span class="comment"># run this to remove cache files (gpg keys and directories will remain)</span>
+dnf clean all --setopt=cachedir=${HOME}/dnfcache31</code></pre>
+  </div>
+  
+  <h3 id="1-1-2"><a href="#1-1-2"></a>Mount container file system and install into it</h3>
+
+  <p>As non-root on host, mounting the container's filesystem back to host with <code>buildah mount</code> requires being root within the user namespace. Below, the Buildah commands are placed in a script for <code>buildah unshare</code> to run that achieves this.</p>
+
+<div class="code"><pre><code
+  >dnf -y makecache --releasever 31 --setopt=cachedir=${HOME}/dnfcache31
+chcon --reference /var/cache/dnf -R ${HOME}/dnfcache31  <span class="comment">SELinux type=rpm_var_cache_t</span>
+
+<span class="comment"># create script to be run as user namespace root</span>
+cat > buildah_build.sh &lt;&lt;&lt; '#!/bin/sh
+set -o errexit
+ctr=$(buildah from registry.fedoraproject.org/fedora:31)
+mnt=$(buildah mount ${ctr})
+dnf -y --installroot ${mnt} \
+  --releasever 31 \
+  --setopt=cachedir=${HOME}/dnfcache31 \
+  --nodocs \
+  --setopt=install_weak_deps=False \
+  install nginx
+buildah config --cmd "nginx -g \"daemon off;\"" ${ctr}
+buildah commit ${ctr} nginximage
+buildah umount ${ctr}'
+
+<span class="comment"># run the script as root within user namespace</span>
+chmod +x /buildah_build.sh
+buildah unshare ./buildah_build.sh
+buildah rm ${ctr}  <span class="comment"># delete working container</span>
+
+<span class="comment"># run container as root within namespace (for default configuration to work)</span>
+podman run --rm --publish 8080:80 nginximage
+podman rmi nginximage</code></pre>
+    </div>
+
+</div>
+
+<div>
+
+  <h2 id="1-2"><a href="#1-2"></a>Basic examples and quick reference</h2>
+
+  <p><a href="#table-1">Table 1</a> lists some image registries and image names. If the fully qualified image name is not given, the registries in <code>unqualified-search-registries</code> (in /etc/containers/registries.conf) are searched. The tag defaults to <code>latest</code> and the transport defaults to <code>docker://</code>.</p>
+
+  <table id="table-1">
+    <caption>Table 1: Image registries.</caption>
+    <tr>
+      <th>Registry</th>
+      <th>Example image</th>
+    </tr>
+    <tr>
+      <td class="l">Fedora</td>
+      <td class="mono">docker://registry.fedoraproject.org/fedora-minimal:35</td>
+    </tr>
+    <tr>
+      <td class="l">RedHat</td>
+      <td class="mono">docker://registry.access.redhat.com/ubi8/nodejs-14:latest</td>
+    </tr>
+    <tr>
+    <tr>
+      <td class="l">Quay.io</td>
+      <td class="mono">docker://quay.io/centos/centos:8</td>
+    </tr>
+    <tr>
+      <td class="l">Docker Hub</td>
+      <td class="mono">docker://docker.io/library/hello-world:latest</td>
+    </tr>
+      <td class="l">GitHub Container Registry</td>
+      <td class="mono">docker://ghcr.io/linjan2/imagename:v1.0.0</td>
+    </tr>
+    <tr>
+      <td class="l">Private registry</td>
+      <td class="mono">docker://privateregistry.host:5000/imagename:alpha</td>
+    </tr>
+  </table>
+
+  <h3 id="1-2-1"><a href="#1-2-1"></a>Commands quick reference</h3>
+
+  <div class="code"><pre><code
+><span class="comment"># find remote images and tags</span>
+podman search quay.io/buildah
+podman search --list-tags --limit 100 quay.io/buildah/stable
+skopeo inspect docker://docker.io/buildah/buildah
+
+<span class="comment"># inspect local image</span>
+podman inspect --format '
+  RepoTags={{.RepoTags}}
+  Cmd={{.Config.Cmd}}
+  WorkingDir={{.Config.WorkingDir}}
+  ExposedPorts={{.Config.ExposedPorts}}
+  Env={{.Config.Env}}' \
+  ${IMAGE}
+<span class="comment"># inspect local container</span>
+podman inspect --format '
+  {{.Config.Entrypoint}} {{.Path}} {{.Args}}
+  ImageName={{.ImageName}}
+  Name={{.Name}}
+  CreateCommand={{.Config.CreateCommand}}
+  Pod={{.Pod}}
+  Mounts={{.Mounts}}
+  IPAddress={{.NetworkSettings.IPAddress}}
+  Ports={{.NetworkSettings.Ports}}
+  Env={{.Config.Env}}' \
+  ${CONTAINER}
+<span class="comment"># show IP address</span>
+podman inspect -f "{{.NetworkSettings.IPAddress}}" ${CONTAINER}
+
+<span class="comment"># build from Dockerfile/Containerfile</span>
+podman build --tag imagename -f Containerfile .
+buildah bud --tag imagename -f Containerfile .
+
+<span class="comment"># login and push images to remote repositories</span>
+podman login quay.io
+buildah login --username ${USER} docker.io
+podman login --get-login docker.io
+skopeo login \
+  --tls-verify false \
+  --username ${USER} \
+  --password ${PASSWORD} \
+  myregistrydomain.com:5000
+skopeo logout myregistrydomain.com:5000
+<span class="comment"># log in to ghcr with token</span>
+cat githubtoken.txt | podman login ghcr.io -u ${USER} --password-stdin
+less ${XDG_RUNTIME_DIR}/containers/auth.json  <span class="comment"># contains hashed passwords</span>
+
+podman push myimage docker://quay.io/username/myimage:latest
+buildah push myimage docker://docker.io/username/myimage:v0
+skopeo copy myimage docker://quay.io/username/myimage:latest
+skopeo copy \
+  docker://quay.io/username/myimage:latest \
+  docker://quay.io/username/myimage:v1.0.0
+skopeo delete docker://quay.io/username/myimage:latest  <span class="comment"># deleted all myimage:*</span></code></pre>
+  </div>
+
+</div>
+
+<div>
+
+  <h3 id="1-2-2"><a href="#1-2-2"></a>Fedora base image</h3>
+
+  <p>This creates a Fedora base image for testing out development tools. A new user is created with sudo access.</p>
+
+  <div class="code"><pre><code
+>ctr=$(buildah from registry.fedoraproject.org/fedora:33)
+buildah run ${ctr} dnf install -y passwd
+buildah run ${ctr} useradd -c Loser -G wheel -m -s /bin/bash loser
+buildah run ${ctr} passwd
+buildah config --workingdir /home/loser/ ${ctr}
+buildah commit ${ctr} base:latest
+
+podman run -tiu loser base:latest
+podman start --attach --interactive --latest  <span class="comment"># start the same container (alt. -ali)</span></code></pre>
+  </div>
+
+</div>
+
+</div><!--[ PAGES END ]-->
+
+
+<div id="footer" class="remove-on-print"><span>2021, Linda Jansson.</span></div>
+
+<!--[ SIDE PANEL ]-->
+<input type="checkbox" id="side-panel-switch" aria-hidden="true">
+<div id="side-panel" class="remove-on-print">
+  <label id="side-panel-icon" for="side-panel-switch" aria-label="side panel toggle"></label>
+  <div id="tabs" class="pack16">
+
+    <input type="radio" id="tab-1" name="tab-control" aria-hidden="true" checked>
+    <input type="radio" id="tab-2" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-3" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-4" name="tab-control" aria-hidden="true">
+
+    <label for="tab-1" class="four" aria-label="side panel outline button">outline</label>
+    <label for="tab-2" class="four" aria-label="side panel external button">external</label>
+    <label for="tab-3" class="four" aria-label="side panel more button">more</label>
+    <label for="tab-4" class="four" aria-label="side panel about button">about</label>
+
+    <div class="sixteen" id="outline-tab">
+      <a href="#title">Using containers with Podman, Buildah, and Skopeo</a>
+      <ul>
+        <li>
+          <a href="#1-1">Using Buildah (or a Buildah build image)</a>
+          <ul>
+            <li><a href="#1-1-1">Mount overlay dnf cache for faster re-builds</a></li>
+            <li><a href="#1-1-2">Mount container file system and install into it</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="#1-2">Basic examples and quick reference</a>
+          <ul>
+            <li><a href="#1-2-1">Commands quick reference</a></li>
+            <li><a href="#1-2-2">Fedora base image</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    
+    <div class="sixteen" id="reference-tab">
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">Open source container projects (including Podman,  Buildah, and Skopeo).</div>
+        <div class="four">Title:</div><div class="twelve">Open Repository for Container Tools</div>
+        <div class="four">Author:</div><div class="twelve">www.mankier.com.</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2021-03-28</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://github.com/containers">github.com/containers</a></div>
+      </div>
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em"><code>podman</code> ManKier man page.</div>
+        <div class="four">Title:</div><div class="twelve">podman man page - General Commands | ManKier</div>
+        <div class="four">Author:</div><div class="twelve">www.mankier.com.</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2021-03-28</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://www.mankier.com/1/podman">www.mankier.com/1/podman</a></div>
+      </div>
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em"><code>buildah</code> ManKier man page.</div>
+        <div class="four">Title:</div><div class="twelve">buildah man page - General Commands | ManKier</div>
+        <div class="four">Author:</div><div class="twelve">www.mankier.com.</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2021-03-28</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://www.mankier.com/1/buildah">www.mankier.com/1/buildah</a></div>
+      </div>
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em"><code>skopeo</code> ManKier man page.</div>
+        <div class="four">Title:</div><div class="twelve">skopeo man page - General Commands | ManKier</div>
+        <div class="four">Author:</div><div class="twelve">www.mankier.com.</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2021-05-02</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://www.mankier.com/1/skopeo">www.mankier.com/1/skopeo</a></div>
+      </div>
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">Podman installation instructions for various systems.</div>
+        <div class="four">Title:</div><div class="twelve">Podman Installation Instructions</div>
+        <div class="four">Author:</div><div class="twelve">podman.io.</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2021-05-01</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://podman.io/getting-started/installation">podman.io/getting-started/installation</a></div>
+      </div>
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">Red Hat container catalogue.</div>
+        <div class="four">Title:</div><div class="twelve">Certified Container Images - Red Hat Ecosystem Catalog</div>
+        <div class="four">Author:</div><div class="twelve">Red Hat</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2021-03-28</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://catalog.redhat.com/software/containers/explore">catalog.redhat.com/software/containers/explore</a></div>
+      </div>      
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">Dockerfile commands documentation.</div>
+        <div class="four">Author:</div><div class="twelve">Docker Inc.</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2021-04-28</div>
+        <div class="four">Link:</div>
+        <div class="twelve">
+          Dockerfile reference:<br>
+          <a href="https://docs.docker.com/engine/reference/builder/">docs.docker.com/engine/reference/builder/</a>
+        </div>
+        <div class="four">Link:</div>
+        <div class="twelve">
+          Best practices for writing Dockerfiles:<br>
+          <a href="https://docs.docker.com/develop/develop-images/dockerfile_best-practices/">docs.docker.com/develop/develop-images/dockerfile_best-practices/</a>
+        </div>
+        <div class="four">Link:</div>
+        <div class="twelve">
+          Docker CLI:<br>
+          <a href="https://docs.docker.com/engine/reference/commandline/docker/">docs.docker.com/engine/reference/commandline/docker/</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="more-tab">
+      <span role="img" aria-label="warning icon" class="icon">⚠</span>
+    </div>
+
+    <div id="about-tab">
+      <p>This text was written for learning purposes. The website's text, HTML, and CSS were created by Linda Jansson.</p>
+      <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—and myself.</p>
+      <p>Notify me of issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
