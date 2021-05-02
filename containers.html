@@ -71,7 +71,7 @@ rm -rf ${HOME}/images/base/</code></pre>
 </div>
 
 <div>
-  <p>If the container is run with <code>--user build:0</code>, to set the group to root, then volume write-access can be granted with <code>chmod g+rwx</code> instead of using <code>podman unshare chown</code>.</p>
+  <p>If the container can be run with <code>--user build:0</code>, to set the group to root, then volume write-access can be granted with <code>chmod g+rwx</code> instead of using <code>podman unshare chown</code>.</p>
 
   <div class="code"><pre><code
 >chmod g+rwx ${HOME}/containers/
