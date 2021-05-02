@@ -228,7 +228,7 @@ podman login quay.io
 buildah login --username ${USER} docker.io
 podman login --get-login docker.io
 skopeo login \
-  --tls-verify false \
+  --tls-verify=false \
   --username ${USER} \
   --password ${PASSWORD} \
   myregistrydomain.com:5000
