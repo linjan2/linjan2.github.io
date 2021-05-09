@@ -378,6 +378,8 @@ buildah rm ${ctr2}
 podman run --rm --user nginx --publish 8888:8888 custom-nginx:latest</code></pre>
   </div>
 
+  <p>To output errors and access logs to standard output, update nginx.conf's <code>error_log</code> and <code>access_log</code> values to the file <code>/dev/stdout</code>.</p>
+
 </div>
 
 </div><!--[ PAGES END ]-->
