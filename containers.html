@@ -34,38 +34,38 @@
 podman run --rm -ti --user build buildah/stable:latest id  <span class="comment"># build's UID:GID is 1000:1000</span>
 
 <span class="comment"># set up shared directories</span>
-mkdir ${HOME}/images/
-mkdir ${HOME}/working_directory
+mkdir images/
+mkdir working_directory
 <span class="comment"># download a base image to be mounted into the buildah container</span>
-skopeo copy docker://docker.io/library/hello-world:latest oci:${HOME}/images/base:latest
+skopeo copy docker://docker.io/library/hello-world:latest oci:${PWD}/images/base:latest
 
 <span class="comment"># create a buildah build script</span>
-cat > ${HOME}/working_directory/build.sh &lt;&lt;&lt; '#!/bin/sh
+cat > working_directory/build.sh &lt;&lt;&lt; '#!/bin/sh
 set -o errexit
 buildah from --name working-container oci:/home/build/images/base:latest \
 && buildah commit working-container oci:/home/build/images/myimage:latest'
-chmod +x ${HOME}/working_directory/build.sh
+chmod +x working_directory/build.sh
 
 <span class="comment"># change owner to build within user namespace</span>
-podman unshare chown -R 1000:1000 ${HOME}/images/
-podman unshare chown -R 1000:1000 ${HOME}/working_directory/
+podman unshare chown -R 1000:1000 ${PWD}/images/
+podman unshare chown -R 1000:1000 ${PWD}/working_directory/
 
 <span class="comment"># start script in the Buildah container to build an image into mounted volume</span>
 podman run --rm \
   --user build \
-  -v ${HOME}/images:/home/build/images:Z \
-  -v ${HOME}/working_directory:/home/build/working_directory:Z \
+  -v ${PWD}/images:/home/build/images:Z \
+  -v ${PWD}/working_directory:/home/build/working_directory:Z \
   buildah/stable:latest \
   /home/build/working_directory/build.sh
 
 <span class="comment"># change owner back to host user (i.e. root in user namespace)</span>
-podman unshare chown -R 0:0 ${HOME}/images/
-podman unshare chown -R 0:0 ${HOME}/working_directory/
+podman unshare chown -R 0:0 ${PWD}/images/
+podman unshare chown -R 0:0 ${PWD}/working_directory/
 
-podman run --rm oci:${HOME}/images/myimage:latest  <span class="comment"># test-run (pulls to local storage)</span>
+podman run --rm oci:${PWD}/images/myimage:latest  <span class="comment"># test-run (pulls to local storage)</span>
 podman rmi myimage:latest                          <span class="comment"># removes pulled image</span>
-rm -rf ${HOME}/images/myimage/
-rm -rf ${HOME}/images/base/</code></pre>
+rm -rf images/myimage/
+rm -rf images/base/</code></pre>
   </div>
 
 </div>
@@ -74,13 +74,13 @@ rm -rf ${HOME}/images/base/</code></pre>
   <p>If the container can be run with <code>--user build:0</code>, to set the group to root, then volume write-access can be granted with <code>chmod g+rwx</code> instead of using <code>podman unshare chown</code>.</p>
 
   <div class="code"><pre><code
->chmod g+rwx ${HOME}/containers/
-chmod g+rwx ${HOME}/working_directory/
+>chmod g+rwx ${PWD}/containers/
+chmod g+rwx ${PWD}/working_directory/
 
 podman run --rm \
   --user build:0 \
-  -v ${HOME}/containers:/home/build/containers:Z \
-  -v ${HOME}/working_directory:/home/build/working_directory:Z \
+  -v ${PWD}/containers:/home/build/containers:Z \
+  -v ${PWD}/working_directory:/home/build/working_directory:Z \
   buildah/stable:latest</span></code></pre>
   </div>
 
@@ -92,11 +92,11 @@ podman run --rm \
 
   <div class="code"><pre><code
 ><span class="comment"># create dnf cache for Fedora 31</span>
-dnf -y makecache --releasever=31 --setopt=cachedir=${HOME}/dnfcache31
-chcon --reference /var/cache/dnf -R ${HOME}/dnfcache31  <span class="comment">SELinux type=rpm_var_cache_t</span>
+dnf -y makecache --releasever=31 --setopt=cachedir=${PWD}/dnfcache31
+chcon --reference /var/cache/dnf -R ${PWD}/dnfcache31  <span class="comment">SELinux type=rpm_var_cache_t</span>
 
 ctr=$(buildah from registry.fedoraproject.org/fedora:31)
-buildah run -v ${HOME}/dnfcache31:/var/cache/dnf:O ${ctr} \
+buildah run -v ${PWD}dnfcache31:/var/cache/dnf:O ${ctr} \
   dnf -y install \
   --nodocs \
   --setopt=install_weak_deps=False \
@@ -112,7 +112,7 @@ podman run --rm --publish 8080:80 myhttpimage
 podman rmi myhttpimage
 
 <span class="comment"># run this to remove cache files (gpg keys and directories will remain)</span>
-dnf clean all --setopt=cachedir=${HOME}/dnfcache31</code></pre>
+dnf clean all --setopt=cachedir=${PWD}dnfcache31</code></pre>
   </div>
   
   <h3 id="1-1-2"><a href="#1-1-2"></a>Mount container file system and install into it</h3>
@@ -120,8 +120,8 @@ dnf clean all --setopt=cachedir=${HOME}/dnfcache31</code></pre>
   <p>As non-root on host, mounting the container's filesystem back to host with <code>buildah mount</code> requires being root within the user namespace. Below, the Buildah commands are placed in a script for <code>buildah unshare</code> to run that achieves this.</p>
 
 <div class="code"><pre><code
-  >dnf -y makecache --releasever 31 --setopt=cachedir=${HOME}/dnfcache31
-chcon --reference /var/cache/dnf -R ${HOME}/dnfcache31  <span class="comment">SELinux type=rpm_var_cache_t</span>
+  >dnf -y makecache --releasever 31 --setopt=cachedir=${PWD}/dnfcache31
+chcon --reference /var/cache/dnf -R ${PWD}/dnfcache31  <span class="comment">SELinux type=rpm_var_cache_t</span>
 
 <span class="comment"># create script to be run as user namespace root</span>
 cat > buildah_build.sh &lt;&lt;&lt; '#!/bin/sh
@@ -130,7 +130,7 @@ ctr=$(buildah from registry.fedoraproject.org/fedora:31)
 mnt=$(buildah mount ${ctr})
 dnf -y --installroot ${mnt} \
   --releasever 31 \
-  --setopt=cachedir=${HOME}/dnfcache31 \
+  --setopt=cachedir=${PWD}/dnfcache31 \
   --nodocs \
   --setopt=install_weak_deps=False \
   install nginx
@@ -258,12 +258,121 @@ skopeo delete docker://quay.io/username/myimage:latest  <span class="comment"># 
 >ctr=$(buildah from registry.fedoraproject.org/fedora:33)
 buildah run ${ctr} dnf install -y passwd
 buildah run ${ctr} useradd -c Loser -G wheel -m -s /bin/bash loser
-buildah run ${ctr} passwd
+buildah run ${ctr} passwd loser
 buildah config --workingdir /home/loser/ ${ctr}
 buildah commit ${ctr} base:latest
+buildah rm ${ctr}
 
 podman run -tiu loser base:latest
 podman start --attach --interactive --latest  <span class="comment"># start the same container (alt. -ali)</span></code></pre>
+  </div>
+
+  <h3 id="1-2-2"><a href="#1-2-3"></a>Nginx builder image</h3>
+
+  <p>This creates an image that runs a custom version of Nginx built from source. It's built in two steps. In step one, Nginx is downloaded and built in one container. The output is the copied to another container that is committed to the final image. Both containers are based on the Fedora base image in the previous section.</p>
+
+  <p>In the first part a container is created with both the Nginx source and development tools.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># prepare cache to mount into both containers (for faster installations)</span>
+dnf -y makecache --releasever=33 --setopt=cachedir=${PWD}/dnfcache33
+chcon --reference /var/cache/dnf -R ${PWD}/dnfcache33
+
+ctr1=$(buildah from base:latest)
+
+buildah run \
+  -v ${PWD}/dnfcache33:/var/cache/dnf:O \
+  ${ctr1} \
+  dnf install -y --setopt=install_weak_deps=False \
+    gcc binutils make wget openssl-devel zlib-devel pcre-devel
+buildah run ${ctr1} wget https://nginx.org/download/nginx-1.18.0.tar.gz
+buildah run ${ctr1} tar zxf nginx-1.18.0.tar.gz
+
+<span class="comment"># build Nginx</span>
+buildah run \
+  ${ctr1} \
+  bash -c 'cd nginx-1.18.0 && ./configure \
+    --build=custom-build \
+    --with-debug \
+    --builddir=/home/loser/build \
+    --prefix=/usr/share/nginx \
+    --sbin-path=/usr/sbin/nginx \
+    --conf-path=/etc/nginx/nginx.conf \
+    --pid-path=/var/run/nginx/nginx.pid \
+    --lock-path=/var/run/nginx/lock \
+    --modules-path=/usr/share/nginx/modules \
+    --error-log-path=/var/log/nginx/error.log \
+    --http-log-path=/var/log/nginx/access.log \
+    --http-client-body-temp-path=/var/lib/nginx/tmp/client_body \
+    --http-proxy-temp-path=/var/lib/nginx/tmp/proxy \
+    --http-fastcgi-temp-path=/var/lib/nginx/tmp/fastcgi \
+    --http-uwsgi-temp-path=/var/lib/nginx/tmp/uwsgi \
+    --http-scgi-temp-path=/var/lib/nginx/tmp/scgi \
+    --user=nginx \
+    --group=nginx \
+    --with-http_ssl_module \
+    --with-http_gzip_static_module \
+    --with-http_v2_module \
+    --with-http_stub_status_module \
+    && make'
+
+buildah commit ${ctr1} build-nginx:latest  <span class="comment"># store state for rebuilds</span></code></pre>
+  </div>
+
+  <p>In the second part the binaries and configuration files are copied from the first container into a new container. Run-time directories are created and their permissions are changed to give access to the user <code>nginx</code> and the root group.</p>
+
+</div>
+
+<div>
+
+  <div class="code"><pre><code
+>ctr2=$(buildah from base:latest)
+
+buildah run \
+  -v ${PWD}/dnfcache33:/var/cache/dnf:O \
+  ${ctr2} dnf install -y --nodocs openssl-libs zlib pcre
+<span class="comment"># create Nginx system user with root as supplementary group</span>
+buildah run ${ctr2} useradd \
+  --system \
+  --comment 'NGINX user' \
+  --user-group \
+  --groups 0 \
+  --home-dir /usr/share/nginx \
+  --shell /usr/sbin/nologin \
+  nginx
+
+<span class="comment"># create configured run-time directories</span>
+buildah run ${ctr2} mkdir -p \
+  /{usr/{sbin/nginx/,share/nginx/modules/},var/{run/nginx/lock/,log/nginx/,lib/nginx/tmp/},etc/nginx/}
+
+<span class="comment"># add binary and (default) files from ctr1 to ctr2</span>
+buildah copy --from ${ctr1} --chmod 770 ${ctr2} \
+  /home/loser/build/nginx /usr/sbin/nginx/nginx
+buildah copy --from ${ctr1} ${ctr2} \
+  /home/loser/nginx-1.18.0/html/ /usr/share/nginx/html/
+buildah copy --from ${ctr1} ${ctr2} \
+  /home/loser/nginx-1.18.0/conf/{nginx.conf,mime.types} /etc/nginx/
+
+<span class="comment"># change permissions</span>
+buildah run ${ctr2} chown -R nginx:0 \
+  /{usr/{sbin/nginx/,share/nginx/},var/{run/nginx/,log/nginx/,lib/nginx/},etc/nginx/}
+buildah run ${ctr2} chmod -R ug+rwX,o-rwx \
+  /{usr/{sbin/nginx/,share/nginx/},var/{run/nginx/,log/nginx/,lib/nginx/},etc/nginx/}
+
+<span class="comment"># replace `listen 80` with `listen 8888` in nginx.conf</span>
+buildah run ${ctr2} sed --in-place --regexp-extended \
+  's/^( +listen +)80;/\18888;/g' \
+  /etc/nginx/nginx.conf
+
+buildah config --workingdir /usr/share/nginx/ ${ctr2}
+buildah config --cmd '/usr/sbin/nginx/nginx -g "daemon off;"' ${ctr2}
+
+buildah commit ${ctr2} custom-nginx:latest
+buildah rm ${ctr1}
+buildah rm ${ctr2}
+
+<span class="comment"># test-run</span>
+podman run --rm --user nginx --publish 8888:8888 custom-nginx:latest</code></pre>
   </div>
 
 </div>
@@ -304,6 +413,7 @@ podman start --attach --interactive --latest  <span class="comment"># start the 
           <ul>
             <li><a href="#1-2-1">Commands quick reference</a></li>
             <li><a href="#1-2-2">Fedora base image</a></li>
+            <li><a href="#1-2-3">Nginx base image</a></li>
           </ul>
         </li>
       </ul>
