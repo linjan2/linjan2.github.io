@@ -196,6 +196,9 @@ podman search quay.io/buildah
 podman search --list-tags --limit 100 quay.io/buildah/stable
 skopeo inspect docker://docker.io/buildah/buildah
 
+<span class="comment"># start bash in running container</span>
+podman exec -ti ${CONTAINER} /bin/bash
+
 <span class="comment"># inspect local image</span>
 podman inspect --format '
   RepoTags={{.RepoTags}}
