@@ -267,7 +267,7 @@ podman run -tiu loser base:latest
 podman start --attach --interactive --latest  <span class="comment"># start the same container (alt. -ali)</span></code></pre>
   </div>
 
-  <h3 id="1-2-2"><a href="#1-2-3"></a>Nginx builder image</h3>
+  <h3 id="1-2-3"><a href="#1-2-3"></a>Nginx builder image</h3>
 
   <p>This creates an image that runs a custom version of Nginx built from source. It's built in two steps. In step one, Nginx is downloaded and built in one container. The output is the copied to another container that is committed to the final image. Both containers are based on the Fedora base image in the previous section.</p>
 
@@ -413,7 +413,7 @@ podman run --rm --user nginx --publish 8888:8888 custom-nginx:latest</code></pre
           <ul>
             <li><a href="#1-2-1">Commands quick reference</a></li>
             <li><a href="#1-2-2">Fedora base image</a></li>
-            <li><a href="#1-2-3">Nginx base image</a></li>
+            <li><a href="#1-2-3">Nginx builder image</a></li>
           </ul>
         </li>
       </ul>
