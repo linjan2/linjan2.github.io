@@ -226,7 +226,7 @@ podman inspect -f "{{.NetworkSettings.IPAddress}}" ${CONTAINER}
 podman build --tag imagename -f Containerfile .
 buildah bud --tag imagename -f Containerfile .
 
-<span class="comment"># login and push images to remote repositories</span>
+<span class="comment"># login (in various ways) and push images to remote repositories</span>
 podman login quay.io
 buildah login --username ${USER} docker.io
 podman login --get-login docker.io
