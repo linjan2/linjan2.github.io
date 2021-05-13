@@ -379,9 +379,9 @@ podman run --rm --user nginx --publish 8888:8888 custom-nginx:latest</code></pre
 
 <div>
 
-  <h3 id="1-2-4"><a href="#1-2-4"></a>Node.js image</h3>
+  <h3 id="1-2-4"><a href="#1-2-4"></a>Node.js development image</h3>
 
-  <p>This creates an image from <code>node:alpine</code>. A new user that is part of the root group is created. Two volumes are mounted into the container to persist both project files and <code>npm</code> data.</p>
+  <p>This creates an image for developing Node.js applications from <code>node:alpine</code>. A new user in the root group is created. Two volumes are mounted to persist both project files and <code>npm</code> data.</p>
 
   <div class="code"><pre><code
 >podman pull docker://docker.io/library/node:alpine
@@ -469,7 +469,7 @@ podman start -ali  <span class="comment"># re-start container with same data</sp
             <li><a href="#1-2-1">Commands quick reference</a></li>
             <li><a href="#1-2-2">Fedora base image</a></li>
             <li><a href="#1-2-3">Nginx builder and runner images</a></li>
-            <li><a href="#1-2-4">Node.js image</a></li>
+            <li><a href="#1-2-4">Node.js development image</a></li>
           </ul>
         </li>
       </ul>
