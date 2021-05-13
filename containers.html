@@ -42,8 +42,8 @@ skopeo copy docker://docker.io/library/hello-world:latest oci:${PWD}/images/base
 <span class="comment"># create a buildah build script</span>
 cat > working_directory/build.sh &lt;&lt;&lt; '#!/bin/sh
 set -o errexit
-buildah from --name working-container oci:/home/build/images/base:latest \
-&& buildah commit working-container oci:/home/build/images/myimage:latest'
+buildah from --name working-container oci:/home/build/images/base:latest
+buildah commit working-container oci:/home/build/images/myimage:latest'
 chmod +x working_directory/build.sh
 
 <span class="comment"># change owner to build within user namespace</span>
