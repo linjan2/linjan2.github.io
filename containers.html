@@ -390,9 +390,10 @@ ctr=$(buildah from node:alpine)
 <span class="comment"># add user loser:root; prompts for password</span>
 buildah run ${ctr} adduser --gecos 'Loser' --shell /bin/ash --ingroup root loser
 
-<span class="comment"># set up sourcing of .shinit-script for users in interactive shells</span>
+<span class="comment"># source .shinit in interactive shells and update PATH with npm's /bin</span>
 buildah run ${ctr} ash -c 'cat > /etc/profile.d/shinit.sh' \
-  &lt;&lt;&lt;'[ -r ${HOME}/.shinit ] && . ${HOME}/.shinit'
+&lt;&lt;&lt;'[ -r ${HOME}/.shinit ] && . ${HOME}/.shinit
+export PATH=${PATH}:${NPM_CONFIG_PREFIX}/bin'
 
 <span class="comment"># update configuration for interactive use</span>
 buildah config \
@@ -403,7 +404,7 @@ buildah config \
   --env NODE_ENV=development \
   --env NPM_CONFIG_GLOBALCONFIG=/home/loser/cache/npmrc \
   --env NPM_CONFIG_USERCONFIG=/home/loser/cache/.npmrc \
-  --env NPM_CONFIG_PREFIX=/home/loser/cache/ \
+  --env NPM_CONFIG_PREFIX=/home/loser/cache \
   --env NPM_CONFIG_CACHE=/home/loser/cache/.npm \
   --env NPM_CONFIG_INIT_MODULE=/home/loser/cache/.npm-init.js \
   ${ctr}
