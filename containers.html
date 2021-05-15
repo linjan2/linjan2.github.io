@@ -424,12 +424,12 @@ podman run -ti --name nodejs \
   -v ${PWD}/web:/home/loser/web/:U,Z,rw \
   node-loser:latest
 
-podman start -ai nodejs  <span class="comment"># re-start container with same data</span></code></pre>
+podman start -ai nodejs  <span class="comment"># re-start container with same state</span></code></pre>
   </div>
 
-  <p>If files are created in the <code>web</code> directory from outside the container the owner will not be <code>loser</code>, but re-starting the container will chown everything inside <code>web</code> again. If the umask was not 002 on the host, then the file should also be chmod:ed with <code>chmod ug+rw FILE</code>.</p>
+  <p>The Node.js container can be started, stopped, removed, and then re-run with the same installed packages and cached data stored within the volume <code>node_volume</code>. To remove the volume use <code>podman volume rm node_volume</code>.</p>
 
-  <p>To remove the volume <code>node_volume</code> use <code>podman volume rm node_volume</code>.</p>
+  <p>If files are created in the <code>web</code> directory from outside the container the owner will not be <code>loser</code>, but re-starting the container will chown everything inside <code>web</code> again. If the umask was not 002 on the host, then the file should also be chmod:ed with <code>chmod ug+rw FILE</code>.</p>
 
 </div>
 
