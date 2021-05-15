@@ -429,7 +429,7 @@ podman start -ai nodejs  <span class="comment"># re-start container with same da
 
   <p>If files are created in the <code>web</code> directory from outside the container the owner will not be <code>loser</code>, but re-starting the container will chown everything inside <code>web</code> again. If the umask was not 002 on the host, then the file should also be chmod:ed with <code>chmod ug+rw FILE</code>.</p>
 
-  <p>Remove the volume <code>node_volume</code> with <code>podman volume rm node_volume</code>.</p>
+  <p>To remove the volume <code>node_volume</code> use <code>podman volume rm node_volume</code>.</p>
 
 </div>
 
