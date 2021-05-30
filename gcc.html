@@ -128,7 +128,8 @@ gcc -c ${COMPILER_FLAGS} -o obj/extra.o src/extra.c
 gcc -shared -fPIC \
   -o obj/lib${NAME}.so.${VERSION} \
   -Wl,-soname,lib${NAME}.so.${SONAME} \
-  obj/${NAME}.o \
+  obj/somelibrary.o \
+  obj/extra.o \
   -Wl,--fatal-warnings,--no-undefined,--no-allow-shlib-undefined,-rpath-link=lib \
   -Wl,-z,origin -Wl,-rpath,'$ORIGIN' \
   -Llib \
