@@ -461,7 +461,7 @@ endlocal</code></pre>
 
   <p>The USB-connected device must have USB debugging enabled which is found under developer options in settings. On Android 4.2 and higher the developer options are only shown after tapping seven times on the build number shown within the "About Phone" view.</p>
 
-  <p>Use <code>adb start-server</code> to start the ADB server and <code>adb kill-server</code> to stop it. A prompt to allow USB debugging should appear on the connected device. Use <code>adb devices -l</code> to list connected devices. Install with <code>adb install -r app.apk</code> and unstinstall with <code>adb uninstall &lt;PACKAGE&gt;</code>.</p>
+  <p>Use <code>adb start-server</code> to start the ADB server and <code>adb kill-server</code> to stop it. A prompt to allow USB debugging should appear on the connected device. Use <code>adb devices -l</code> to list connected devices. Install with <code>adb install -r app.apk</code> and uninstall with <code>adb uninstall &lt;PACKAGE&gt;</code>.</p>
 
   <p>The following script will install the application, clear the logs and begin outputting <code>logcat</code> messages.</p>
 
