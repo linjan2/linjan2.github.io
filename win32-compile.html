@@ -193,7 +193,7 @@ set linker_flags= /debug:full /incremental:no /pdbaltpath:main.pdb</code></pre>
 
   <p>Beside the compilation tools, the Visual Studio installation also includes a binary dumper tool called <code>dumpbin</code>. It's brought into the command-line environment by <code>vcvarsall.bat</code>.</p>
 
-  <p>Display exported symbols with <code>dumpbin /exports &lt;BINARY&gt;</code>. Display imported symbols with <code>dumpbin /imports &lt;BINARY&gt;</code>. If linked with linker option <code>/debug</code>, diplay COFF symbol table with <code>dumpin /symbols &lt;BINARY&gt;</code>. The binary file can be a <code>.exe</code> executable, a <code>.obj</code> object file, a <code>.lib</code> library, or a <code>.dll</code> library.</p>
+  <p>Display exported symbols with <code>dumpbin /exports &lt;BINARY&gt;</code>. Display imported symbols with <code>dumpbin /imports &lt;BINARY&gt;</code>. If linked with linker option <code>/debug</code>, display COFF symbol table with <code>dumpin /symbols &lt;BINARY&gt;</code>. The binary file can be a <code>.exe</code> executable, a <code>.obj</code> object file, a <code>.lib</code> library, or a <code>.dll</code> library.</p>
 
   <p>The program Dependency Walker can also be downloaded at <a href="http://dependencywalker.com/">dependencywalker.com</a> to view a binary's dependencies with a graphical interface. It officially only supports up to Windows 8 though.</p>
 
@@ -218,7 +218,7 @@ set linker_flags= /debug:full /incremental:no /pdbaltpath:main.pdb</code></pre>
       </ul>
     </li>
     <li>
-      <code>Define memset()</code> if the compiler doesn't inline it with an intrinsic version.
+      Define<code>memset()</code> if the compiler doesn't inline it with an intrinsic version.
       <ul>
         <li>a <code>memset()</code> function call is generated for static initialization of arrays and structs.</li>
         <li>the intrinsic version is requested when passing <code>/O2</code> or <code>/Oi</code> and when not passing <code>/Od</code> to the compiler.</li>
