@@ -176,7 +176,7 @@ for (int i = 0; i &lt; 10; i += 1) <span class="comment">// rotate 10 times</spa
     $$
   </figure>
 
-  <p>The multiplication can also be expressed using dot product and cross product if the last three parameters are treated as three-dimensional vectors.</p>
+  <p>The multiplication can also be expressed using dot product and cross product if the last three parameters of each quaternion are treated as one three-dimensional vector.</p>
 
   <figure aria-label="">
     $$
@@ -211,7 +211,7 @@ void quaternion_multiplication(quaternion *out, quaternion *q1, quaternion *q2)
     out-&gt;d = q3.d;
 }</code></pre></div>
 
-  <p>To rotate a vector \(\vec v = (v_x,v_y,v_z)\), it's first made into a quaternion as: \(q_v=(0, v_x, v_y, v_z)\). Then the quaternion \(q = (a, \vec u)\) is constructed such that the vector \(\vec u = (u_x, u_y, u_z)\) is perpendicular to the desired plane of rotation. The following equation then performs the rotation on \(\vec v\). The resulting 3D coordinates are in the last three parameters of \(q_v'\).</p>
+  <p>To rotate a vector \(\vec v = (v_x,v_y,v_z)\), it's first made into a quaternion \(q_v=(0, v_x, v_y, v_z)\). Then the quaternion \(q = (a, \vec u)\) is created such that the vector \(\vec u = (u_x, u_y, u_z)\) is perpendicular to the desired plane of rotation. The following equation then performs the rotation on \(\vec v\). The resulting 3D coordinates are in the last three parameters of \(q_v'\).</p>
 
   <figure aria-label="">
     $$
@@ -290,7 +290,7 @@ void quaternion_multiplication(quaternion *out, quaternion *q1, quaternion *q2)
     $$
   </figure>
 
-  <p>Find a quaternion with a plane of rotation not perpendicular to major axes by rotating the \(\vec u\)-component of a major axis quaternion with other major axis quaternions.</p>
+  <p>Find a quaternion with any plane of rotation by rotating the \(\vec u\)-component of a major axis quaternion with other major axis quaternions.</p>
 
   <figure aria-label="">
     $$
