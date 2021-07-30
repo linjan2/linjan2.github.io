@@ -93,7 +93,7 @@ podman run --rm \
   <div class="code"><pre><code
 ><span class="comment"># create dnf cache for Fedora 31</span>
 dnf -y makecache --releasever=31 --setopt=cachedir=${PWD}/dnfcache31
-chcon --reference /var/cache/dnf -R ${PWD}/dnfcache31  <span class="comment">SELinux type=rpm_var_cache_t</span>
+chcon --reference /var/cache/dnf -R ${PWD}/dnfcache31  <span class="comment"># SELinux type=rpm_var_cache_t</span>
 
 ctr=$(buildah from registry.fedoraproject.org/fedora:31)
 buildah run -v ${PWD}dnfcache31:/var/cache/dnf:O ${ctr} \
@@ -121,7 +121,7 @@ dnf clean all --setopt=cachedir=${PWD}dnfcache31</code></pre>
 
 <div class="code"><pre><code
   >dnf -y makecache --releasever 31 --setopt=cachedir=${PWD}/dnfcache31
-chcon --reference /var/cache/dnf -R ${PWD}/dnfcache31  <span class="comment">SELinux type=rpm_var_cache_t</span>
+chcon --reference /var/cache/dnf -R ${PWD}/dnfcache31  <span class="comment"># SELinux type=rpm_var_cache_t</span>
 
 <span class="comment"># create script to be run as user namespace root</span>
 cat > buildah_build.sh &lt;&lt;&lt; '#!/bin/sh
@@ -267,7 +267,7 @@ podman start --attach --interactive --latest  <span class="comment"># start the 
 
   <h3 id="1-2-3"><a href="#1-2-3"></a>Nginx builder and runner images</h3>
 
-  <p>This creates an image that runs a custom version of Nginx built from source. It's built in two steps. In step one, Nginx is downloaded and built in one container. The output is the copied to another container that is committed to the final image. Both containers are based on the Fedora base image in the previous section.</p>
+  <p>This creates an image that runs a custom version of Nginx built from source. It's built in two steps. In step one, Nginx is downloaded and built in one container. The output is then copied to another container that is committed to the final image. Both containers are based on the Fedora base image in the previous section.</p>
 
   <p>In the first part a container is created with both the Nginx source and development tools.</p>
 
