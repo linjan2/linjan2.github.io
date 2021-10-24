@@ -315,7 +315,7 @@ squash a1bfa50 commit 4
 
   <p>When cloning a repository its branch references are locally known as <code>origin/&lt;branch-name&gt;</code>where <code>origin</code> is the automatic name of the default remote repository. The <code>master</code>-branch tracks <code>origin/master</code> by default.</p>
 
-  <p>A remote repository can be added with <code>`git remote add &lt;repo-name&gt; &lt;URL&gt;`</code>. Update the URL with <code>`git remote set-url &lt;repo-name&gt; &lt;URL&gt;`</code>.</p>
+  <p>A remote repository can be added with <code>`git remote add &lt;repo-name&gt; &lt;URL&gt;`</code>. Update the URL with <code>`git remote set-url &lt;repo-name&gt; &lt;URL&gt;`</code>. For example, to add a remote as <code>origin</code>: <code>`git remote add origin git@github.com:linjan2/myrepo.git`</code>. Show remotes with <code>git remote -v</code>.</p>
 
   <div class="note">
     A remote repository URL can be a path in the local file system. If the remote is over HTTPS Git prompts for authentication. If the remote is over SSH Git uses the <code>ssh</code>-tool with the user's default key pair.
