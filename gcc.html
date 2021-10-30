@@ -97,6 +97,8 @@ COMPILER_FLAGS="${DEFINES} ${INCLUDES} ${WARN_FLAGS} -pthread -g -Og"</code></pr
   <p>Linker options are passed with <code>-Wl,&lt;comma-separated options&gt;</code>. Linker option <code>-rpath-link</code> adds a secondary library dependency search path when building. For example, for locating <code>libsomelibrary.so</code>'s dependencies. The option can be passed multiple times.</p>
   
   <p>The option <code>-rpath</code> adds a library search path and encodes it into the binary. The literal text value <code>'$ORIGIN'</code> is the location of the executable itself; <code>'$ORIGIN/lib'</code> is also possible. The option <code>-z origin</code> tells the linker that the object uses <code>'$ORIGIN'</code>.</p>
+
+  <p>The option <code>-rpath</code> will either result in an <code>RPATH</code> entry or an <code>RUNPATH</code> entry in the binary. Use linker option <code>--disable-new-dtags</code> to ensure <code>RPATH</code> is used and <code>--enable-new-dtags</code> to ensure <code>RUNPATH</code> is used. The difference is that <code>RPATH</code> takes precedence over <code>LD_LIBRARY_PATH</code> and also that <code>RUNPATH</code> is not used to find secondary library dependencies.</p>
   
   <h2 id="1-2"><a href="#1-2"></a>Building a shared library</h2>
   
@@ -143,19 +145,17 @@ ln -sf lib${NAME}.so.${VERSION} lib${NAME}.so.${SONAME}   <span class="comment">
 ln -sf lib${NAME}.so.${SONAME} lib${NAME}.so              <span class="comment"># NAME-link to SONAME</span></code></pre>
   </div>
   
-  <p><code>--no-undefined</code> (alternatively, <code>-z defs</code>) and <code>--no-allow-shlib-undefined</code> fails the build if there are unresolved symbols from either the compiled sources or the linked-to dependencies. A library built with missing symbols causes linker errors for executables using it.</p>
+  <p><code>--no-undefined</code> (alternatively, <code>-z defs</code>) and <code>--no-allow-shlib-undefined</code> fails the build if there are unresolved symbols from either the compiled sources or the dependencies. A library built with missing symbols will cause linker errors for executables using it.</p>
   
-  <p>As mentioned for building executables, the option <code>-rpath-link</code> adds library search paths when building and doesn't affect the run-time library search paths (unlike <code>-rpath</code>).</p>
-
 </div>
-
+  
 <div>
 
+  <p>As mentioned for building executables, the option <code>-rpath-link</code> adds library search paths when building and doesn't affect the run-time library search paths (unlike <code>-rpath</code>).</p>
+
   <p>When both a library and its dependant executable use <code>-Wl,-rpath,'$ORIGIN'</code> the library's file location is searched before the executable's when locating the library's dependencies.</p>
-  
-  <div class="note">
-    <code>-fPIC</code> compiles code as position-independent for use with <code>-shared</code>. <code>-fPIC</code> is used both during compilation and linking in case supplementary code is built or to avoid linking against the wrong support libraries. Building a shared library that links to a static library requires that the static library was also compiled with <code>-fPIC</code>.
-  </div>
+
+  <p><code>-fPIC</code> compiles code as position-independent for use with <code>-shared</code>. <code>-fPIC</code> is used both during compilation and linking in case supplementary code is built or to avoid linking against the wrong support libraries. Building a shared library that links to a static library requires that the static library was also compiled with <code>-fPIC</code>.</p>
 
   <h2 id="1-3"><a href="#1-3"></a>Building a static library</h2>
   
@@ -207,32 +207,32 @@ int main()
 }</code></pre>
   </div>
 
-  <div class="code"><pre><code
-><span class="comment">// somelibrary.h</span>
-#ifndef SOMELIBRARY_H
-#define SOMELIBRARY_H 1
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-<span class="comment">// define EXPORT when building a shared library</span>
-#ifdef EXPORT
-#define API __attribute__((visibility ("default")))
-#else
-#define API
-#endif
-
-extern API void global_function();
-
-#ifdef __cplusplus
-}
-#endif
-#endif</code></pre>
-  </div>
-
 </div>
 
 <div>
+
+  <div class="code"><pre><code
+    ><span class="comment">// somelibrary.h</span>
+    #ifndef SOMELIBRARY_H
+    #define SOMELIBRARY_H 1
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+    
+    <span class="comment">// define EXPORT when building a shared library</span>
+    #ifdef EXPORT
+    #define API __attribute__((visibility ("default")))
+    #else
+    #define API
+    #endif
+    
+    extern API void global_function();
+    
+    #ifdef __cplusplus
+    }
+    #endif
+    #endif</code></pre>
+      </div>
 
   <p>The <code>extern "C"</code> block makes C++ compilers use the non-name-mangled C type symbols.</p>
 
@@ -260,7 +260,7 @@ global_function()
 
   <div class="code"><pre><code
 ><span class="comment"># view library dependency configuration</span>
-objdump --private-headers libsomelibrary.so | grep -e NEEDED -e SONAME -e RPATH
+objdump --private-headers libsomelibrary.so | grep -e NEEDED -e SONAME -e RPATH -e RUNPATH
 ldd libsomelibrary.so  <span class="comment"># list dynamic dependencies</span>
 
 nm --print-armap libsomelibrary.a  <span class="comment"># view archive index + member's symbols</span>
@@ -281,6 +281,8 @@ gdb -batch -ex "disassemble/rs global_function" main  <span class="comment"># vi
 <span class="comment"># view libraries and their locations found by ld</span>
 ldconfig -p  <span class="comment"># print libraries in current cache</span>
 ldconfig -vNX $(sed 's/:/ /g' &lt;&lt;&lt; ${LD_LIBRARY_PATH})  <span class="comment"># print libraries in a new scan</span>
+LD_DEBUG=libs ./myexe  <span class="comment"># view search done by runtime ld</span>
+LD_DEBUG=libs LD_LIBRARY_PATH=. ./myexe
 
 <span class="comment"># find missing symbols (causing run-time errors)</span>
 ldd --data-relocs --function-relocs libsomelibrary.so</code></pre>
