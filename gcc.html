@@ -102,7 +102,7 @@ COMPILER_FLAGS="${DEFINES} ${INCLUDES} ${WARN_FLAGS} -pthread -g -Og"</code></pr
   
   <h2 id="1-2"><a href="#1-2"></a>Building a shared library</h2>
   
-  <p>Below is the script <code>build.sh</code> that builds a shared library. Symbolic links are created for both the library name and its soname, so that the library file can be updated with ABI-compatible changes without affecting dependant binaries.</p>
+  <p>Below is the script <code>build.sh</code> that builds a shared library. Symbolic links are created for both the library name and its soname, so that the library file can be updated with ABI-compatible changes without affecting dependent binaries.</p>
 
   <div class="code"><pre><code
 >set -o nounset
@@ -212,26 +212,26 @@ int main()
 <div>
 
   <div class="code"><pre><code
-    ><span class="comment">// somelibrary.h</span>
-    #ifndef SOMELIBRARY_H
-    #define SOMELIBRARY_H 1
-    #ifdef __cplusplus
-    extern "C" {
-    #endif
-    
-    <span class="comment">// define EXPORT when building a shared library</span>
-    #ifdef EXPORT
-    #define API __attribute__((visibility ("default")))
-    #else
-    #define API
-    #endif
-    
-    extern API void global_function();
-    
-    #ifdef __cplusplus
-    }
-    #endif
-    #endif</code></pre>
+><span class="comment">// somelibrary.h</span>
+#ifndef SOMELIBRARY_H
+#define SOMELIBRARY_H 1
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+<span class="comment">// define EXPORT when building a shared library</span>
+#ifdef EXPORT
+#define API __attribute__((visibility ("default")))
+#else
+#define API
+#endif
+
+extern API void global_function();
+
+#ifdef __cplusplus
+}
+#endif
+#endif</code></pre>
       </div>
 
   <p>The <code>extern "C"</code> block makes C++ compilers use the non-name-mangled C type symbols.</p>
