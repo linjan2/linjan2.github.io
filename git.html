@@ -17,7 +17,7 @@
 <div>
   <h1 id="title"><a href="#title"></a>Basic Git usage</h1>
   <p>This text describes a set of useful Git commands for managing commits both locally and distributed in remote repositories. Basic Git commands are first described and then a simple script is presented (a batch script for Windows and a shell script for Linux).</p>
-  
+
   <p>The Git commands described cover the following actions.</p>
 
   <ul>
@@ -122,7 +122,7 @@ git checkout branch-2</code></pre>
     Even if a commit has been orphaned it will not be removed until garbage collected. Therefore, its hash can still be used in Git-commands.
   </div>
 
-  <h2 id="1-3"><a href="#1-3"></a>Diffing files between commits, working tree, and index</h2>
+  <h2 id="1-3"><a href="#1-3"></a>Diffing commits, working tree, and index</h2>
 
   <p>Git's patch format can be used to capture a subset of changes to files. For example, <code>git add --patch</code> goes through each hunk of change to manually select what will and will not be added to the index.</p>
 
@@ -146,7 +146,7 @@ index 6f29da4..b3853af 100644
 +++ b/main.cpp
 @@ -1,7 +1,6 @@</span>
  #include &lt;iostream&gt;
- 
+
 -using namespace std;
 -
 -int main() {
@@ -169,21 +169,19 @@ git apply &lt;file3&gt;.patch    <span class="comment"># apply changes from patc
 
   <p>File paths in the diff-data are relative so the current directory must be the same for both <code>diff</code> and <code>apply</code>, unless applying with <code>--directory=&lt;path&gt;</code> to prepend <code>path</code> or <code>-p&lt;n&gt;</code> to remove <code>n</code> path components (including the '<code>a</code>' and '<code>b</code>' prefixes). Without the option <code>--unsafe-paths</code> the prepended path can't reach outside the current directory.</p>
 
-  <p>When a patch file doesn't cleanly apply because of conflicts the apply-option <code>--3way</code> begins a three-way merge.</p>
-
-  <div class="note">
-    The commands <code>git format-patch</code> and <code>git am</code> can apply multiple commit patches as new commits that retain commit-data. The format is different from the output of the <code>diff</code>-command; it's instead formatted as an e-mail.
-  </div>
-
 </div>
 
 <div>
+
+  <p>When a patch file doesn't cleanly apply because of conflicts the apply-option <code>--3way</code> begins a three-way merge.</p>
+
+  <p>The commands <code>git format-patch</code> and <code>git am</code> can apply multiple commit patches as new commits that retain commit-data. The format is different from the output of the <code>diff</code>-command; it's instead formatted as an e-mail.</p>
 
   <h2 id="1-4"><a href="#1-4"></a>Managing the commit graph</h2>
 
   <p>Besides adding new commits, existing commits can be replaced (amended), copied (rebased), and combined (merged). Since commits are immutable and are only removed when garbage collected these actions are achieved by creating new commits in specific ways.</p>
 
-  <p>The commit pointed to by <code>HEAD</code> can be replaced with <code>git commit --amend</code>. The new commit gets the same parent as the old one and <code>HEAD</code> now points to it, as shown in <a href="#figure-4">figure 4</a>.</p>
+  <p>The commit pointed to by <code>HEAD</code> can be replaced with <code>git commit --amend</code>. The new commit gets the same parent as the old one and <code>HEAD</code> now points to it, as shown in <a href="#figure-4">figure 4</a>. When amending without <code>-m &lt;commit-message&gt;</code>, an editor is started to edit the old commit message.</p>
 
   <figure aria-labelledby="figure-4-caption" id="figure-4">
 <pre role="img"
@@ -193,8 +191,6 @@ git apply &lt;file3&gt;.patch    <span class="comment"># apply changes from patc
                                                * 945891e a commit</pre>
   <figcaption id="figure-4-caption">Figure 4: The changes from (1) to (2) are the effects of <code>git commit --amend</code>. A new commit is created and <code>HEAD</code> is moved to it. The old commit and its descendants remain, but may be orphaned and hidden from <code>git log</code>.</figcaption>
   </figure>
-
-  <p>When amending without <code>-m &lt;commit-message&gt;</code>, an editor is started to edit the old commit message.</p>
 
   <h3 id="1-4-1"><a href="#1-4-1"></a>Squashing and re-ordering commits</h3>
 
@@ -230,7 +226,7 @@ squash a1bfa50 commit 4
 
   <p>A rebase re-creates commits onto a new starting-point with <code>git rebase &lt;starting-point&gt;</code>. The commits between the common ancestor of <code>&lt;starting-point&gt;</code> and <code>HEAD</code> are used to patch <code>&lt;starting-point&gt;</code>.</p>
 
-  <p><a href="#figure-6">Figure 6</a> shows a rebase of a forked branch. Since commits are re-created at a different place in the commit graph their hash values change. Both <code>HEAD</code> and the branch are moved which orphans the old commits.</p>
+  <p><a href="#figure-6">Figure 6</a> shows a rebase of a forked branch where its commits are re-created with new hashes. Both <code>HEAD</code> and the branch are moved which orphans the old commits.</p>
 
 </div>
 
@@ -315,15 +311,13 @@ squash a1bfa50 commit 4
 
   <p>When cloning a repository its branch references are locally known as <code>origin/&lt;branch-name&gt;</code>where <code>origin</code> is the automatic name of the default remote repository. The <code>master</code>-branch tracks <code>origin/master</code> by default.</p>
 
-  <p>A remote repository can be added with <code>git remote add &lt;repo-name&gt; &lt;URL&gt;</code>. Update the URL with <code>git remote set-url &lt;repo-name&gt; &lt;URL&gt;</code>. For example, to add a remote as <code>origin</code>: <code>git remote add origin git@github.com:linjan2/myrepo.git</code>. Show remotes with <code>git remote -v</code>.</p>
+  <p>Add a remote repository with <code>git remote add &lt;repo-name&gt; &lt;URL&gt;</code>. Show remotes with <code>git remote -v</code>. Update the URL with <code>git remote set-url &lt;repo-name&gt; &lt;URL&gt;</code>.</p>
 
   <div class="note">
     A remote repository URL can be a path in the local file system. If the remote is over HTTPS Git prompts for authentication. If the remote is over SSH Git uses the <code>ssh</code>-tool with the user's default key pair.
   </div>
 
-  <p><code>git branch -r</code> and <code>git branch -r &lt;repo-name&gt;</code> lists remote branches if the references have been downloaded with <code>git fetch &lt;repo-name&gt;</code>. Update all remote repositories' references with <code>git fetch --all</code>. Download a single branch's updates with <code>git fetch &lt;repo-name&gt; &lt;remote-branch-name&gt;</code>.</p>
-  
-  <p>Remove references that have been deleted in a remote repository with <code>git fetch --prune &lt;repo-name&gt;</code>.</p>
+  <p><code>git branch -r</code> and <code>git branch -r &lt;repo-name&gt;</code> lists remote branches if the references have been downloaded with <code>git fetch &lt;repo-name&gt;</code>. Update all remote repositories' references with <code>git fetch --all</code>. Download a single branch's updates with <code>git fetch &lt;repo-name&gt; &lt;remote-branch-name&gt;</code>. Remove references that have been deleted in a remote repository with <code>git fetch --prune &lt;repo-name&gt;</code>.</p>
 
   <p>To make a local branch track a remote one, do one of the following.</p>
 
@@ -430,7 +424,7 @@ esac</code></pre>
 <div>
 
   <h3 id="1-7-2"><a href="#1-7-2"></a>Windows batch script</h3>
-  
+
   <div class="code"><pre><code
 >@echo off
 setlocal
@@ -539,7 +533,7 @@ endlocal</code></pre>
         </li>
       </ul>
     </div>
-    
+
     <div class="sixteen" id="reference-tab">
       <div class="reference pack16">
         <div class="two"></div><div class="fourteen em">Atlassian's Git tutorials.</div>
