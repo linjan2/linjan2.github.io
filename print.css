@@ -44,6 +44,7 @@ td,th
 }
 .code,.code-ln
 { border-left-width:2px;
+  background:none;
 }
 figure,figure>figcaption
 { background:none;

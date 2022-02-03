@@ -102,27 +102,32 @@ h1,h2,h3,h4,h5
 }
 h1
 { font-size:2rem;
-  margin:2rem;
+  margin:2rem 0;
+  padding-left:2rem;
 }
 h2
 { font-size:1.75rem;
-  margin:1.5rem;
+  margin:1.5rem 0;
+  padding-left:3.5rem;
 }
 h3
 { font-size:1.25rem;
-  margin:1.25rem;
+  margin:1.25rem 0;
+  padding-left:3.75rem;
 }
 h4
 { font-size:1rem;
-  margin:1rem;
+  margin:1rem 0;
   font-weight:bold;
 }
 h1>a::before,h2>a::before,h3>a::before
 { position:absolute;
   color:#ddd;
-  content:'#';
-  left:-1em;
+  left:0;
 }
+h1>a::before {content:'#';}
+h2>a::before {content:'##';}
+h3>a::before {content:'###';}
 h1>a:hover::before,h2>a:hover::before,h3>a:hover::before
 { color:inherit; /* inherit <a> color */
 }
@@ -294,6 +299,7 @@ table.click th>label:hover
 
 .code,.code-ln
 { color:#222;
+  background-color: #f0f8ff;
   border-left:0.25rem solid #7bc4e5;
   padding:0.25rem 0;
   font-size:0.8rem;

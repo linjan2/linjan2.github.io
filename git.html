@@ -31,7 +31,7 @@
 
   <h2 id="1-1"><a href="#1-1"></a>Initializing a repository</h2>
 
-  <p>A new Git repository is created using either <code>`git init &lt;directory&gt;`</code> or <code>`git clone &lt;URI&gt; &lt;directory&gt;`</code>. Files must begin being tracked using <code>`git add &lt;file&gt;`</code>. The <code>master</code> branch is automatically created, but an initial commit containing new data must be created to initialize the <code>HEAD</code> reference.</p>
+  <p>A new Git repository is created using either <code>git init &lt;directory&gt;</code> or <code>git clone &lt;URI&gt; &lt;directory&gt;</code>. Files must begin being tracked using <code>git add &lt;file&gt;</code>. The <code>master</code> branch is automatically created, but an initial commit containing new data must be created to initialize the <code>HEAD</code> reference.</p>
 
   <div class="code"><pre><code
 >git init myrepo
@@ -41,17 +41,17 @@ git add main.cpp
 git commit -m "initial commit"</code></pre>
   </div>
 
-  <p>When a tracked file is modified it only updates the working tree. Git uses the index as a scratch space to store and load data. Add files to the index with <code>`git add &lt;file&gt;`</code> and commit snapshots of the index with <code>`git commit -m "&lt;message&gt;"`</code>.</p>
+  <p>When a tracked file is modified it only updates the working tree. Git uses the index as a scratch space to store and load data. Add files to the index with <code>git add &lt;file&gt;</code> and commit snapshots of the index with <code>git commit -m "&lt;message&gt;"</code>.</p>
 
-  <p>To display the current state of the working tree and the index use <code>`git status`</code>. Display a more compact view with the current branch with <code>`git status --short --branch`</code>. Use <code>`git status &lt;directory&gt;`</code> to scan the directory and its subdirectories instead of the entire repository.</p>
+  <p>To display the current state of the working tree and the index use <code>git status</code>. Display a more compact view with the current branch with <code>git status --short --branch</code>. Use <code>git status &lt;directory&gt;</code> to scan the directory and its subdirectories instead of the entire repository.</p>
 
-  <p><code>HEAD</code> is a reference to the commit with the current state of the local repository files. As new commits are created (locally) <code>HEAD</code> will update to the newest commit. Usually, <code>HEAD</code> is attached to a branch reference (a.k.a. "the current branch") so both will update to the newest commit. Using <code>`git checkout &lt;branch-name&gt;`</code>  will attach <code>HEAD</code> to a different branch reference; this leaves the previously attached-to branch reference where it was.</p>
+  <p><code>HEAD</code> is a reference to the commit with the current state of the local repository files. As new commits are created (locally) <code>HEAD</code> will update to the newest commit. Usually, <code>HEAD</code> is attached to a branch reference (a.k.a. "the current branch") so both will update to the newest commit. Using <code>git checkout &lt;branch-name&gt;</code>  will attach <code>HEAD</code> to a different branch reference; this leaves the previously attached-to branch reference where it was.</p>
 
-  <p>A new branch reference created with <code>`git branch &lt;branch-name&gt;`</code> will reference the commit that <code>HEAD</code> is currently referencing. Delete a branch with <code>`git branch -D &lt;branch-name&gt;`</code>.</p>
+  <p>A new branch reference created with <code>git branch &lt;branch-name&gt;</code> will reference the commit that <code>HEAD</code> is currently referencing. Delete a branch with <code>git branch -D &lt;branch-name&gt;</code>.</p>
 
   <h2 id="1-2"><a href="#1-2"></a>Viewing and moving between commits</h2>
 
-  <p>To view the list of commits that led to the commit that <code>HEAD</code> refers to, use <code>`git log`</code>. For a more compact listing that also prints where branches and the <code>HEAD</code> are located, use <code>`git log --oneline --decorate`</code>. To show all branches' commits use <code>`git log --oneline --decorate --all --graph`</code>.</p>
+  <p>To view the list of commits that led to the commit that <code>HEAD</code> refers to, use <code>git log</code>. For a more compact listing that also prints where branches and the <code>HEAD</code> are located, use <code>git log --oneline --decorate</code>. To show all branches' commits use <code>git log --oneline --decorate --all --graph</code>.</p>
 
 </div>
 
@@ -67,16 +67,16 @@ git commit -m "initial commit"</code></pre>
 |/
 * de015b4 another commit on master
 * 2c49530 initial commit on master</pre>
-  <figcaption id="figure-1-caption">Figure 1: Output of <code>`git log --oneline --decorate --all --graph`</code> for a repository with two branches.</figcaption>
+  <figcaption id="figure-1-caption">Figure 1: Output of <code>git log --oneline --decorate --all --graph</code> for a repository with two branches.</figcaption>
   </figure>
 
-  <p>If a new commit is made then both <code>HEAD</code> and the branch it's attached to will move to the new commit. To attach <code>HEAD</code> to another branch use <code>`git checkout &lt;branch-name&gt;`</code>. The <code>checkout</code>-command updates the working tree (and index) with the commit's data, but it preserves new files. It aborts if it would overwrite modified files in the working tree.</p>
+  <p>If a new commit is made then both <code>HEAD</code> and the branch it's attached to will move to the new commit. To attach <code>HEAD</code> to another branch use <code>git checkout &lt;branch-name&gt;</code>. The <code>checkout</code>-command updates the working tree (and index) with the commit's data, but it preserves new files. It aborts if it would overwrite modified files in the working tree.</p>
 
-  <p>When moving or deleting references commits may be left orphaned. Orphaned commits that are still in Git's reflog can be included in the output with <code>`git log --oneline --decorate --reflog --graph`</code>. Git can garbage collect orphaned commits and data blobs.</p>
+  <p>When moving or deleting references commits may be left orphaned. Orphaned commits that are still in Git's reflog can be included in the output with <code>git log --oneline --decorate --reflog --graph</code>. Git can garbage collect orphaned commits and data blobs.</p>
 
   <h3 id="1-2-1"><a href="#1-2-1"></a>Moving the working tree between commits</h3>
 
-  <p>Trying to move <code>HEAD</code> with <code>`git checkout &lt;commit&gt;`</code> aborts if the working tree has uncommitted local changes. Using <code>`git reset --soft &lt;commit&gt;`</code> will move <code>HEAD</code> to another commit while maintaining the current working tree state, but if <code>HEAD</code> is attached to a branch then that branch will also move to the commit while <code>HEAD</code> remains attached to it.</p>
+  <p>Trying to move <code>HEAD</code> with <code>git checkout &lt;commit&gt;</code> aborts if the working tree has uncommitted local changes. Using <code>git reset --soft &lt;commit&gt;</code> will move <code>HEAD</code> to another commit while maintaining the current working tree state, but if <code>HEAD</code> is attached to a branch then that branch will also move to the commit while <code>HEAD</code> remains attached to it.</p>
 
   <p>To move the <code>HEAD</code> with the current working tree state to a commit without modifying the branch it's attached to, the <code>HEAD</code> must first be detached. The commands below detach <code>HEAD</code> (to itself) and then move it with the working tree to the <code>de015b4</code>-commit, without affecting any branches.</p>
 
@@ -85,7 +85,7 @@ git commit -m "initial commit"</code></pre>
 git reset --soft de015b4</code></pre>
   </div>
 
-  <p>For the same repository as before, after the commands above the command <code>`git log --oneline --decorate --all --graph`</code> would now output what's shown in <a href="#figure-2">figure 2</a> below.</p>
+  <p>For the same repository as before, after the commands above the command <code>git log --oneline --decorate --all --graph</code> would now output what's shown in <a href="#figure-2">figure 2</a> below.</p>
 
   <figure aria-labelledby="figure-2-caption" id="figure-2">
 <pre role="img"
@@ -95,10 +95,10 @@ git reset --soft de015b4</code></pre>
 |/
 * de015b4 (HEAD) another commit on master
 * 2c49530 initial commit on master</pre>
-  <figcaption id="figure-2-caption">Figure 2: Repository commit graph shown by <code>`git log --oneline --decorate --all --graph`</code> when <code>HEAD</code> is detached and moved to commit <code>de015b4</code>.</figcaption>
+  <figcaption id="figure-2-caption">Figure 2: Repository commit graph shown by <code>git log --oneline --decorate --all --graph</code> when <code>HEAD</code> is detached and moved to commit <code>de015b4</code>.</figcaption>
   </figure>
 
-  <p>To re-attach <code>HEAD</code> to a branch use <code>`git checkout &lt;branch-name&gt;`</code>. If the working tree has changes the detached <code>HEAD</code> must first be moved to the branch's commit (i.e. <code>`git reset --soft &lt;branch-name&gt;`</code>) before attaching with <code>checkout</code>.</p>
+  <p>To re-attach <code>HEAD</code> to a branch use <code>git checkout &lt;branch-name&gt;</code>. If the working tree has changes the detached <code>HEAD</code> must first be moved to the branch's commit (i.e. <code>git reset --soft &lt;branch-name&gt;</code>) before attaching with <code>checkout</code>.</p>
 
   <p>In short, the entire working tree state—whether it's in the current commit or not—can be migrated from one branch to another by detaching the <code>HEAD</code> from a branch, moving it to the other branch, and then attaching it to that other branch. The commands are shown below.</p>
 
@@ -114,9 +114,9 @@ git checkout branch-2</code></pre>
 <div>
 
 
-  <p>Another way to move parts of a commit is to apply its patch onto the working tree with <code>`git checkout &lt;commit&gt; --patch`</code>. The patch editor is opened to selectively overwrite parts of the working tree and the index. Apply the patch for a single file with <code>`git checkout &lt;commit&gt; --patch -- &lt;file&gt;`</code>.</p>
+  <p>Another way to move parts of a commit is to apply its patch onto the working tree with <code>git checkout &lt;commit&gt; --patch</code>. The patch editor is opened to selectively overwrite parts of the working tree and the index. Apply the patch for a single file with <code>git checkout &lt;commit&gt; --patch -- &lt;file&gt;</code>.</p>
 
-  <p>Finally, <code>HEAD</code> can be moved while discarding all of the working tree's local changes using <code>`git reset --hard &lt;commit&gt;`</code>. If <code>HEAD</code> is attached to a branch then the branch is also moved to the specified commit.</p>
+  <p>Finally, <code>HEAD</code> can be moved while discarding all of the working tree's local changes using <code>git reset --hard &lt;commit&gt;</code>. If <code>HEAD</code> is attached to a branch then the branch is also moved to the specified commit.</p>
 
   <div class="note">
     Even if a commit has been orphaned it will not be removed until garbage collected. Therefore, its hash can still be used in Git-commands.
@@ -124,19 +124,19 @@ git checkout branch-2</code></pre>
 
   <h2 id="1-3"><a href="#1-3"></a>Diffing files between commits, working tree, and index</h2>
 
-  <p>Git's patch format can be used to capture a subset of changes to files. For example, <code>`git add --patch`</code> goes through each hunk of change to manually select what will and will not be added to the index.</p>
+  <p>Git's patch format can be used to capture a subset of changes to files. For example, <code>git add --patch</code> goes through each hunk of change to manually select what will and will not be added to the index.</p>
 
-  <p>The <code>diff</code>-command uses the same patch-format as <code>`git add --patch`</code>. The patch displays changes that would be applied from one state to another; the order of the arguments matters when generating the patch.</p>
+  <p>The <code>diff</code>-command uses the same patch-format as <code>git add --patch</code>. The patch displays changes that would be applied from one state to another; the order of the arguments matters when generating the patch.</p>
 
   <ul>
-    <li>To show the patch from the working tree to the index use <code>`git diff`</code>.</li>
-    <li>To show the patch from the working tree to a commit use <code>`git diff &lt;commit&gt;`</code>.</li>
-    <li>To show the patch from the index to a commit use <code>`git diff --staged &lt;commit&gt;`</code>.</li>
-    <li>To show the patch from one commit to another commit use <code>`git diff &lt;commit&gt; &lt;commit&gt;`</code>.</li>
-    <li>To show the patch from one file to another use <code>`git diff --no-index &lt;file&gt; &lt;file&gt;`</code>.</li>
+    <li>To show the patch from the working tree to the index use <code>git diff</code>.</li>
+    <li>To show the patch from the working tree to a commit use <code>git diff &lt;commit&gt;</code>.</li>
+    <li>To show the patch from the index to a commit use <code>git diff --staged &lt;commit&gt;</code>.</li>
+    <li>To show the patch from one commit to another commit use <code>git diff &lt;commit&gt; &lt;commit&gt;</code>.</li>
+    <li>To show the patch from one file to another use <code>git diff --no-index &lt;file&gt; &lt;file&gt;</code>.</li>
   </ul>
 
-  <p>A single file can be diff-ed between versions by to the <code>diff</code>-command. <a href="#figure-3">Figure 3</a> below shows the patch for <code>`git diff <code>HEAD</code> -- main.cpp`</code>, which diffs the file <code>`main.cpp`</code> from the working tree to the commit of <code>HEAD</code>.</p>
+  <p>A single file can be diff-ed between versions by to the <code>diff</code>-command. <a href="#figure-3">Figure 3</a> below shows the patch for <code>git diff <code>HEAD</code> -- main.cpp</code>, which diffs the file <code>main.cpp</code> from the working tree to the commit of <code>HEAD</code>.</p>
 
   <figure aria-labelledby="figure-3-caption" id="figure-3">
 <pre role="img"
@@ -155,7 +155,7 @@ index 6f29da4..b3853af 100644
 +{
 +    std::cout &lt;&lt; "hello" &lt;&lt; std::endl;
  }</pre>
-  <figcaption id="figure-3-caption">Figure 3: Patch generated by <code>`git diff <code>HEAD</code> -- main.cpp`</code>, which shows the changes that would be applied to <code>`main.cpp`</code> if the working tree were to overwrite the commit referred to by <code>HEAD</code>. Lines beginning with <code>-</code> are removed and lines beginning with <code>+</code> are added.</figcaption>
+  <figcaption id="figure-3-caption">Figure 3: Patch generated by <code>git diff <code>HEAD</code> -- main.cpp</code>, which shows the changes that would be applied to <code>main.cpp</code> if the working tree were to overwrite the commit referred to by <code>HEAD</code>. Lines beginning with <code>-</code> are removed and lines beginning with <code>+</code> are added.</figcaption>
   </figure>
 
   <h3 id="1-3-1"><a href="#1-3-1"></a>Generating and applying patches</h3>
@@ -183,7 +183,7 @@ git apply &lt;file3&gt;.patch    <span class="comment"># apply changes from patc
 
   <p>Besides adding new commits, existing commits can be replaced (amended), copied (rebased), and combined (merged). Since commits are immutable and are only removed when garbage collected these actions are achieved by creating new commits in specific ways.</p>
 
-  <p>The commit pointed to by <code>HEAD</code> can be replaced with <code>`git commit --amend`</code>. The new commit gets the same parent as the old one and <code>HEAD</code> now points to it, as shown in <a href="#figure-4">figure 4</a>.</p>
+  <p>The commit pointed to by <code>HEAD</code> can be replaced with <code>git commit --amend</code>. The new commit gets the same parent as the old one and <code>HEAD</code> now points to it, as shown in <a href="#figure-4">figure 4</a>.</p>
 
   <figure aria-labelledby="figure-4-caption" id="figure-4">
 <pre role="img"
@@ -191,14 +191,14 @@ git apply &lt;file3&gt;.patch    <span class="comment"># apply changes from patc
       * 945891e a commit                       | * 3e1b09f change
                                                |/
                                                * 945891e a commit</pre>
-  <figcaption id="figure-4-caption">Figure 4: The changes from (1) to (2) are the effects of <code>`git commit --amend`</code>. A new commit is created and <code>HEAD</code> is moved to it. The old commit and its descendants remain, but may be orphaned and hidden from <code>`git log`</code>.</figcaption>
+  <figcaption id="figure-4-caption">Figure 4: The changes from (1) to (2) are the effects of <code>git commit --amend</code>. A new commit is created and <code>HEAD</code> is moved to it. The old commit and its descendants remain, but may be orphaned and hidden from <code>git log</code>.</figcaption>
   </figure>
 
-  <p>When amending without <code>`-m &lt;commit-message&gt;`</code>, an editor is started to edit the old commit message.</p>
+  <p>When amending without <code>-m &lt;commit-message&gt;</code>, an editor is started to edit the old commit message.</p>
 
   <h3 id="1-4-1"><a href="#1-4-1"></a>Squashing and re-ordering commits</h3>
 
-  <p><code>`git rebase --interactive &lt;starting-point&gt;`</code> opens the editor for choosing how to re-create the commits from <code>&lt;starting-point&gt;</code> to <code>HEAD</code>. Commits can be re-ordered and squashed into a single commit. <code>HEAD</code> is moved to the last commit in the new commit chain.</p>
+  <p><code>git rebase --interactive &lt;starting-point&gt;</code> opens the editor for choosing how to re-create the commits from <code>&lt;starting-point&gt;</code> to <code>HEAD</code>. Commits can be re-ordered and squashed into a single commit. <code>HEAD</code> is moved to the last commit in the new commit chain.</p>
 
   <p>The rebase editor looks like what's shown in <a href="#figure-5">figure 5</a> below. Writing <code>squash</code> before a commit causes it to amend the previous one in the list.</p>
 
@@ -228,7 +228,7 @@ squash a1bfa50 commit 4
 
   <h3 id="1-4-2"><a href="#1-4-2"></a>Rebasing to another branch</h3>
 
-  <p>A rebase re-creates commits onto a new starting-point with <code>`git rebase &lt;starting-point&gt;`</code>. The commits between the common ancestor of <code>&lt;starting-point&gt;</code> and <code>HEAD</code> are used to patch <code>&lt;starting-point&gt;</code>.</p>
+  <p>A rebase re-creates commits onto a new starting-point with <code>git rebase &lt;starting-point&gt;</code>. The commits between the common ancestor of <code>&lt;starting-point&gt;</code> and <code>HEAD</code> are used to patch <code>&lt;starting-point&gt;</code>.</p>
 
   <p><a href="#figure-6">Figure 6</a> shows a rebase of a forked branch. Since commits are re-created at a different place in the commit graph their hash values change. Both <code>HEAD</code> and the branch are moved which orphans the old commits.</p>
 
@@ -243,7 +243,7 @@ squash a1bfa50 commit 4
      |/                                             | * 4c1bf28 change 2
      * e1e1bdc change 1                             |/
                                                     * e1e1bdc change 1</pre>
-  <figcaption id="figure-6-caption">Figure 6: The changes from (1) to (2) are the effects of <code>`git rebase master`</code> with <code>HEAD</code> attached to branch <code>test</code>. The old commits remain as orphans, hidden from <code>`git log`</code>. Both <code>test</code> and <code>HEAD</code> move to the last of the new commits while <code>master</code> is unchanged.</figcaption>
+  <figcaption id="figure-6-caption">Figure 6: The changes from (1) to (2) are the effects of <code>git rebase master</code> with <code>HEAD</code> attached to branch <code>test</code>. The old commits remain as orphans, hidden from <code>git log</code>. Both <code>test</code> and <code>HEAD</code> move to the last of the new commits while <code>master</code> is unchanged.</figcaption>
   </figure>
 
   <p>Perform a rebase by attaching <code>HEAD</code> to the starting-point and then applying the patches from the forked path onto <code>HEAD</code>.</p>
@@ -260,13 +260,13 @@ squash a1bfa50 commit 4
   <figcaption id="figure-7-caption">Figure 7: Conflict markup added to file in the working tree. It indicates what starting-point's patch looks like versus the current commit's patch. <code>HEAD</code> points to the starting-point during the rebase.</figcaption>
   </figure>
 
-  <p>To continue the rebase after a conflict, first remove the conflict markup and leave the final version. Then add the modified files to the index and call <code>`git rebase --continue`</code>. To stop the rebase after a conflict, call <code>`git rebase --abort`</code>.</p>
+  <p>To continue the rebase after a conflict, first remove the conflict markup and leave the final version. Then add the modified files to the index and call <code>git rebase --continue</code>. To stop the rebase after a conflict, call <code>git rebase --abort</code>.</p>
 
   <h3 id="1-4-3"><a href="#1-4-3"></a>Merging branches</h3>
 
   <p>A merge is when two branches are moved to a new common commit. The common commit contains the applied patch from a branch onto <code>HEAD</code>. That is, <code>HEAD</code> is attached to the merged-into branch and the patch contains the changes that the another branch applies to <code>HEAD</code>.</p>
 
-  <p>Merge a branch to <code>HEAD</code> with <code>`git merge &lt;branch-name&gt;`</code>. <a href="#figure-8">Figure 8</a> shows what the commit graph looks like before and after two branches merge.</p>
+  <p>Merge a branch to <code>HEAD</code> with <code>git merge &lt;branch-name&gt;</code>. <a href="#figure-8">Figure 8</a> shows what the commit graph looks like before and after two branches merge.</p>
 
   <figure aria-labelledby="figure-8-caption" id="figure-8">
 <pre role="img"
@@ -292,7 +292,7 @@ squash a1bfa50 commit 4
   <figcaption id="figure-9-caption">Figure 9: Conflict markup added to file in the working tree. It indicates what own's patch looks like versus the other's patch.</figcaption>
   </figure>
 
-  <p>To continue the merge save the final state of the files, add them to the index, and use <code>git commit</code> to create the merge commit. To stop the merge use <code>`git merge --abort`</code>.</p>
+  <p>To continue the merge save the final state of the files, add them to the index, and use <code>git commit</code> to create the merge commit. To stop the merge use <code>git merge --abort</code>.</p>
 
 </div>
 
@@ -301,54 +301,54 @@ squash a1bfa50 commit 4
   <p>When the branches don't form a fork (i.e. the branch is a descendant of <code>HEAD</code>) a fast-forward merge occurs. A fast-forward merge just moves <code>HEAD</code> to the merged-from branch. Avoid fast-forwarding with <code>git merge --no-ff &lt;branch-name&gt;</code>. Only allow a fast-forward merge with <code>git merge --ff-only &lt;branch-name&gt;</code>.</p>
 
   <div class="note">
-    A three-way merge will merge two branches to <code>HEAD</code> one after the other and then squash the two new commits into a third one. Perform a three-way merge to <code>HEAD</code> with <code>`git merge &lt;branch-1&gt; &lt;branch-2&gt;`</code>.
+    A three-way merge will merge two branches to <code>HEAD</code> one after the other and then squash the two new commits into a third one. Perform a three-way merge to <code>HEAD</code> with <code>git merge &lt;branch-1&gt; &lt;branch-2&gt;</code>.
   </div>
 
   <h2 id="1-5"><a href="#1-5"></a>Synchronizing with remote repositories</h2>
 
-  <p>Local branches can track branches in remote repositories. Remote branches can't be committed to directly; instead, a branch must be locally created and then marked as tracking the remote branch. Tracking causes <code>`git pull`</code> to fetch and merge the tracked branch into the local branch; <code>`git push`</code> sends and merges local changes to the remote branch.</p>
+  <p>Local branches can track branches in remote repositories. Remote branches can't be committed to directly; instead, a branch must be locally created and then marked as tracking the remote branch. Tracking causes <code>git pull</code> to fetch and merge the tracked branch into the local branch; <code>git push</code> sends and merges local changes to the remote branch.</p>
 
   <div class="note">
-    Use <code>`git pull &lt;repo-name&gt; &lt;remote-branch&gt;`</code> to specify the remote repository and remote branch.<br><br>
-    Use <code>`git pull --rebase`</code> to perform a rebase instead of a merge.
+    Use <code>git pull &lt;repo-name&gt; &lt;remote-branch&gt;</code> to specify the remote repository and remote branch.<br><br>
+    Use <code>git pull --rebase</code> to perform a rebase instead of a merge.
   </div>
 
   <p>When cloning a repository its branch references are locally known as <code>origin/&lt;branch-name&gt;</code>where <code>origin</code> is the automatic name of the default remote repository. The <code>master</code>-branch tracks <code>origin/master</code> by default.</p>
 
-  <p>A remote repository can be added with <code>`git remote add &lt;repo-name&gt; &lt;URL&gt;`</code>. Update the URL with <code>`git remote set-url &lt;repo-name&gt; &lt;URL&gt;`</code>. For example, to add a remote as <code>origin</code>: <code>`git remote add origin git@github.com:linjan2/myrepo.git`</code>. Show remotes with <code>git remote -v</code>.</p>
+  <p>A remote repository can be added with <code>git remote add &lt;repo-name&gt; &lt;URL&gt;</code>. Update the URL with <code>git remote set-url &lt;repo-name&gt; &lt;URL&gt;</code>. For example, to add a remote as <code>origin</code>: <code>git remote add origin git@github.com:linjan2/myrepo.git</code>. Show remotes with <code>git remote -v</code>.</p>
 
   <div class="note">
     A remote repository URL can be a path in the local file system. If the remote is over HTTPS Git prompts for authentication. If the remote is over SSH Git uses the <code>ssh</code>-tool with the user's default key pair.
   </div>
 
-  <p><code>`git branch -r`</code> and <code>`git branch -r &lt;repo-name&gt;`</code> lists remote branches if the references have been downloaded with <code>`git fetch &lt;repo-name&gt;`</code>. Update all remote repositories' references with <code>`git fetch --all`</code>. Download a single branch's updates with <code>`git fetch &lt;repo-name&gt; &lt;remote-branch-name&gt;`</code>.</p>
+  <p><code>git branch -r</code> and <code>git branch -r &lt;repo-name&gt;</code> lists remote branches if the references have been downloaded with <code>git fetch &lt;repo-name&gt;</code>. Update all remote repositories' references with <code>git fetch --all</code>. Download a single branch's updates with <code>git fetch &lt;repo-name&gt; &lt;remote-branch-name&gt;</code>.</p>
   
-  <p>Remove references that have been deleted in a remote repository with <code>`git fetch --prune &lt;repo-name&gt;</code>.</p>
+  <p>Remove references that have been deleted in a remote repository with <code>git fetch --prune &lt;repo-name&gt;</code>.</p>
 
   <p>To make a local branch track a remote one, do one of the following.</p>
 
   <ul>
-    <li><code>`git checkout &lt;remote-branch&gt;`</code> creates and switches to a local branch that tracks the remote one – assuming a local branch doesn't match and only one remote branch matches.</li>
-    <li>Use <code>`git checkout --track &lt;repo-name&gt;/&lt;remote-branch&gt;`</code> to specify the remote repository.</li>
-    <li><code>`git branch --track &lt;local-branch&gt; &lt;repo-name/remote-branch&gt;`</code> creates a local branch that tracks a remote one.</li>
-    <li><code>`git branch --set-upstream-to=&lt;repo-name/remote-branch&gt; &lt;local-branch&gt;`</code> makes an existing branch track a remote one.</li>
-    <li><code>`git push --set-upstream &lt;repo-name&gt; &lt;local-branch&gt;`</code> uses a local branch to create and track a remote branch.</li>
+    <li><code>git checkout &lt;remote-branch&gt;</code> creates and switches to a local branch that tracks the remote one – assuming a local branch doesn't match and only one remote branch matches.</li>
+    <li>Use <code>git checkout --track &lt;repo-name&gt;/&lt;remote-branch&gt;</code> to specify the remote repository.</li>
+    <li><code>git branch --track &lt;local-branch&gt; &lt;repo-name/remote-branch&gt;</code> creates a local branch that tracks a remote one.</li>
+    <li><code>git branch --set-upstream-to=&lt;repo-name/remote-branch&gt; &lt;local-branch&gt;</code> makes an existing branch track a remote one.</li>
+    <li><code>git push --set-upstream &lt;repo-name&gt; &lt;local-branch&gt;</code> uses a local branch to create and track a remote branch.</li>
   </ul>
 
-  <p>Stop tracking a remote branch with <code>`git branch --unset-upstream &lt;local-branch-name&gt;`</code>.<p>
+  <p>Stop tracking a remote branch with <code>git branch --unset-upstream &lt;local-branch-name&gt;</code>.<p>
 
   <div class="note">
-    Push any local branch's updates to any remote branch with <code>`git push &lt;repo-name&gt; &lt;local-branch&gt;:&lt;remote-branch&gt;`</code>.
+    Push any local branch's updates to any remote branch with <code>git push &lt;repo-name&gt; &lt;local-branch&gt;:&lt;remote-branch&gt;</code>.
   </div>
 
   <h2 id="1-6"><a href="#1-6"></a>Git configuration</h2>
 
-  <p>Git has configuration levels: local, global, and system. <code>`git config --list`</code> lists all current configuration settings.</p>
+  <p>Git has configuration levels: local, global, and system. <code>git config --list</code> lists all current configuration settings.</p>
 
   <ul>
-    <li><code>`git config --local --list`</code> lists the repository's Git configuration.</li>
-    <li><code>`git config --global --list`</code> lists the user's Git configuration.</li>
-    <li><code>`git config --system --list`</code> lists the system's Git configuration.</li>
+    <li><code>git config --local --list</code> lists the repository's Git configuration.</li>
+    <li><code>git config --global --list</code> lists the user's Git configuration.</li>
+    <li><code>git config --system --list</code> lists the system's Git configuration.</li>
   </ul>
 
 
@@ -356,7 +356,7 @@ squash a1bfa50 commit 4
 
 <div>
 
-  <p>To set a configuration value use <code>`git config &lt;section.name&gt; &lt;value&gt;`</code> (<code>--local</code> is the default). To unset a configuration value use <code>`git config --unset &lt;section.name&gt;`</code>. Below are some useful configuration settings.</p>
+  <p>To set a configuration value use <code>git config &lt;section.name&gt; &lt;value&gt;</code> (<code>--local</code> is the default). To unset a configuration value use <code>git config --unset &lt;section.name&gt;</code>. Below are some useful configuration settings.</p>
 
   <div class="code"><pre><code
 ><span class="comment"># user data</span>
@@ -375,14 +375,14 @@ git config --global core.autocrlf input</code></pre>
   <p><code>git fetch</code> and <code>git pull</code> can use SSH or HTTPS to interact with remote repositories. An HTTPS URL starts with <code>https://</code> and an SSH URL sometimes start with <code>ssh://</code>. For SSH a key pair can be generated with <code>ssh-keygen</code>. For HTTPS Git prompts for user name and password, which it then caches with a credentials manager.</p>
 
   <div class="note">
-    Create an SSH key-pair with <code>`ssh-keygen -t rsa -C "email@domain"`</code>. The public key can be added to web sites like GitHub.
+    Create an SSH key-pair with <code>ssh-keygen -t rsa -C "email@domain"</code>. The public key can be added to web sites like GitHub.
   </div>
 
-  <p>The URL for a remote repository is initially set with <code>git remote add</code>. To update it: <code>`git remote set-url origin &lt;URL&gt;`</code>.</p>
+  <p>The URL for a remote repository is initially set with <code>git remote add</code>. To update it: <code>git remote set-url origin &lt;URL&gt;</code>.</p>
 
   <h2 id="1-7"><a href="#1-7"></a>Wrapper-script</h2>
 
-  <p>Git commands can be aliased with <code>`git config alias.&lt;new command&gt; &lt;existing command&gt;`</code>, but a wrapper-script is used here instead. The Linux and Windows scripts have the same user interface.</p>
+  <p>Git commands can be aliased with <code>git config alias.&lt;new command&gt; &lt;existing command&gt;</code>, but a wrapper-script is used here instead. The Linux and Windows scripts have the same user interface.</p>
 
   <h3 id="1-7-1"><a href="#1-7-1"></a>Linux shell script</h3>
 
