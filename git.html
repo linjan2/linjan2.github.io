@@ -173,7 +173,7 @@ git apply &lt;file3&gt;.patch    <span class="comment"># apply changes from patc
 
 <div>
 
-  <p>When a patch file doesn't cleanly apply because of conflicts the apply-option <code>--3way</code> begins a three-way merge.</p>
+  <p>When a patch file doesn't cleanly apply because of conflicts the apply-option <code>--3way</code> begins a three-way merge, which merges two branches to <code>HEAD</code> one after the other and then squashes to a single commit.</p>
 
   <p>The commands <code>git format-patch</code> and <code>git am</code> can apply multiple commit patches as new commits that retain commit-data. The format is different from the output of the <code>diff</code>-command; it's instead formatted as an e-mail.</p>
 
@@ -213,12 +213,7 @@ squash a1bfa50 commit 4
 # s, squash = use commit, but meld into previous commit
 # f, fixup = like "squash", but discard this commit's log message
 # x, exec = run command (the rest of the line) using shell
-# d, drop = remove commit
-#
-# These lines can be re-ordered; they are executed from top to bottom.
-# If you remove a line here THAT COMMIT WILL BE LOST.
-# However, if you remove everything, the rebase will be aborted.
-# Note that empty commits are commented out</pre>
+# d, drop = remove commit</pre>
   <figcaption id="figure-5-caption">Figure 5: Rebase interactive editor where three commits are being squashed into the first.</figcaption>
   </figure>
 
@@ -248,11 +243,11 @@ squash a1bfa50 commit 4
 
   <figure aria-labelledby="figure-7-caption" id="figure-7">
 <pre role="img"
-><<<<<<< HEAD
+>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
 &lt;starting-point patch&gt;
 =======
 &lt;commit patch&gt;
->>>>>>> &lt;patch commit-message&gt;</pre>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &lt;patch commit-message&gt;</pre>
   <figcaption id="figure-7-caption">Figure 7: Conflict markup added to file in the working tree. It indicates what starting-point's patch looks like versus the current commit's patch. <code>HEAD</code> points to the starting-point during the rebase.</figcaption>
   </figure>
 
@@ -280,11 +275,11 @@ squash a1bfa50 commit 4
 
   <figure aria-labelledby="figure-9-caption" id="figure-9">
 <pre role="img"
-><<<<<<< HEAD
+>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
 &lt;merged-into's change&gt;
 =======
 &lt;merged-from's change&gt;
->>>>>>> &lt;merged-from branch&gt;</pre>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; &lt;merged-from branch&gt;</pre>
   <figcaption id="figure-9-caption">Figure 9: Conflict markup added to file in the working tree. It indicates what own's patch looks like versus the other's patch.</figcaption>
   </figure>
 
@@ -294,19 +289,14 @@ squash a1bfa50 commit 4
 
 <div>
 
-  <p>When the branches don't form a fork (i.e. the branch is a descendant of <code>HEAD</code>) a fast-forward merge occurs. A fast-forward merge just moves <code>HEAD</code> to the merged-from branch. Avoid fast-forwarding with <code>git merge --no-ff &lt;branch-name&gt;</code>. Only allow a fast-forward merge with <code>git merge --ff-only &lt;branch-name&gt;</code>.</p>
-
-  <div class="note">
-    A three-way merge will merge two branches to <code>HEAD</code> one after the other and then squash the two new commits into a third one. Perform a three-way merge to <code>HEAD</code> with <code>git merge &lt;branch-1&gt; &lt;branch-2&gt;</code>.
-  </div>
+  <p>When the branches don't form a fork (i.e. the branch is a descendant of <code>HEAD</code>) a fast-forward merge occurs. A fast-forward merge just moves <code>HEAD</code> to the merged-from branch. Avoid fast-forwarding with <code>git merge --no-ff &lt;branch-name&gt;</code>. Only allow a fast-forward merge with <code>git merge --ff-only &lt;branch-name&gt;</code>. Perform a three-way merge to <code>HEAD</code> with <code>git merge &lt;branch-1&gt; &lt;branch-2&gt;</code>.</p>
 
   <h2 id="1-5"><a href="#1-5"></a>Synchronizing with remote repositories</h2>
 
   <p>Local branches can track branches in remote repositories. Remote branches can't be committed to directly; instead, a branch must be locally created and then marked as tracking the remote branch. Tracking causes <code>git pull</code> to fetch and merge the tracked branch into the local branch; <code>git push</code> sends and merges local changes to the remote branch.</p>
 
   <div class="note">
-    Use <code>git pull &lt;repo-name&gt; &lt;remote-branch&gt;</code> to specify the remote repository and remote branch.<br><br>
-    Use <code>git pull --rebase</code> to perform a rebase instead of a merge.
+    Use <code>git pull &lt;repo-name&gt; &lt;remote-branch&gt;</code> to specify the remote repository and remote branch. Use <code>git pull --rebase</code> to perform a rebase instead of a merge.
   </div>
 
   <p>When cloning a repository its branch references are locally known as <code>origin/&lt;branch-name&gt;</code>where <code>origin</code> is the automatic name of the default remote repository. The <code>master</code>-branch tracks <code>origin/master</code> by default.</p>
@@ -329,11 +319,7 @@ squash a1bfa50 commit 4
     <li><code>git push --set-upstream &lt;repo-name&gt; &lt;local-branch&gt;</code> uses a local branch to create and track a remote branch.</li>
   </ul>
 
-  <p>Stop tracking a remote branch with <code>git branch --unset-upstream &lt;local-branch-name&gt;</code>.<p>
-
-  <div class="note">
-    Push any local branch's updates to any remote branch with <code>git push &lt;repo-name&gt; &lt;local-branch&gt;:&lt;remote-branch&gt;</code>.
-  </div>
+  <p>Stop tracking a remote branch with <code>git branch --unset-upstream &lt;local-branch-name&gt;</code>. Delete a remote branch with <code>git push origin --delete &lt;branch-name&gt;</code>. Push any local branch's updates to any remote branch with <code>git push &lt;repo-name&gt; &lt;local-branch&gt;:&lt;remote-branch&gt;</code>.</p>
 
   <h2 id="1-6"><a href="#1-6"></a>Git configuration</h2>
 
@@ -388,12 +374,12 @@ set -o noglob     <span class="comment"># don't replace *</span>
 CMD=${1:-status}  <span class="comment"># defaults to status</span>
 
 case ${CMD} in
-  <span class="em">status</span>) git status --short --branch ${2:-.} ;;     <span class="comment"># defaults to .</span>
-  <span class="em">+</span>)      git add --patch -- ${@:2} ;;               <span class="comment"># add files with interactive patch</span>
+  <span class="em">status</span>) git status --short --branch ${2:-.} ;;      <span class="comment"># defaults to .</span>
+  <span class="em">+</span>)      git add --patch -- ${@:2} ;;                <span class="comment"># add files with interactive patch</span>
   <span class="em">++</span>)     git add -- ${@:2} ;;
-  <span class="em">-</span>)      git reset --patch HEAD -- ${@:2} ;;        <span class="comment"># unadd files with interactive patch</span>
+  <span class="em">-</span>)      git reset --patch HEAD -- ${@:2} ;;         <span class="comment"># unadd files with interactive patch</span>
   <span class="em">--</span>)     git reset HEAD -- ${@:2} ;;
-  <span class="em">---</span>)    git rm --cached -r -- ${@:2} ;;            <span class="comment"># untrack files</span>
+  <span class="em">---</span>)    git rm --cached -r -- ${@:2} ;;             <span class="comment"># untrack files</span>
             <span class="comment"># diff between index or commits; adds -- before file(s)</span>
   <span class="em">diff</span>)   git diff ${2/INDEX/--staged} ${3} ${4:+-- ${4} ${5:-}} ;;
             <span class="comment"># log ancestors of $2</span>
@@ -409,11 +395,12 @@ case ${CMD} in
   <span class="em">edit</span>)   git rebase --interactive ${2:-HEAD}~2 ;;    <span class="comment"># edit from $2, inclusive</span>
             <span class="comment"># detach, move with working tree; -q for quiet about detaching</span>
   <span class="em">move</span>)   git checkout -q --detach HEAD && git reset --soft ${2} ;;
-  <span class="em">attach</span>) git checkout -q ${2} ;;                    <span class="comment"># attach HEAD</span>
+  <span class="em">attach</span>) git checkout -q ${2} ;;                     <span class="comment"># attach HEAD</span>
             <span class="comment"># restore a file from commit or index</span>
   <span class="em">get</span>)    git checkout --patch ${3/INDEX} -- ${3} ${@:4} ;;
-  <span class="em">!</span>)      git tag ${2} ${3:-HEAD} ;;                 <span class="comment"># create tag at $3</span>
-  <span class="em">-!</span>)     git tag -d ${@:2} ;;                       <span class="comment"># delete tag</span>
+  <span class="em">!</span>)      git tag ${2} ${3:-HEAD} ;;                  <span class="comment"># create tag at $3</span>
+  <span class="em">-!</span>)     git tag -d ${@:2} ;;                        <span class="comment"># delete tag</span>
+  <span class="em">branch</span>) git branch ${@:2} && git checkout ${@:2} ;; <span class="comment"># create branch</span>
 
   <span class="em">*</span>)      echo "unrecognized command '${CMD}'" ;;
 esac</code></pre>
@@ -464,6 +451,7 @@ else if "%CMD%"=="<span class="em">get</span>"    (^
           else (call git checkout --patch %2 -- %%ARGV:%2 =%%))) ^
 else if "%CMD%"=="<span class="em">!</span>"      (git tag %2 %3) ^
 else if "%CMD%"=="<span class="em">-!</span>"     (git tag -d %2) ^
+else if "%CMD%"=="<span class="em">branch</span>" (git branch %2 && git checkout %2) ^
 else echo. unrecognized command '%CMD%'
 
 exit /b
