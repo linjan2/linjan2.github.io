@@ -16,7 +16,7 @@
 
 <div>
 
-  <h1 id="title"><a href="#title"></a>OpenShift for application developers</h1>
+  <h1 id="title"><a href="#title"></a>WIP! OpenShift for application developers</h1>
 
   <p>This text is a quick reference to OpenShift 4 with examples for developers. It shows steps for setting up a test cluster using CodeReady containers (CRC 1.37.0, OpenShift client and server 4.9.10, Kubernetes v1.22.3) on Fedora 34.</p>
 
@@ -594,13 +594,14 @@ oc new-app --name test --image-stream=IMAGESTREAM:IMAGESTREAMTAG</code></pre>
 
 <div>
 
-  <p><code>Deployments</code> and <code>DeploymentConfigs</code> can have image change triggers. The triggers are automatically set by <code>oc new-app</code> when running from image streams. Set them manually with <code>oc set triggers</code>. For <code>Deployments</code> the trigger is set in an annotation. For <code>DeploymentConfigs</code> the trigger is in its <code>spec.triggers</code> field.</p>
-  
+  <p>Set an image stream's lookup policy to <code>local</code> to enable Kubernetes resources to reference image stream tags instead image URLs. That is, if a pod references <code>mysql-80:1-159</code> in its <code>image</code> field then the location in the image stream tag <code>mysql-80:1-159</code> (in the same project) is pulled without an upstream registry lookup.</p>
+
   <div class="code"><pre><code
->oc set triggers deployment/DEPLOYMENT \
---from-image=PROJECT/IMAGESTREAM:IMAGESTREAMTAG --containers CONTAINER 
-oc set triggers deploymentconfig/DEPLOYMENTCONFIG \
---from-image=PROJECT/IMAGESTREAM:IMAGESTREAMTAG --containers CONTAINER</code></pre>
+>oc import-image registry.redhat.io/rhel8/mysql-80:1-159 --confirm
+oc set image-lookup mysql-80:1-159                  <span class="comment"># set lookupPolicy.local to true</span>
+oc run mysql --image=mysql-80:1-159 ...             <span class="comment"># pulls image stream tag's image</span>
+oc set image-lookup --enabled=false mysql-80:1-159  <span class="comment"># set lookupPolicy.local to false</span>
+oc set image-lookup  <span class="comment"># list lookup policies of image streams in project</span></code></pre>
   </div>
 
   <h2 id="1-3"><a href="#1-3"></a>Running image builds</h2>
@@ -940,16 +941,25 @@ oc set triggers bc/name --from-github             <span class="comment"># add a 
   <p>To use <code>curl</code> with the webhook endpoint, fetch and use the API server's certificate chain as trusted CA. OpenSSL is used below to connect to <code>api.crc.testing:6443</code> for this.</p>
 
   <div class="code"><pre><code
-><span class="comment"># extract the certificate chain from the API server</span>
+>host api.crc.testing  <span class="comment"># check lookup; CRC should've added cluster IP to /etc/hosts</span>
+<span class="comment"># extract the certificate chain from the API server</span>
 openssl s_client -showcerts -connect api.crc.testing:6443 &lt;/dev/null \
   | sed -n '/BEGIN CERTIFICATE/,/END CERTIFICATE/p' &gt; api.crc.testing.crt</code></pre>
 </div>
 
-  <p>The webhook's secret identifier is extracted from the build configuration and then the webhook is triggered with a specific Git commit hash.</p>
+  <p>Alternatively, as administrator, extract the entire root CA bundle from the configuration.</p>
 
 </div>
 
 <div>
+
+  <div class="code"><pre><code
+><span class="comment"># extract the root CA certificate chain for the API server (as the file "ca.crt")</span>
+oc extract configmap/kube-root-ca.crt -n openshift-apiserver --keys=ca.crt
+mv ca.crt kube-root-ca.crt  <span class="comment"># rename certificate chain file</span></code></pre>
+  </div>
+  
+  <p>The webhook's secret identifier is extracted from the build configuration and then the webhook is triggered with a specific Git commit hash below.</p>
 
   <div class="code"><pre><code
 >oc describe bc/name  <span class="comment"># view the webhooks' URL</span>
@@ -958,9 +968,10 @@ SECRETS=($(oc get bc/main -o jsonpath='{.spec.triggers[*].generic.secret}'))
 SECRET=${SECRETS[0]}  <span class="comment"># get the first generic webhook's secret identifier (using shell array)</span>
 NAMESPACE=env1
 BC=name
+CACERT=api.crc.testing.crt  <span class="comment"># or kube-root-ca.crt</span>
 
 curl https://api-crc-testing:6443/oapi/v1/namespaces/${NAMESPACE}/buildconfigs/${BC}/webhooks/${SECRET}/generic \
-  --cacert api.crc.testing.crt -H 'Content-Type: application/yaml' --data \
+  --cacert ${CACERT} -H 'Content-Type: application/yaml' --data \
 'git:
   ref: master
   commit: "3036684"'</code></pre>
@@ -1000,7 +1011,8 @@ oc delete all -l app=name  <span class="comment"># delete resources with the aut
 
   <div class="code"><pre><code
 ><span class="comment"># create service "name" to target port 8080 with selector app=name</span>
-oc create service clusterip name --tcp=8080:8080</code></pre>
+oc create service clusterip name --tcp=8080:8080
+oc expose service name  <span class="comment"># add route to service under the cluster domain</span></code></pre>
   </div>
 
   <p>When the deployment replicas is scaled up to more than one pod the service will balance traffic between them. Scale the replicas to zero to stop all the deployment's pods.</p>
@@ -1010,24 +1022,29 @@ oc create service clusterip name --tcp=8080:8080</code></pre>
 oc rollout status deployment/name</code></pre>
   </div>
 
-  <p>The deployment's <code>spec.template.spec.containers</code> array specifies the images of the pod. The image from the build is automatically filled in and another image can be patched in. Below, an image reference is taken from the image stream tag.</p>
+</div>
 
+<div>
+  
+  <p>The deployment's <code>spec.template.spec.containers</code> array specifies the images of the pod. The image from the build is automatically filled in and another image can be patched in. Below, an image reference is taken from the image stream tag.</p>
+  
   <div class="code"><pre><code
->oc patch deployment name -p \
-"spec:
+  >oc patch deployment name -p \
+  "spec:
   template:
     spec:
       containers:
       - name: container2
-        image: $(oc get istag is2:latest -o jsonpath='{.image.dockerImageReference}')"
-</code></pre>
+        image: $(oc get istag is2:latest -o jsonpath='{.image.dockerImageReference}')"</code></pre>
   </div>
 
-</div>
+  <p>Logs from all pod containers can be prefixed with pod name and container name.</p>
 
-<div>
+  <div class="code"><pre><code
+>oc logs name --all-containers --prefix --timestamps</code></pre>
+  </div>
 
-  <p>There's a re-deployment trigger on the deployment that restarts its specified container with a new image reference when its corresponding image stream tag is updated. A separate image trigger can be added for the other container.</p>
+  <p>There's a re-deployment trigger on the deployment that restarts its specified container with a new image tag reference when its corresponding image stream tag is updated. A separate image trigger can be added for the other container.</p>
 
   <div class="code"><pre><code
 >oc set triggers deployment  <span class="comment"># show deployment triggers</span>
@@ -1040,31 +1057,183 @@ oc set triggers deployment/name --auto  <span class="comment"># resume automatic
 
   <h3 id="1-4-1"><a href="#1-4-1"></a>Specifying pod containers' resource requests and limits</h3>
 
-  <p>A deployment can specify CPU and memory resources for its pods. A pod is guaranteed its resource requests, but may burst up to its resouce limits. Pod resources affect their scheduling for best fit onto nodes.</p>
+  <p>A deployment can specify CPU and memory resources for its pods. A pod is guaranteed its resource requests, but may burst up to its resource limits. Pod resources affect their scheduling onto nodes.</p>
 
   <div class="code"><pre><code
-><span class="comment"># </span>
-oc set resources deployment name --containers=name \
+>oc set resources deployment name --containers=name \
   --limits=cpu=200m,memory=128Mi \
   --requests=cpu=100m,memory=128Mi</code></pre>
   </div>
 
-  <h3 id="1-4-2"><a href="#1-4-2"></a>Using <code>ConfigMaps</code>, <code>Secrets</code>, and environment variables</h3>
+  <h3 id="1-4-2"><a href="#1-4-2"></a>Adding environment variables, <code>ConfigMaps</code>, and <code>Secrets</code> to pods</h3>
 
-  <p><code>ConfigMap</code>, <code>Secret</code>, and <code>Persistent</code> resources can be mounted as volumes into pod containers.</p>
+  <p><code>ConfigMap</code> and <code>Secret</code> resources can be created from files and literals with corresponding keys. A key's name must be of the format <code>[-._a-zA-Z0-9]+</code>.</p>
 
-<div class="code"><pre><code
-><span class="comment"># </span>
-oc set volume
-oc set env
-</code></pre>
+  <div class="code"><pre><code
+>oc create configmap app-conf \
+  --from-literal key1=value1 \
+  --from-literal key2=value2
+oc set data configmap/app-conf key3=value3  <span class="comment"># add an entry</span>
+oc set data configmap/app-conf key3-        <span class="comment"># remove an entry</span>
+
+oc create configmap trust-store --from-file=ca.crt=server-ca-bundle.crt
+
+oc create secret generic credentials \
+  --from-literal username=user \
+  --from-literal password=$(openssl rand -base64 16)
+oc set data secret/credentials username=loser  <span class="comment"># update an entry</span>
+
+oc create secret generic client-cert \
+  --from-file=client.crt \
+  --from-file=client.key</code></pre>
   </div>
+
+  <p>Add environment variables to the deployment's pod template with <code>oc set env</code>. When the key-value pairs from <code>ConfigMaps</code> and <code>Secrets</code> are used for environment variables the keys are converted to uppercase and dashes and dots become underscores.</p>
+
+</div>
+
+<div>
+
+  <div class="code"><pre><code
+>oc set env deployment/name ENV1=VAL1 ENV2=VAL2
+oc set env -e - deployment/name &lt;&lt;&lt;$'key3=value3\nkey4=value4'  <span class="comment"># add from stdin (newline-delimited key-value pairs)</span>
+
+<span class="comment"># add with name-prefix from ConfigMap to all containers</span>
+oc set env --from=configmap/app-conf --prefix=APP_CONF_ deployment/name
+<span class="comment"># add from Secret to the specified container</span>
+oc set env --from=secret/credentials deployment/name --containers='container2'
+
+<span class="comment"># remove a variable from a container</span>
+oc set env deployment/name --containers=container2 APP_CONF_KEY2-
+<span class="comment"># show the environment variables set</span>
+oc set env --list deployment/name</code></pre>
+</div>
+
+  <p><code>oc set env</code> adds items to <code>deployment.spec.template.spec.containers.env</code>. This field provides the name of the environment variable. Another field is <code>envFrom</code> which only references <code>ConfigMaps</code> and <code>Secrets</code> and injects all key-value pairs using the key name as the environment variable. Keys with dots or dashes or a leading number would become invalid environment variables.</p>
+
+  <p>Use <code>oc patch</code> to add an <code>envFrom</code> array to a container.</p>
+
+  <div class="code"><pre><code
+>oc patch deployment name -p \
+'spec:
+  template:
+    spec:
+      containers:
+      - name: container2
+        envFrom:
+        - configMapRef:
+            name: app-conf
+        - secretRef:
+            name: credentials'</code></pre>
+  </div>
+
+  <p>Volumes from <code>ConfigMaps</code> and <code>Secrets</code> can be added to the deployment and mounted into the pod container's file systems.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># mount one key-value entry as a file name conf.txt</span>
+oc set volume deployment/name --containers=container2 --add --type=configmap \
+  --name=app-conf-vol --configmap-name=app-conf \
+  --mount-path /conf.txt --sub-path=key1
+
+<span class="comment"># mount all key-value entries as files in directory /cred</span>
+oc set volume deployment/name --containers=container2 --add --type=secret \
+  --name=credentials-vol --secret-name=credentials --mount-path /cred
+oc set volume deployment/name --remove --name=credentials-vol --containers=container2</code></pre>
+  </div>
+
+  <p>To mount a subset of files from a volume, patch in an array of keys and their respective path names on the volume.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># provide only the key "password" as the file "pass" for mounting</span>
+oc patch deployment/name -p \
+'spec:
+  template:
+    spec:
+      volumes:
+      - name: credentials-vol
+        secret:
+          secretName: credentials
+          items:
+          - key: password
+            path: pass'</code></pre>
+  </div>
+
+  <h4 id="1-4-2-1"><a href="#1-4-2-1"></a>Starting an init-container to copy <code>ConfigMap</code> data to a writable volume</h4>
+
+  <p><code>ConfigMap</code> and <code>Secret</code> volumes are always mounted as read-only. To get around this, an <code>emptyDir</code> volume can be added with write permission and the data can be copied there. An init-container can copy files to a volume shared with a regular container.</p>
+
+</div>
+
+<div>
+
+  <div class="code"><pre><code
+><span class="comment"># create and emptyDir volume and mount in the regular container</span>
+oc set volume deployment/name --containers='container2' --add \
+  --type=emptyDir --name=shared-vol --mount-path /shared
+
+<span class="comment"># create the conf-volume with owner-writable permissions (retained when copying)</span>
+oc set volume deployment/name --add --type=configmap \
+  --name=app-conf-vol --configmap-name=app-conf --default-mode=640
+
+<span class="comment"># add an init-container that copies files from the conf-volume to the shared volume</span>
+oc patch deployment name -p \
+'spec:
+  template:
+    spec:
+      initContainers:
+      - name: container2-init
+        image: imagename:version
+        command: ["sh", "-c", "cp -LR /conf/* /shared/"]
+        volumeMounts:
+          - mountPath: /conf
+            name: app-conf-vol
+          - mountPath: /shared
+            name: shared-vol'</code></pre>
+  </div>
+
+  <h4 id="1-4-2-2"><a href="#1-4-2-2"></a>Using the downward API in resources</h4>
 
   <p>WIP</p>
 
-  <h3 id="1-4-3"><a href="#1-4-3"></a>Start an init-container to copy <code>ConfigMap</code> data to an <code>emptyDir</code> volume</h3>
+  <h3 id="1-4-3"><a href="#1-4-3"></a>Adding persistent volume mounts</h3>
 
-  <p>Mounted <code>ConfigMaps</code> aren't writeable and can't be used as writeable state. So instead, at pod startup an init-container can mount the <code>ConfigMap</code> and copy the initial state to a writeable <code>emptyDir</code> volume.</p>
+  <p>A <code>PersistentVolumeClaim</code> resource is created in the project below for persisted cluster storage. CRC provides static recycled persistent volumes on its single node which automatically bind to claims (without selectors or storage classes).</p>
+
+  <div class="code"><pre><code
+>cat &lt;&lt;&lt;'apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc1
+spec:
+  storageClassName: ""
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi' | oc create -f -</code></pre>
+  </div>
+
+  <p>Create a volume and mount with the type <code>pvc</code>.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># create volume and mount from an existing persistent volume claim</span>
+oc set volume deployment/name --add \
+  --name=pvc-vol --type=pvc --mount-path=/data --claim-name=pvc1
+
+<span class="comment"># create volume and mount with a new generated persistent volume claim</span>
+oc set volume deployment/name --add --name=pvc-vol --type=pvc --mount-path=/data \
+  --claim-name=pvc1 --claim-size=1Gi --claim-mode='ReadWriteOnce' --claim-class=''</code></pre>
+  </div>
+
+  <h3 id="1-4-4"><a href="#1-4-4"></a>Specifying pod containers' liveness probe and readiness probe</h3>
+  
+  <p>WIP</p>
+
+  <h3 id="1-4-5"><a href="#1-4-5"></a>Using deployment rollout strategies</h3>
+
+  <p>WIP</p>
+
+  <h3 id="1-4-6"><a href="#1-4-6"></a>Creating services and secure routes</h3>
 
   <p>WIP</p>
 
@@ -1101,8 +1270,6 @@ spec:
   storageClassName: mystorageclass
   accessModes:
   - ReadWriteOnce
-  - ReadWriteMany
-  - ReadOnlyMany
   capacity:
     storage: 1Gi
   hostPath:
@@ -1200,6 +1367,12 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
 
 </div>
 
+<div>
+
+  <h2 id="1-7"><a href="#1-7"></a>Using the Kubernetes API</h2>
+
+</div>
+
 </div><!--[ PAGES END ]-->
 
 <div id="footer" class="remove-on-print"><span>2022, Linda Jansson.</span></div>
@@ -1245,9 +1418,12 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
         </li>
         <li><a href="#1-4">Using deployments</a>
           <ul>
-            <li><a href="#1-4-1">Specifying pod containers' resource requests and limits</a></li>
-            <li><a href="#1-4-2">Using <code>ConfigMaps</code>, <code>Secrets</code>, and environvariables</h3></a></li>
-            <li><a href="#1-4-3">Start an init-container to copy <code>ConfigMap</code> data to an <code>emptyDir</code> volume</a></li>
+            <li><a href="#1-4-1">Specifying pod containers' resource requests and limits</li></a>
+            <li><a href="#1-4-2">Adding environment variables, <code>ConfigMaps</code>, and <code>Secrets</code> to pods</li></a>
+            <li><a href="#1-4-3">Adding persistent volume mounts</li></a>
+            <li><a href="#1-4-4">Specifying pod containers' liveness probe and readiness probe</li></a>
+            <li><a href="#1-4-5">Using deployment rollout strategies</li></a>
+            <li><a href="#1-4-6">Creating services and secure routes</li></a>
           </ul>
         </li>
         <li><a href="#1-5">Managing persistent volumes</a>
@@ -1259,6 +1435,11 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
         <li><a href="#1-6">Using stateful sets</a>
           <ul>
             <li><a href="#1-6-1">Setting node anti-affinity and pod taint</a></li>
+          </ul>
+        </li>
+        <li><a href="#1-7">Using the Kubernetes API</a>
+          <ul>
+            <li>.</li>
           </ul>
         </li>
       </ul>
