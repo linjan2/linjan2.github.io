@@ -1057,7 +1057,7 @@ oc set triggers deployment/name --auto  <span class="comment"># resume automatic
 
   <h3 id="1-4-1"><a href="#1-4-1"></a>Specifying pod containers' resource requests and limits</h3>
 
-  <p>A deployment can specify CPU and memory resources for its pods. A pod is guaranteed its resource requests, but may burst up to its resource limits. Pod resources affect their scheduling onto nodes.</p>
+  <p>A deployment can specify CPU and memory resources for its pod containers. A pod is guaranteed its resource requests, but may burst up to its resource limits. Pod resources affect their scheduling onto nodes.</p>
 
   <div class="code"><pre><code
 >oc set resources deployment name --containers=name \
@@ -1127,7 +1127,7 @@ oc set env --list deployment/name</code></pre>
             name: credentials'</code></pre>
   </div>
 
-  <p>Volumes from <code>ConfigMaps</code> and <code>Secrets</code> can be added to the deployment and mounted into the pod container's file systems.</p>
+  <p>Volumes from <code>ConfigMaps</code> and <code>Secrets</code> can be added to the deployment and mounted into the pod containers' file systems.</p>
 
   <div class="code"><pre><code
 ><span class="comment"># mount one key-value entry as a file name conf.txt</span>
@@ -1173,7 +1173,7 @@ oc set volume deployment/name --containers='container2' --add \
 
 <span class="comment"># create the conf-volume with owner-writable permissions (retained when copying)</span>
 oc set volume deployment/name --add --type=configmap \
-  --name=app-conf-vol --configmap-name=app-conf --default-mode=640
+  --name=app-conf-vol --configmap-name=app-conf --default-mode=0640
 
 <span class="comment"># add an init-container that copies files from the conf-volume to the shared volume</span>
 oc patch deployment name -p \
@@ -1475,6 +1475,13 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
         <div class="four">Link:</div><div class="twelve"><a href="https://docs.openshift.com/container-platform/4.9/post_installation_configuration/index.html">docs.openshift.com/container-platform/4.9/post_installation_configuration/index.html</a></div>
       </div>
       <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">Kubernetes documentation and guides.</div>
+        <div class="four">Title:</div><div class="twelve">Kubernetes Documentation</div>
+        <div class="four">Author:</div><div class="twelve">The Kubernetes Authors.</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2022-02-07</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://kubernetes.io/docs/home/">kubernetes.io/docs/home/</a></div>
+      </div>
+      <div class="reference pack16">
         <div class="two"></div><div class="fourteen em">OpenShift API documentation.</div>
         <div class="four">Title:</div><div class="twelve">API index</div>
         <div class="four">Author:</div><div class="twelve">Red Hat Inc.</div>
@@ -1495,7 +1502,6 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
         <div class="four">Link:</div><div class="twelve"><a href="https://registry.fedoraproject.org/">registry.fedoraproject.org/</a></div>
         <div class="four">Link:</div><div class="twelve"><a href="https://quay.io/search">quay.io/search</a></div>
       </div>
-      
       
     </div>
 
