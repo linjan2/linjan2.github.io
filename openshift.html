@@ -399,7 +399,7 @@ oc registry info --internal  <span class="comment"># this should show the intern
 oc get configs.imageregistry.operator.openshift.io cluster -o yaml | grep 'defaultRoute'</code></pre>
   </div>
 
-  <p>To access the route from outside the cluster, extract the <code>ingress-operator</code>'s CA certificate from its <code>ConfigMap</code> and then use it and a user token to log in with <code>podman</code>, as shown below. </p>
+  <p>To access the route from outside the cluster, extract the CA certificate for the wildcard domain <code>*.apps-crc.testing</code> from a <code>ConfigMap</code> in namespace <code>openshift-config</code> and then use it with <code>podman</code>, as shown below.</p>
 
   <p>RBAC rules to access images and imagestreams et cetera are needed to pull and/or push images within a project. The roles <code>registry-viewer</code> and <code>registry-editor</code> have the necessary access privileges. Project roles <code>view</code> and <code>edit</code> include those privileges.</p>
 
@@ -409,14 +409,14 @@ oc get configs.imageregistry.operator.openshift.io cluster -o yaml | grep 'defau
 <span class="comment"># use route URL from outside the cluster</span>
 ROUTE=$(oc registry info --public)
 
-<span class="comment"># get the ingress-operator CA certificate as a file (named ${ROUTE})</span>
+<span class="comment"># get the CA certificate for the registry as a file (named ${ROUTE})</span>
 oc extract configmap/registry-certs -n openshift-config --keys=${ROUTE}
-<span class="comment"># inspect same certificate file from route (CN=ingress-operator@XXX)</span>
+
+<span class="comment"># inspect certificate file</span>
 openssl x509 -text -noout -in ${ROUTE}
-<span class="comment"># view certificate chain (ingress-operator signs *.app-crc.testing)</span>
-openssl s_client -showcerts -CAfile ${ROUTE} \
-  -connect ${ROUTE}:443 \
-  &lt; /dev/null
+
+<span class="comment"># alternatively, fetch the certificate chain from URL (both subject's and issuer's)</span>
+openssl s_client -showcerts -CAfile ${ROUTE} -connect ${ROUTE}:443 &lt; /dev/null
 
 <span class="comment"># move certificate for usage with podman/skopeo/buildah</span>
 mkdir -p "${HOME}/.config/containers/certs.d/${ROUTE}"
@@ -441,7 +441,9 @@ podman pull "docker://${ROUTE}/common/myimage:123"
 skopeo copy "docker://${ROUTE}/common/myimage:123" containers-storage:localhost/myimage:123</code></pre>
   </div>
 
-  <p>Deleting the image stream doesn't remove image data. Images can be pruned manually, as shown below. <code>skopeo delete</code> is not allowed. The node performs garbage collection every few minutes.</p>
+  <p> The ingress operator is the certificate issuer for <code>*.apps-crc.testing</code> and its certificate is in the root CA bundle inside <code>configmap/kube-root-ca.crt -n openshift-ingress</code>. Only the route certificate is needed for Podman/Skopeo/Buildah to trust the registry though.</p>
+
+  <p>Deleting an image stream doesn't remove image data since it's garbage collected. Images can be pruned manually, as shown below. <code>skopeo delete</code> is not allowed. The node performs garbage collection every few minutes.</p>
 
   <div class="code"><pre><code
 >oc adm prune images  <span class="comment"># dry-run image prune</span>
