@@ -1031,13 +1031,15 @@ oc rollout status deployment/name</code></pre>
   <p>The deployment's <code>spec.template.spec.containers</code> array specifies the images of the pod. The image from the build is automatically filled in and another image can be patched in. Below, an image reference is taken from the image stream tag.</p>
   
   <div class="code"><pre><code
-  >oc patch deployment name -p \
-  "spec:
+>oc set image-lookup is2  <span class="comment"># to resolve image stream tag's .image.dockerImageReference below</span>
+
+oc patch deployment name -p \
+'spec:
   template:
     spec:
       containers:
       - name: container2
-        image: $(oc get istag is2:latest -o jsonpath='{.image.dockerImageReference}')"</code></pre>
+        image: is2:latest'</code></pre>
   </div>
 
   <p>Logs from all pod containers can be prefixed with pod name and container name.</p>
@@ -1051,10 +1053,7 @@ oc rollout status deployment/name</code></pre>
   <div class="code"><pre><code
 >oc set triggers deployment  <span class="comment"># show deployment triggers</span>
 <span class="comment"># add re-deployment when second container's image stream tag is updated</span>
-oc set triggers deployment name --from-image=env1/is2:latest --containers=container2
-
-oc set triggers deployment/name --manual  <span class="comment"># suspend automatic trigger</span>
-oc set triggers deployment/name --auto  <span class="comment"># resume automatic trigger</span></code></pre>
+oc set triggers deployment name --from-image=env1/is2:latest --containers=container2</code></pre>
   </div>
 
   <h3 id="1-4-1"><a href="#1-4-1"></a>Specifying pod containers' resource requests and limits</h3>
@@ -1193,7 +1192,7 @@ oc patch deployment name -p \
             name: shared-vol'</code></pre>
   </div>
 
-  <h4 id="1-4-2-2"><a href="#1-4-2-2"></a>Using the downward API in resources</h4>
+  <h4 id="1-4-2-2"><a href="#1-4-2-2"></a>Using the downward API in deployments</h4>
 
   <p>WIP</p>
 
@@ -1227,17 +1226,221 @@ oc set volume deployment/name --add --name=pvc-vol --type=pvc --mount-path=/data
   --claim-name=pvc1 --claim-size=1Gi --claim-mode='ReadWriteOnce' --claim-class=''</code></pre>
   </div>
 
-  <h3 id="1-4-4"><a href="#1-4-4"></a>Specifying pod containers' liveness probe and readiness probe</h3>
+  <h3 id="1-4-4"><a href="#1-4-4"></a>Specifying containers' lifecycle probes</h3>
+
+  <p>Three types of probes can be set on a pod's container to indicate its lifecycle state to the kubelet.</p>
+
+  <ul>
+    <li>Startup probe: determines if container is started. It runs before the readiness or liveness probes. If its fails the container is killed and optionally restarted.</li>
+    <li>Readiness probe: determines if a container is ready to receive requests. Service requests are not sent to the container until it succeeds.</li>
+    <li>Liveness probe: determines if a container should be killed and optionally restarted.</li>
+  </ul>
+
+  <p>A probe check can be a command executed inside the container, a TCP connection test, or a HTTP GET request test. The pod's <code>spec.restartPolicy</code> determines whether a failed startup or liveness probe tries to restart the container.</p>
+
+</div>
+
+<div>
+
+  <p>Each probe has the following parameters.</p>
+
+  <ul>
+    <li>Failure threshold: the minimum consecutive failures for probe failure. The default is 3.</li>
+    <li>Success threshold: the minimum consecutive successes for probe success. The default is 1.</li>
+    <li>Initial delay: the delay in seconds before first probe after container start. The default is 0.</li>
+    <li>Period: how often the probe is performed in seconds. The default is 10 seconds.</li>
+    <li>Timeout: the time in seconds before a pending probe times out and fails. The default is 1.</li>
+  </ul>
+
+  <p>A startup probe is rerun until it reaches its threshold for failure or success. Since it runs before the readiness and liveness probe it's intended to replace long initial delays for these. The startup probe's thresholds and its period is effectively the initial delay before the other probes start.</p>
+
+  <p>Probes using different actions are created below on one of a deployment's containers.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># set startup probe with TCP connection test (without initial delay)</span>
+oc set probe deployment/name --startup --open-tcp=8080 --containers=container2 \
+  --failure-threshold=3 --success-threshold=1 --initial-delay-seconds=0 \
+  --period-seconds=10 --timeout-seconds=1
+
+<span class="comment"># set readiness probe with HTTP GET test</span>
+oc set probe deployment/name --readiness --get-url=http://:8080/health --containers=container1 \
+  --failure-threshold=3 --success-threshold=1 --initial-delay-seconds=0 \
+  --period-seconds=10 --timeout-seconds=1
+
+<span class="comment"># set liveness probe with command execution test</span>
+oc set probe deployment/name --liveness --containers=container1 \
+  --failure-threshold=3 --success-threshold=1 --initial-delay-seconds=0 \
+  --period-seconds=10 --timeout-seconds=1 \
+  -- echo ok
+
+<span class="comment"># remove probes</span>
+oc set probe deployment/name --remove --startup --readiness --liveness</code></pre>
+  </div>
+
+  <h3 id="1-4-5"><a href="#1-4-5"></a>Creating cluster services and secure external routes</h3>
+
+  <p>A <code>Service</code> resource creates an IP forwarding rule for traffic sent to a cluster-local hostname to the address of a pod. A <code>Route</code> resource forwards traffic sent to a cluster-external hostname to a service.</p>
+
+  <p>A cluster-IP service is created below that forwards its traffic to any pod with the label <code>app=service1</code>. Port 8080 maps to port 5555 on the pod and port 8081 maps to ports named <code>target1</code> on the pod (in <code>pod.spec.containers.ports.name</code>).</p>
+
+  <div class="code"><pre><code
+><span class="comment"># forward service1.env1.svc.cluster.local:8080 to ports 5555 and "target2"</span>
+oc create service clusterip service1 --tcp=8080:5555,8081:target2 -n env1
+oc get service service1 -o jsonpath='{.spec.selector}'  <span class="comment"># app = service1</span></code></pre>
+  </div>
+
+  <p>A service's full hostname is <code>SERVICE.PROJECT.svc.cluster.local</code>, but can reached at <code>SERVICE.PROJECT</code>. From within its project it can be reached by the service name. A route's hostname is <code>ROUTE-PROJECT.CLUSTER</code> and the OpenShift router listens on ports 80 and 443.</p>
+
+  <p><code>oc expose</code> can create a service from a deployment and an insecure route from a service.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># forward service1.env1.svc.cluster.local:8081 to port "target1"</span>
+oc expose deployment/name --name service1 --port=8081 --target-port=target1
+oc get service service1 -o jsonpath='{.spec.selector}'  <span class="comment"># deployment = service1</span>
+<span class="comment"># redirect to service1 from route-http-env1.apps-crc.testing:80</span>
+oc expose service/service1 --name insecure-http-route</code></pre>
+  </div>
+
+  <p>To let the client and destination handle TLS themselves, create a passthrough route. It forwards encrypted traffic to the destination and allows for mutual TLS where server and the client exchange certificates. The destination must provide a certificate that is valid for the hostname that the client specifies.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># forward traffic to service1 from pr-env1.apps-crc.testing:443</span>
+oc create route passthrough pr --service=service1 --port=8081</code></pre>
+  </div>
+
+</div>
+
+<div>
+
+  <p>Both edge and reencrypt routes perform TLS communication with clients and require their own certificates. A reencrypt-type route also needs the destination's certificate since it forwards encrypted traffic. An edge-type route forwards unencrypted traffic.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># create edge route that uses default wildcard certificates</span>
+oc create route edge er1 --service=service1 --port=8081
+<span class="comment"># check the certificates sent on route</span>
+openssl s_client -showcerts -connect er1-env1.apps-crc.testing:443 &lt;/dev/null
+
+<span class="comment"># or manually set certificate and key for edge route</span>
+oc create route edge er2 --service=service1 --port=8081 --cert=tls.crt --key=tls.key
+
+<span class="comment"># create reencrypt route that uses default wildcard certificate</span>
+oc create route reencrypt rr1 --service=service1 --port=8081 --dest-ca-cert=destca.crt
+
+<span class="comment"># or manually set certificate and key for edge route</span>
+oc create route reencrypt rr2 --service=service1 --port=8081 --dest-ca-cert=destca.crt \
+  --cert=tls.crt --key=tls.key
+
+<span class="comment"># extract the default wildcard certificate and its key as "tls.crt" and "tls.key"</span>
+oc extract secret/router-certs-default -n openshift-ingress</code></pre>
+  </div>
+
+  <p>An additional CA certificate can be added to the route with <code>--ca-cert</code> if needed to complete the certificate chain.</p>
+
+  <p>If an edge or reencrypt route is accessed without HTTP on port 80 it can redirect to port 443 for HTTPS. Set the route's <code>insecureEdgeTerminationPolicy</code> field to <code>Redirect</code> to enable this. By default insecure traffic is allowed and forwarded on port 80. Set the field to <code>None</code> to block HTTP on port 80.</p>
+
+  <div class="code"><pre><code
+>oc patch route er1 -p '{"spec":{"tls": {"insecureEdgeTerminationPolicy": "Redirect"}}}'
+oc patch route er2 -p '{"spec":{"tls": {"insecureEdgeTerminationPolicy": "None"}}}'
+</code></pre>
+  </div>
+
+  <p>A route can load balance traffic to multiple services by adding services to <code>alternateBackends</code> and setting relative weights.</p>
+
+  <div class="code"><pre><code
+>oc set route-backends er1 service1=4 service2=1</code></pre>
+  </div>
+
+  <h3 id="1-4-6"><a href="#1-4-6"></a>Managing deployments manually</h3>
+
+  <p>Deployment states are stored in a history of revisions as <code>ReplicaSets</code> resources. When the pod template is changed a deployment's pods terminates and are replaced. Below are commands that manage re-deployments.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># pause deployment reconciliation, make pod template edits, and resume</span>
+oc rollout pause deployment/name   <span class="comment"># stop any re-deployment during changes</span>
+oc set image deployment/name container2=myis:tag --source=imagestreamtag
+oc scale deployment/name --replicas=5
+oc rollout resume deployment/name  <span class="comment"># enable re-deployment to match the changes</span>
+
+<span class="comment"># view history (max. revision history is set in deployment.spec.revisionHistoryLimit)</span>
+oc rollout status deployment/name   <span class="comment"># show last status message</span>
+oc rollout history deployment/name  <span class="comment"># show list of revisions (max. .spec.revisionHistoryLimit)</span>
+oc rollout history deployment/name --revision=1  <span class="comment"># describe a deployment revision</span>
+
+oc rollout restart deployment/name               <span class="comment"># deploy new revision</span>
+oc rollout undo deployment/name --to-revision=1  <span class="comment"># deploy new revision equal to 1st</span></code></pre>
+  </div>
+
+  <p><code>deployment.spec.progressDeadlineSeconds</code> is the number of seconds to wait before a progressing deployment is considered to have failed. The default is 600 seconds.</p>
   
-  <p>WIP</p>
+  <p><code>deployment.spec.minReadySeconds</code> is the number of seconds that a deployment's pods must be in the ready-state before the deployment is considered available. The default is 0 seconds.</p>
 
-  <h3 id="1-4-5"><a href="#1-4-5"></a>Using deployment rollout strategies</h3>
+</div>
 
-  <p>WIP</p>
+<div>
 
-  <h3 id="1-4-6"><a href="#1-4-6"></a>Creating services and secure routes</h3>
+  <h4 id="1-4-6-1"><a href="#1-4-6-1"></a>Configuring deployment strategies</h4>
 
-  <p>WIP</p>
+  <p>Deployment pods are restarted and rolled out in accordance with their deployment strategy. The <code>Recreate</code> strategy will terminate all existing pods (simultaneously) before the next revision's are started. The <code>RollingUpdate</code> strategy will start new pods successively as the previous ones are terminating.</p>
+
+  <p>The <code>RollingUpdate</code> strategy is the default and it has the following parameters to determine when to stop old pods and start new ones.</p>
+
+  <ul>
+    <li>Maximum unavailable: how many pods out of the desired number that may be unavailable at any one time. It can be a number or a percentage. The default is 25%.</li>
+    <li>Maximum surge: how many pods over the desired number that may be created. It can be a number or a percentage. The default is 25% (i.e. 125% of the desired number).</li>
+  </ul>
+
+  <p>Percentages of the desired number of pods are rounded down to a number. If at least one pod must be available, the maximum surge must be at least 1 so that down all old pods can be terminated at some point.</p>
+
+  <p>The two strategies are set on a deployment below.</p>
+
+  <div class="code"><pre><code
+>oc patch deployment/name -p \
+'spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%'
+
+oc patch deployment/name -p \
+'spec:
+  strategy:
+    type: Recreate'</code></pre>
+  </div>
+
+  <p>The <code>Recreate</code> strategy is functionally the same as having <code>maxUnavailable=100%</code> and <code>maxSurge=0</code> for the <code>RollingUpdate</code> strategy.</p>
+
+
+  <h4 id="1-4-6-2"><a href="#1-4-6-2"></a>Planning a blue-green deployment</h4>
+
+  <p>A blue-green deployment starts pods of a new version (green) as unreachable while running the old (blue). When the green pods are ready traffic is routed to them instead and the blue ones are terminated. For the next update, the green are old and the blue are new.</p>
+
+  <p>A separate deployment is created per release-color and the pods are labeled accordingly. Double the resources are required since blue and green will be deployed at the same time. A single service first forwards traffic to only the blue pods. When green is ready, the service's selector is changed to forward to them instead. If the green deployment has problems, then the service can be switched back to blue deployment.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># set label selector on service "name" to pods of the green deployment</span>
+oc set selector service/name deployment=green
+<span class="comment"># remove blue deployment</span>
+oc delete deployment/blue</code></pre>
+  </div>
+
+  <h4 id="1-4-6-3"><a href="#1-4-6-3"></a>Planning a canary deployment</h4>
+
+  <p>A canary deployment gradually starts pods of a new version (the canary) while gradually removing the old. The new pods receive a limited amount of traffic at first, but eventually reach 100% as old pods are removed and new ones are started.</p>
+
+</div>
+
+<div>
+
+  <p>A separate canary deployment is created with a fewer number of pod replicas. A single service forwards traffic to both types of pods by labeling both deployments' pods with the service selector. In stages, the replicas of the old deployment are scaled down and the new are scaled up.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># add label on pods of the canary deployment</span>
+oc label pods deployment=name --selector=deployment=canary
+<span class="comment"># scale new pods up and old ones down</span>
+oc scale --replicas=2 deployment/canary
+oc scale --replicas=1 deployment/old</code></pre>
+  </div>
 
 </div>
 
@@ -1289,7 +1492,7 @@ spec:
     <li><code>ROX</code>, <code>ReadOnlyMany</code>; the volume can be mounted on many nodes in read-write mode.</li>
   </ul>
 
-  <p>The reclaim policy determines whether the backing storage is deleted (<code>Delete</code>) or retained (<code>Retain</code>) when its bound claim is deleted. The prepared CRC volumes have a policy of <code>Recycle</code> which retains and clears the same directories. If <code>Retain</code> is used, the persistent volume has to be recreated. <code>Delete</code> for <code>hostPath</code> in this case is only valid for directories under <code>/tmp/</code>.</p>
+  <p>The reclaim policy determines whether the backing storage is deleted (<code>Delete</code>) or retained (<code>Retain</code>) when its bound claim is deleted. The prepared CRC volumes have a policy of <code>Recycle</code> which retains and clears the same directories. If <code>Retain</code> is used, the persistent volume resource has to be recreated. <code>Delete</code> for <code>hostPath</code> in this case is only valid for directories under <code>/tmp/</code>.</p>
 
 </div>
 
@@ -1345,7 +1548,7 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
 
   <p>Installing a storage operator should also simultaneously create their storage class resource. <code>parameters</code> and <code>mountOptions</code> can also be set on a storage class.</p>
 
-  <h3 id="1-5-2"><a href="#1-5-2"></a>Creating persistent volumes on a NFS backend</h3>
+  <h3 id="1-5-2"><a href="#1-5-2"></a>Creating persistent volumes on an NFS backend</h3>
 
   <p>WIP</p>
 
@@ -1423,9 +1626,9 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
             <li><a href="#1-4-1">Specifying pod containers' resource requests and limits</li></a>
             <li><a href="#1-4-2">Adding environment variables, <code>ConfigMaps</code>, and <code>Secrets</code> to pods</li></a>
             <li><a href="#1-4-3">Adding persistent volume mounts</li></a>
-            <li><a href="#1-4-4">Specifying pod containers' liveness probe and readiness probe</li></a>
-            <li><a href="#1-4-5">Using deployment rollout strategies</li></a>
-            <li><a href="#1-4-6">Creating services and secure routes</li></a>
+            <li><a href="#1-4-4">Specifying containers' lifecycle probes</li></a>
+            <li><a href="#1-4-5">Creating cluster services and secure external routes</li></a>
+            <li><a href="#1-4-6">Managing deployments manually</li></a>
           </ul>
         </li>
         <li><a href="#1-5">Managing persistent volumes</a>
