@@ -120,13 +120,13 @@ oc adm new-project common  <span class="comment"># for common resources</span></
   <p>Default resources <code>ResourceQuota</code>, <code>LimitRange</code>, <code>NetworkPolicy</code>, and <code>ServiceAccount</code> are added to each project. Each resource YAML is added to <code>project-resources.yaml</code>.</p>
 
   <p>A project quota YAML is created below. This sets the maximum CPU and memory that a project's containers can request and use in total.</p>
-  
+
   <div class="code"><pre><code
 >oc create quota memory-and-cpu-quota --dry-run=client -o yaml \
   --hard=limits.memory=2Gi,limits.cpu=2,requests.memory=2Gi,requests.cpu=2 \
   &gt;&gt; project-resources.yaml</code></pre>
   </div>
-    
+
   <p>Below is project limit range that limits container's CPU and memory request and limits. This sets the defaults and allowed range.</p>
 
   <div class="code"><pre><code
@@ -225,7 +225,7 @@ oc create -f project-resources.yaml -n common</code></pre>
       </div>
 
   <p>Logged in users can self-provision a project with <code>oc new-project</code>. A template can then also be configured with the additional resources to be added automatically. This isn't used for this text, but can be configured as shown below.</p>
-  
+
   <div class="code"><pre><code
 >oc adm create-bootstrap-project-template -o yaml > project-template.yaml
 <span class="comment"># ... add resources to project-template.yaml objects-list...</span>
@@ -378,7 +378,7 @@ oc process -f template.networkpolicy.yaml -p NAMESPACE=env2 | oc create -f - -n 
   </div>
 
   <h3 id="1-1-2"><a href="#1-1-2"></a>Access internal image registry with Podman and Skopeo</h3>
-  
+
   <p>The OpenShift internal registry should already be configured with the registry service <code>image-registry.openshift-image-registry.svc:5000</code> and its external facing route <code>default-route-openshift-image-registry.apps-crc.testing</code>.</p>
 
 </div>
@@ -563,7 +563,7 @@ oc create secret generic mydockerhubsecret \
   <h3 id="1-2-1"><a href="#1-2-1"></a>Using OpenShift image streams</h3>
 
   <p>An OpenShift image stream tracks image updates by storing the immutable image digests. Each image stream tag has a history of image digests and is updated with the latest digest when importing the tracked image. Updating an image stream tag also be set to trigger deployments with the new image digest.</p>
-  
+
   <p>Use <code>oc import-image</code> to update an image stream tag's most recent image digest. Use <code>oc tag</code> to manipulate image stream tags.</p>
 
   <div class="code"><pre><code
@@ -609,7 +609,7 @@ oc set image-lookup  <span class="comment"># list lookup policies of image strea
   <h2 id="1-3"><a href="#1-3"></a>Running image builds</h2>
 
   <p>The command <code>new-build</code> creates a <code>BuildConfig</code> and <code>ImageStream</code>. The build configuration starts a build pod that builds and pushes an image to an image stream or image registry.</p>
-  
+
   <p>A <code>BuildConfig</code>'s build strategy is either to run a Dockerfile or a source-to-image (S2I) builder image. Input files are put in the context directory of the build and can be cloned from a Git repository, be uploaded from the command-line, or be sourced from another image. Cloning and uploading are mutually exclusive inputs.</p>
 
   <p>Below is an example of a Dockerfile build with uploaded files for context. The Dockerfile uses two images that are first imported into the project <code>common</code>. The <code>FROM</code> instructions use the internal repository.</p>
@@ -699,7 +699,7 @@ oc new-build --name main --strategy=docker \
   common/ubi8-minimal:8.5~https://github.com/linjan2/example-repo.git --context-dir=gcc \
   --source-secret=git-http-auth</code></pre>
 </div>
-  
+
   <p>Use <code>ssh-keygen</code> to generate the SSH keys; the public key should be uploaded to the repository. <code>ssh-keyscan</code> can get the repository's host key for <code>known_hosts</code>.</p>
 
   <div class="code"><pre><code
@@ -815,7 +815,7 @@ exec cat application.txt artifact.txt</code></pre>
 <div>
 
   <p>The <code>usage</code> script set as the builder image's command is shown below. It outputs usage information.</p>
-  
+
   <div class="code"><pre><code
 ><span class="comment"># usage</span>
 echo 'Run as S2I builder'</code></pre>
@@ -960,7 +960,7 @@ openssl s_client -showcerts -connect api.crc.testing:6443 &lt;/dev/null \
 oc extract configmap/kube-root-ca.crt -n openshift-apiserver --keys=ca.crt
 mv ca.crt kube-root-ca.crt  <span class="comment"># rename certificate chain file</span></code></pre>
   </div>
-  
+
   <p>The webhook's secret identifier is extracted from the build configuration and then the webhook is triggered with a specific Git commit hash below.</p>
 
   <div class="code"><pre><code
@@ -992,7 +992,6 @@ oc patch bc/name -p '{"spec":{"postCommit":{"command": null, "args":["arg1","arg
 <span class="comment"># remove post-commit hook</span>
 oc set build-hook bc/name --post-commit --remove</code></pre>
   </div>
-    
 
   <h2 id="1-4"><a href="#1-4"></a>Using deployments</h2>
 
@@ -1027,9 +1026,9 @@ oc rollout status deployment/name</code></pre>
 </div>
 
 <div>
-  
+
   <p>The deployment's <code>spec.template.spec.containers</code> array specifies the images of the pod. The image from the build is automatically filled in and another image can be patched in. Below, an image reference is taken from the image stream tag.</p>
-  
+
   <div class="code"><pre><code
 >oc set image-lookup is2  <span class="comment"># to resolve image stream tag's .image.dockerImageReference below</span>
 
@@ -1048,12 +1047,18 @@ oc patch deployment name -p \
 >oc logs name --all-containers --prefix --timestamps</code></pre>
   </div>
 
-  <p>There's a re-deployment trigger on the deployment that restarts its specified container with a new image tag reference when its corresponding image stream tag is updated. A separate image trigger can be added for the other container.</p>
+  <p>There's a re-deployment trigger on the deployment that restarts its specified container with a new image when its corresponding image stream tag is updated. A separate image trigger can be added for the other container.</p>
 
   <div class="code"><pre><code
 >oc set triggers deployment  <span class="comment"># show deployment triggers</span>
 <span class="comment"># add re-deployment when second container's image stream tag is updated</span>
 oc set triggers deployment name --from-image=env1/is2:latest --containers=container2</code></pre>
+  </div>
+
+  <p>For example, when an image stream tag is ready to be deployed it can be tagged as <code>latest</code> to trigger a new deployment.</p>
+
+  <div class="code"><pre><code
+>oc tag is2:v2.0.444 is2:latest</code></pre>
   </div>
 
   <h3 id="1-4-1"><a href="#1-4-1"></a>Specifying pod containers' resource requests and limits</h3>
@@ -1194,7 +1199,100 @@ oc patch deployment name -p \
 
   <h4 id="1-4-2-2"><a href="#1-4-2-2"></a>Using the downward API in deployments</h4>
 
-  <p>WIP</p>
+  <p>Certain fields of a deployment can be set as environment variables and as files in a volume. Additionally, the environment variables values can be referenced in using the syntax <code>$(NAME)</code> (which can be escaped with <code>$$(NAME)</code>).</p>
+
+  <p>A patch with examples is shown below.</p>
+
+  <div class="code"><pre><code
+>oc patch deployment/name -p \
+'spec:
+  template:
+    spec:
+      volumes:
+      - name: podinfo
+        downwardAPI:
+          items:
+          - fieldRef:
+              fieldPath: metadata.labels
+            path: labels
+          - fieldRef:
+              fieldPath: metadata.annotations
+            path: annotations
+          - fieldRef:
+              fieldPath: metadata.name
+            path: pod_name
+          - fieldRef:
+              fieldPath: metadata.namespace
+            path: pod_namespace
+          - resourceFieldRef:
+              resource: requests.memory
+              containerName: container2
+            path: mem_request
+      containers:
+      - name: container2
+        args: [ "$(POD_NAMESPACE)", "$(POD_NAME)", "$(POD_IP)" ]
+        # -----------------------------------------
+        volumeMounts:
+        - name: podinfo
+          mountPath: /podinfo
+        # -----------------------------------------
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: MEM_LIMIT
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.memory
+              containerName: container2
+        - name: MEM_LIMIT_2
+          value: $(MEM_LIMIT)'</code></pre>
+  </div>
+
+</div>
+
+<div>
+
+  <p><code>fieldRef</code> only supports annotations, labels, name, and namespace. If container resources are not present then <code>resourceFieldRef</code> defaults to the node's CPU and memory.</p>
+
+  <p>The <code>configMapRef</code> and <code>secretMapRef</code> fields for environment variables described previously are also considered part of the downward API.</p>
+
+  <p>A volume can also be created from a combination of <code>downwardAPI</code>, <code>ConfigMap</code>, and <code>Secret</code>. These sources are projected as files into a single directory. An example is below.</p>
+
+  <div class="code"><pre><code
+>oc patch deployment/name -p \
+'spec:
+  volumes:
+  - name: projected-vol
+    projected:
+      defaultMode: 0600
+      sources:
+      - downwardAPI:
+          items:
+          - path: labels
+            fieldRef:
+              fieldPath: metadata.labels
+      - secret:
+          name: secret-name
+          items:
+          - keys: password
+            path: secret/pass
+      - configMap:
+          name: configmap-name
+          items:
+          - key: configuration
+            path: config/conf
+            mode: 0660'</code></pre>
+  </div>
 
   <h3 id="1-4-3"><a href="#1-4-3"></a>Adding persistent volume mounts</h3>
 
@@ -1236,11 +1334,11 @@ oc set volume deployment/name --add --name=pvc-vol --type=pvc --mount-path=/data
     <li>Liveness probe: determines if a container should be killed and optionally restarted.</li>
   </ul>
 
-  <p>A probe check can be a command executed inside the container, a TCP connection test, or a HTTP GET request test. The pod's <code>spec.restartPolicy</code> determines whether a failed startup or liveness probe tries to restart the container.</p>
-
 </div>
 
 <div>
+
+  <p>A probe check can be a command executed inside the container, a TCP connection test, or a HTTP GET request test. The pod's <code>spec.restartPolicy</code> determines whether a failed startup or liveness probe tries to restart the container.</p>
 
   <p>Each probe has the following parameters.</p>
 
@@ -1301,16 +1399,16 @@ oc get service service1 -o jsonpath='{.spec.selector}'  <span class="comment"># 
 oc expose service/service1 --name insecure-http-route</code></pre>
   </div>
 
-  <p>To let the client and destination handle TLS themselves, create a passthrough route. It forwards encrypted traffic to the destination and allows for mutual TLS where server and the client exchange certificates. The destination must provide a certificate that is valid for the hostname that the client specifies.</p>
-
-  <div class="code"><pre><code
-><span class="comment"># forward traffic to service1 from pr-env1.apps-crc.testing:443</span>
-oc create route passthrough pr --service=service1 --port=8081</code></pre>
-  </div>
-
 </div>
 
 <div>
+
+  <p>To let the client and destination handle TLS themselves, create a passthrough route. It forwards encrypted traffic to the destination and allows for mutual TLS where server and the client exchange certificates. The destination must provide a certificate that is valid for the hostname that the client specifies.</p>
+
+  <div class="code"><pre><code
+  ><span class="comment"># forward traffic to service1 from pr-env1.apps-crc.testing:443</span>
+  oc create route passthrough pr --service=service1 --port=8081</code></pre>
+  </div>
 
   <p>Both edge and reencrypt routes perform TLS communication with clients and require their own certificates. A reencrypt-type route also needs the destination's certificate since it forwards encrypted traffic. An edge-type route forwards unencrypted traffic.</p>
 
@@ -1350,7 +1448,7 @@ oc patch route er2 -p '{"spec":{"tls": {"insecureEdgeTerminationPolicy": "None"}
 >oc set route-backends er1 service1=4 service2=1</code></pre>
   </div>
 
-  <h3 id="1-4-6"><a href="#1-4-6"></a>Managing deployments manually</h3>
+  <h3 id="1-4-6"><a href="#1-4-6"></a>Managing deployments</h3>
 
   <p>Deployment states are stored in a history of revisions as <code>ReplicaSets</code> resources. When the pod template is changed a deployment's pods terminates and are replaced. Below are commands that manage re-deployments.</p>
 
@@ -1372,15 +1470,15 @@ oc rollout undo deployment/name --to-revision=1  <span class="comment"># deploy 
 oc set triggers --auto                           <span class="comment"># re-enable image triggers after rollout undo</span></code></pre>
   </div>
 
+</div>
+
+<div>
+
   <p>When a deployment fails the new pods remain along with any old pods that weren't immediately terminated. Use <code>oc rollout undo</code> to remove the new pods.</p>
 
   <p><code>deployment.spec.minReadySeconds</code> is the number of seconds that a deployment's pods must be in the ready-state before the deployment is considered available. The default is 0 seconds.</p>
 
   <p><code>deployment.spec.progressDeadlineSeconds</code> is the number of seconds to wait before a setting a progression timeout status on a deployment. The default is 600 seconds. It must be larger than <code>minReadySeconds</code>.</p>
-
-</div>
-
-<div>
 
   <h4 id="1-4-6-1"><a href="#1-4-6-1"></a>Configuring deployment strategies</h4>
 
@@ -1428,19 +1526,19 @@ oc set selector service/name deployment=green
 oc delete deployment/blue</code></pre>
   </div>
 
-  <p>Another alternative is to re-direct a route to a service that forwards to the new pods. This affects cluster-external traffic.</p>
+</div>
+
+<div>
+
+  <p>Another alternative is to change a route's backend to a service that forwards to the new pods. This affects cluster-external traffic.</p>
 
   <div class="code"><pre><code
->oc set route-backends routename greenService</code></pre>
+  >oc set route-backends routename greenService</code></pre>
   </div>
 
   <h4 id="1-4-6-3"><a href="#1-4-6-3"></a>Planning a canary deployment</h4>
 
   <p>A canary deployment gradually starts pods of a new version (the canary) while gradually removing the old. The new deployment effectively takes on more and more traffic as old pods are removed and new ones are started.</p>
-
-</div>
-
-<div>
 
   <p>A separate canary deployment can be created while a single service forwards traffic to both canary and stable pods. Both deployments need a label in their <code>spec.template.metadata.labels</code> for the service selector to match. In stages, the replicas of the old deployment are scaled down and the new are scaled up.</p>
 
@@ -1579,7 +1677,7 @@ spec:
   <h3 id="1-5-1"><a href="#1-5-1"></a>Using a default storage class</h3>
 
   <p>A storage class can be automatically set on persistent volume claims by adding the annotation <code>storageclass.kubernetes.io/is-default-class:"true"</code> on a created storage class. Otherwise the default storage class is empty which matches persistent volumes with no storage class.</p>
-  
+
   <p>A default storage class without a provisioner is created below. The <code>storageClassName</code> field of a <code>PersistentVolumeClaim</code> will then default to <code>mystorageclass</code> when left unspecified.</p>
 
   <div class="code"><pre><code
@@ -1699,7 +1797,7 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
         </li>
       </ul>
     </div>
-    
+
     <div class="sixteen" id="reference-tab">
       <div class="reference pack16">
         <div class="two"></div><div class="fourteen em">Download site for CodeReady Containers.</div>
@@ -1757,7 +1855,7 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
         <div class="four">Link:</div><div class="twelve"><a href="https://registry.fedoraproject.org/">registry.fedoraproject.org/</a></div>
         <div class="four">Link:</div><div class="twelve"><a href="https://quay.io/search">quay.io/search</a></div>
       </div>
-      
+
     </div>
 
     <div id="more-tab">
