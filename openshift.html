@@ -1362,17 +1362,21 @@ oc scale deployment/name --replicas=5
 oc rollout resume deployment/name  <span class="comment"># enable re-deployment to match the changes</span>
 
 <span class="comment"># view history (max. revision history is set in deployment.spec.revisionHistoryLimit)</span>
-oc rollout status deployment/name   <span class="comment"># show last status message</span>
+oc rollout status deployment/name   <span class="comment"># watch status changes until success/failure</span>
 oc rollout history deployment/name  <span class="comment"># show list of revisions (max. .spec.revisionHistoryLimit)</span>
 oc rollout history deployment/name --revision=1  <span class="comment"># describe a deployment revision</span>
 
 oc rollout restart deployment/name               <span class="comment"># deploy new revision</span>
-oc rollout undo deployment/name --to-revision=1  <span class="comment"># deploy new revision equal to 1st</span></code></pre>
+oc rollout undo deployment/name                  <span class="comment"># deploy new revision equal to previous</span>
+oc rollout undo deployment/name --to-revision=1  <span class="comment"># deploy new revision equal to 1st</span>
+oc set triggers --auto                           <span class="comment"># re-enable image triggers after rollout undo</span></code></pre>
   </div>
 
-  <p><code>deployment.spec.progressDeadlineSeconds</code> is the number of seconds to wait before a progressing deployment is considered to have failed. The default is 600 seconds.</p>
-  
+  <p>When a deployment fails the new pods remain along with any old pods that weren't immediately terminated. Use <code>oc rollout undo</code> to remove the new pods.</p>
+
   <p><code>deployment.spec.minReadySeconds</code> is the number of seconds that a deployment's pods must be in the ready-state before the deployment is considered available. The default is 0 seconds.</p>
+
+  <p><code>deployment.spec.progressDeadlineSeconds</code> is the number of seconds to wait before a setting a progression timeout status on a deployment. The default is 600 seconds. It must be larger than <code>minReadySeconds</code>.</p>
 
 </div>
 
@@ -1424,22 +1428,68 @@ oc set selector service/name deployment=green
 oc delete deployment/blue</code></pre>
   </div>
 
+  <p>Another alternative is to re-direct a route to a service that forwards to the new pods. This affects cluster-external traffic.</p>
+
+  <div class="code"><pre><code
+>oc set route-backends routename blueService=1</code></pre>
+  </div>
+
   <h4 id="1-4-6-3"><a href="#1-4-6-3"></a>Planning a canary deployment</h4>
 
-  <p>A canary deployment gradually starts pods of a new version (the canary) while gradually removing the old. The new pods receive a limited amount of traffic at first, but eventually reach 100% as old pods are removed and new ones are started.</p>
+  <p>A canary deployment gradually starts pods of a new version (the canary) while gradually removing the old. The new deployment effectively takes on more and more traffic as old pods are removed and new ones are started.</p>
 
 </div>
 
 <div>
 
-  <p>A separate canary deployment is created with a fewer number of pod replicas. A single service forwards traffic to both types of pods by labeling both deployments' pods with the service selector. In stages, the replicas of the old deployment are scaled down and the new are scaled up.</p>
+  <p>A separate canary deployment can be created while a single service forwards traffic to both canary and stable pods. Both deployments need a label in their <code>spec.template.metadata.labels</code> for the service selector to match. In stages, the replicas of the old deployment are scaled down and the new are scaled up.</p>
 
   <div class="code"><pre><code
-><span class="comment"># add label on pods of the canary deployment</span>
-oc label pods deployment=name --selector=deployment=canary
+><span class="comment"># set service selector to match both deployment's pods</span>
+oc set selector service/name deployment-group=name
 <span class="comment"># scale new pods up and old ones down</span>
 oc scale --replicas=2 deployment/canary
-oc scale --replicas=1 deployment/old</code></pre>
+oc scale --replicas=1 deployment/stable</code></pre>
+  </div>
+
+  <p>Another alternative is to re-balance traffic on a route's back-end services, where the services forward to the separate deployments. This affects cluster-external traffic.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># balance route's traffic between stable and canary deployments as 4:1</span>
+oc set route-backends routename stableService=4 canaryService=1</code></pre>
+  </div>
+
+  <p>Instead of manually scaling and re-balancing the same can be done by a single deployment's rolling update strategy. Use the <code>minReadySeconds</code> parameter to control when new pods become available. Set <code>maxUnavailable</code> to zero and <code>maxSurge</code> to one. When the deployment is updated one replacement pod is created and after its readiness delay plus <code>minReadySeconds</code> an old pod is terminated and the next replacement pod is created.</p>
+
+  <p>The parameters for an automatic canary pod replacement is set on a deployment below.</p>
+
+  <div class="code"><pre><code
+>oc patch deployment/name -p \
+'spec:
+  minReadySeconds: 600
+  progressDeadlineSeconds: 1000
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1'</code></pre>
+  </div>
+
+  <p>The <code>progressDeadlineSeconds</code> deadline is reset when a new pod replica becomes available. If a deployment is paused in the middle of a rollout the progress timer is also paused.</p>
+
+  <p>If the canary deployment has a higher replica count than the old then more of the new pods are started in the beginning. If it has fewer desired replicas then more of the old are terminated at the beginning.</p>
+
+  <h4 id="1-4-6-4"><a href="#1-4-6-4"></a>Auto-scaling pods</h4>
+
+  <p>The horisontal pod autoscaler (HPA) resource uses node and pod metrics to automatically scale pods up or down between a minimum and maximum to hit a target CPU utilization. The metrics server is needed to auto-scale and this isn't available in the CRC cluster.</p>
+
+  <div class="code"><pre><code
+>oc adm top nodes  <span class="comment"># show CPU and memory resource consumption of nodes</span>
+oc adm top pods   <span class="comment"># show CPU and memory resource consumption of pods</span>
+<span class="comment"># autoscale between 2 and 10 pods; scale to maintain 80% CPU utilization</span>
+oc autoscale deployment/name --min=2 --max=10 --cpu-percent=80
+<span class="comment"># watch created HorizontalPodAutoscaler resource</span>
+oc get hpa/name --field-selector=spec.scaleTargetRef.name=name --watch</code></pre>
   </div>
 
 </div>
