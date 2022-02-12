@@ -110,7 +110,7 @@ oc login -u other https://api.crc.testing:6443</code></pre>
   <p>Create new projects as cluster administrator. How to group resources into projects depends on how it simplifies maintenance of things like access privileges, shared resources, network flows, and pods' node placement.</p>
 
   <div class="code"><pre><code
-  >oc adm new-project env1 --admin=linda
+>oc adm new-project env1 --admin=linda
 oc adm new-project env2 --admin=other
 oc adm new-project qa  <span class="comment"># for testing tools</span>
 oc adm new-project db  <span class="comment"># for database resources</span>
@@ -130,7 +130,7 @@ oc adm new-project common  <span class="comment"># for common resources</span></
   <p>Below is project limit range that limits container's CPU and memory request and limits. This sets the defaults and allowed range.</p>
 
   <div class="code"><pre><code
-  >cat &gt;&gt; project-resources.yaml &lt;&lt;&lt;'
+>cat &gt;&gt; project-resources.yaml &lt;&lt;&lt;'
 ---
 apiVersion: v1
 kind: LimitRange
@@ -227,7 +227,7 @@ oc create -f project-resources.yaml -n common</code></pre>
   <p>Logged in users can self-provision a project with <code>oc new-project</code>. A template can then also be configured with the additional resources to be added automatically. This isn't used for this text, but can be configured as shown below.</p>
 
   <div class="code"><pre><code
->oc adm create-bootstrap-project-template -o yaml > project-template.yaml
+>oc adm create-bootstrap-project-template -o yaml &gt; project-template.yaml
 <span class="comment"># ... add resources to project-template.yaml objects-list...</span>
 
 oc create -f project-template.yaml -n openshift-config <span class="comment"># upload template</span>
@@ -792,8 +792,8 @@ echo "---> Installing application source..."
 cp -R /tmp/src/. ./
 
 echo "---> Building application from source..."
-[ ! -f date.txt ] && date > artifact.txt  <span class="comment"># simulate an artifact file</span>
-date > application.txt                    <span class="comment"># simulate an application file</span></code></pre>
+[ ! -f date.txt ] && date &gt; artifact.txt  <span class="comment"># simulate an artifact file</span>
+date &gt; application.txt                    <span class="comment"># simulate an application file</span></code></pre>
   </div>
 
   <p>The <code>save-artifacts</code> script is shown below. It creates a tar archive with the artifacts to stdout. Only <code>artifact.txt</code> is added as an artifact here.</p>
@@ -871,7 +871,7 @@ oc new-build --name apprun --strategy=source \
 
   <div class="code"><pre><code
 >echo "---> Building application from source..."
-date > application.txt</code></pre>
+date &gt; application.txt</code></pre>
   </div>
 
   <p>The <code>assemble</code> script for the second build's image <code>ubis2i:1</code> is below. It accesses the provided files in <code>/tmp/src</code>, since that is the build context for this source-to-image build.</p>
@@ -1406,8 +1406,8 @@ oc expose service/service1 --name insecure-http-route</code></pre>
   <p>To let the client and destination handle TLS themselves, create a passthrough route. It forwards encrypted traffic to the destination and allows for mutual TLS where server and the client exchange certificates. The destination must provide a certificate that is valid for the hostname that the client specifies.</p>
 
   <div class="code"><pre><code
-  ><span class="comment"># forward traffic to service1 from pr-env1.apps-crc.testing:443</span>
-  oc create route passthrough pr --service=service1 --port=8081</code></pre>
+><span class="comment"># forward traffic to service1 from pr-env1.apps-crc.testing:443</span>
+oc create route passthrough pr --service=service1 --port=8081</code></pre>
   </div>
 
   <p>Both edge and reencrypt routes perform TLS communication with clients and require their own certificates. A reencrypt-type route also needs the destination's certificate since it forwards encrypted traffic. An edge-type route forwards unencrypted traffic.</p>
@@ -1533,7 +1533,7 @@ oc delete deployment/blue</code></pre>
   <p>Another alternative is to change a route's backend to a service that forwards to the new pods. This affects cluster-external traffic.</p>
 
   <div class="code"><pre><code
-  >oc set route-backends routename greenService</code></pre>
+>oc set route-backends routename greenService</code></pre>
   </div>
 
   <h4 id="1-4-6-3"><a href="#1-4-6-3"></a>Planning a canary deployment</h4>
