@@ -1714,7 +1714,7 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
   <div class="code"><pre><code
 >oc project env1
 oc create service clusterip ss --tcp=8080 --clusterip=None  <span class="comment"># create the headless service</span>
-oc set selector service/ss app=my-set  <span class="comment"># set label to match the pods</span></code></pre>
+oc set selector service/ss app=my-set                       <span class="comment"># set label to match the pods</span></code></pre>
   </div>
 
   <p>Any target port for the headless service is ignored; it's always the same as the service port.</p>
@@ -1799,7 +1799,14 @@ oc delete service ss                    <span class="comment"># remove headless 
 oc delete statefulset name --cascade=orphan</code></pre>
   </div>
 
-  <p>When a partition in <code>statefulset.spec.updateStrategy.rollingUpdate.partition</code> is specified, all Pods with an ordinal that is greater than or equal to the partition will be updated when the StatefulSet's .spec.template is updated. If a Pod that has an ordinal less than the partition is deleted or otherwise terminated, it will be restored to its original configuration.</p>
+  <p>The field <code>statefulset.spec.updateStrategy.rollingUpdate.partition</code> partitions the pods such that all pods of an ordinal greater than or equal to the partition number will be updated when <code>.spec.template</code> is updated. If pods of the other partition are terminated they are launched with the previous configuration.</p>
+
+  <p>Create a regular service to access the pods with load balancing.</p>
+
+  <div class="code"><pre><code
+>oc create service clusterip my-set --tcp=8080  <span class="comment"># create regular service</span>
+oc set selector service/my-set app=my-set       <span class="comment"># set label to match the pods</span></code></pre>
+  </div>
 
   <h3 id="1-6-1"><a href="#1-6-1"></a>Setting node anti-affinity and pod taint</h3>
 
