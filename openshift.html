@@ -1789,11 +1789,11 @@ oc patch statefulset my-set -p \
 oc set triggers statefulset/my-set --from-image=tools:a --containers=container1
 
 oc rollout status statefulset/my-set      <span class="comment"># watch the rollout status</span>
-oc get pvc -l app=name                  <span class="comment"># one pvc per pod replica</span>
+oc get pvc -l app=name                    <span class="comment"># one pvc per pod replica</span>
 oc scale statefulset my-set --replicas=1  <span class="comment"># scale replicas</span>
 oc delete statefulset my-set
 oc delete pvc -l app=my-set               <span class="comment"># remove PVCs manually</span>
-oc delete service ss                    <span class="comment"># remove headless service manually</span>
+oc delete service ss                      <span class="comment"># remove headless service manually</span>
 
 <span class="comment"># orphan pods on deletion to let a new stateful set adopt them</span>
 oc delete statefulset name --cascade=orphan</code></pre>
@@ -1805,7 +1805,7 @@ oc delete statefulset name --cascade=orphan</code></pre>
 
   <div class="code"><pre><code
 >oc create service clusterip my-set --tcp=8080  <span class="comment"># create regular service</span>
-oc set selector service/my-set app=my-set       <span class="comment"># set label to match the pods</span></code></pre>
+oc set selector service/my-set app=my-set      <span class="comment"># set label to match the pods</span></code></pre>
   </div>
 
   <h3 id="1-6-1"><a href="#1-6-1"></a>Setting node anti-affinity and pod taint</h3>
