@@ -38,9 +38,9 @@ eval $(crc oc-env)        <span class="comment"># add oc to $PATH</span>
 EDITOR=vim                <span class="comment"># use vim for oc edit</span>
 
 ifconfig                  <span class="comment"># view virtual network interfaces</span>
-cat /etc/hosts            <span class="comment"># view host names added by crc</span>
+cat /etc/hosts            <span class="comment"># view hostnames added by crc</span>
+resolvectl status         <span class="comment"># view DNS server added by crc</span>
 
-<span class="comment"># login to cluster as kubeadmin or as developer user</span>
 crc console --credentials                                  <span class="comment"># show usernames and passwords</span>
 oc login -u developer https://api.crc.testing:6443         <span class="comment"># login as developer (no password)</span>
 oc login -u kubeadmin -p xxx https://api.crc.testing:6443  <span class="comment"># login as kubeadmin</span>
@@ -1230,17 +1230,13 @@ oc patch deployment name -p \
             path: mem_request
       containers:
       - name: container2
-        args: [ "$(POD_NAMESPACE)", "$(POD_NAME)", "$(POD_IP)" ]
+        args: [ "$(POD_NAME)", "$(POD_IP)" ]
         # -----------------------------------------
         volumeMounts:
         - name: podinfo
           mountPath: /podinfo
         # -----------------------------------------
         env:
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
         - name: POD_NAME
           valueFrom:
             fieldRef:
@@ -1249,20 +1245,22 @@ oc patch deployment name -p \
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
+        - name: POD_SERVICEACCOUNT
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.serviceAccountName
         - name: MEM_LIMIT
           valueFrom:
             resourceFieldRef:
               resource: limits.memory
-              containerName: container2
-        - name: MEM_LIMIT_2
-          value: $(MEM_LIMIT)'</code></pre>
+              containerName: container2'</code></pre>
   </div>
 
 </div>
 
 <div>
 
-  <p><code>fieldRef</code> only supports annotations, labels, name, and namespace. If container resources are not present then <code>resourceFieldRef</code> defaults to the node's CPU and memory.</p>
+  <p><code>fieldRef</code> in volumes only supports annotations, labels, name, and namespace. If container resources are not present then <code>resourceFieldRef</code> defaults to the node's CPU and memory.</p>
 
   <p>The <code>configMapRef</code> and <code>secretMapRef</code> fields for environment variables described previously are also considered part of the downward API.</p>
 
@@ -1379,12 +1377,13 @@ oc set probe deployment/name --remove --startup --readiness --liveness</code></p
 
   <p>A <code>Service</code> resource creates an IP forwarding rule for traffic sent to a cluster-local hostname to the address of a pod. A <code>Route</code> resource forwards traffic sent to a cluster-external hostname to a service.</p>
 
-  <p>A cluster-IP service is created below that forwards its traffic to any pod with the label <code>app=service1</code>. Port 8080 maps to port 5555 on the pod and port 8081 maps to ports named <code>target1</code> on the pod (in <code>pod.spec.containers.ports.name</code>).</p>
+  <p>A cluster-IP service is created below that forwards its traffic to any pod with the label <code>app=name</code>. Port 8080 maps to port 5555 on the pod and port 8081 maps to ports named <code>target1</code> on the pod (in <code>pod.spec.containers.ports.name</code>).</p>
 
   <div class="code"><pre><code
 ><span class="comment"># forward service1.env1.svc.cluster.local:8080 to ports 5555 and "target2"</span>
 oc create service clusterip service1 --tcp=8080:5555,8081:target2 -n env1
-oc get service service1 -o jsonpath='{.spec.selector}'  <span class="comment"># app = service1</span></code></pre>
+oc get service service1 -o jsonpath='{.spec.selector}'  <span class="comment"># {"app":"service1"}</span>
+oc set selector service/service1 app=name  <span class="comment"># manually set selector</span></code></pre>
   </div>
 
   <p>A service's full hostname is <code>SERVICE.PROJECT.svc.cluster.local</code>, but can reached at <code>SERVICE.PROJECT</code>. From within its project it can be reached by the service name. A route's hostname is <code>ROUTE-PROJECT.CLUSTER</code> and the OpenShift router listens on ports 80 and 443.</p>
@@ -1394,7 +1393,7 @@ oc get service service1 -o jsonpath='{.spec.selector}'  <span class="comment"># 
   <div class="code"><pre><code
 ><span class="comment"># forward service1.env1.svc.cluster.local:8081 to port "target1"</span>
 oc expose deployment/name --name service1 --port=8081 --target-port=target1
-oc get service service1 -o jsonpath='{.spec.selector}'  <span class="comment"># deployment = service1</span>
+oc get service service1 -o jsonpath='{.spec.selector}'  <span class="comment"># {"deployment":"name"}</span>
 <span class="comment"># redirect to service1 from route-http-env1.apps-crc.testing:80</span>
 oc expose service/service1 --name insecure-http-route</code></pre>
   </div>
@@ -1706,23 +1705,109 @@ reclaimPolicy: Delete' | oc create -f -</code></pre>
 
   <h2 id="1-6"><a href="#1-6"></a>Using stateful sets</h2>
 
-  <p>Stateful sets are used instead of deployments for providing consistent DNS host names (i.e. pod names) and persistent volumes to each replicated pod during re-scheduling. For example, databases with replicated storage can have one pod be identified as managing the master data storage and the rest as managing replicated copies. Database synchronization is handled by the database software itself, but it can be important that the pods to be spread out across nodes for resilience.</p>
+  <p>Stateful sets are used instead of deployments for providing consistent DNS hostnames, pod names, and persistent volumes to each replicated pod during re-scheduling.</p>
 
-  <p>A persistent volume claim is shared between replicas in a deployment. A stateful set has a volume claim template field instead of pod volumes. This generates separate claims for the pods and results in the replicas mounting different persistent volumes.</p>
+  <p>Each replicated pod is provided with their own copy of a persistent volume claim and if a pod is re-scheduled it will use the same persistent volume as previously. Scaling down a stateful set won't delete persistent volume claims, so that scaling up can re-mount them again.</p>
 
-  <p>If a pod is re-scheduled it will use the same persistent volume as previously. This requires the persistent volumes to be available from any node the pod is re-scheduled to. Scaling down a stateful set won't delete the associated persistent volumes. Pods of a stateful sets are scaled up and down in order of pod number.</p>
+  <p>A <code>StatefulSet</code> resource references a headless <code>clusterip</code> service whose CNAME is associated with service location records (SRV) for each ready pod's IP. Kubernetes manages the SRV records which clients then use for peer discovery.</p>
 
-  <p>WIP</p>
+  <div class="code"><pre><code
+>oc project env1
+oc create service clusterip ss --tcp=8080 --clusterip=None  <span class="comment"># create the headless service</span>
+oc set selector service/ss app=my-set  <span class="comment"># set label to match the pods</span></code></pre>
+  </div>
 
-  <h3 id="1-6-1"><a href="#1-6-1"></a>Setting node anti-affinity and pod taint</h3>
+  <p>Any target port for the headless service is ignored; it's always the same as the service port.</p>
 
-  <p>WIP</p>
+  <p>Create a stateful set using a YAML like below. <code>spec.serviceName</code> is set to the headless service. A persistent volume claim is created per pod using <code>spec.volumeClaimTemplates</code>. The downward API is used here to inject each pod's name and IP address.</p>
+
+  <div class="code"><pre><code
+>cat &lt;&lt;&lt;'
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-set
+spec:
+  serviceName: ss
+  replicas: 2
+  selector: {matchLabels: {app: my-set}}
+  template:
+    metadata: {labels: {app: my-set}}
+    spec:
+      containers:
+      - name: container1
+        image: stateful-image:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: POD_NAME
+          valueFrom: {fieldRef: {fieldPath: metadata.name}}
+        - name: POD_IP
+          valueFrom: {fieldRef: {fieldPath: status.podIP} }
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ""
+      resources: {requests: {storage: 1Gi}}' | oc create -f -</code></pre>
+  </div>
+
+  <div class="code"><pre><code
+><span class="comment"># from within the cluster, query the SRV records of the stateful set service</span>
+dig SRV ss.env1.svc.cluster.local
+nslookup ss.env1.svc.cluster.local</code></pre>
+  </div>
+
+  <p>The rolling update strategy terminates pods one by one in reverse ordinal order. The partition parameter sets the ordinal at which the controller pauses the update of pods. Only pods with ordinals equal to or higher than <code>partition</code> are updated on rollout. The default value is 0.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># rollout updates to ordinal 1 and higher</span>
+oc patch statefulset my-set -p \
+'spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 1'</code></pre>
+  </div>
 
 </div>
 
 <div>
 
+  <p>Set <code>spec.updateStrategy.type</code> to <code>OnDelete</code> to not update pods on changes to <code>spec.template</code>.</p>
+
+  <p>The order of pod launch and termination during scaling (not updating) is set by <code>spec.podManagementPolicy</code>. The default one-by-one behavior corresponds to <code>OrderedReady</code>. Change it to <code>Parallel</code> to allow pods to be launched and terminated in parallel.</p>
+
+  <p>Below are commands to manage the stateful set.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># set image change trigger on stateful set</span>
+oc set triggers statefulset/my-set --from-image=tools:a --containers=container1
+
+oc rollout status statefulset/my-set      <span class="comment"># watch the rollout status</span>
+oc get pvc -l app=name                  <span class="comment"># one pvc per pod replica</span>
+oc scale statefulset my-set --replicas=1  <span class="comment"># scale replicas</span>
+oc delete statefulset my-set
+oc delete pvc -l app=my-set               <span class="comment"># remove PVCs manually</span>
+oc delete service ss                    <span class="comment"># remove headless service manually</span>
+
+<span class="comment"># orphan pods on deletion to let a new stateful set adopt them</span>
+oc delete statefulset name --cascade=orphan</code></pre>
+  </div>
+
+  <p>When a partition in <code>statefulset.spec.updateStrategy.rollingUpdate.partition</code> is specified, all Pods with an ordinal that is greater than or equal to the partition will be updated when the StatefulSet's .spec.template is updated. If a Pod that has an ordinal less than the partition is deleted or otherwise terminated, it will be restored to its original configuration.</p>
+
+  <h3 id="1-6-1"><a href="#1-6-1"></a>Setting node anti-affinity and pod taint</h3>
+
+  <p>WIP</p>
+
   <h2 id="1-7"><a href="#1-7"></a>Using the Kubernetes API</h2>
+
+  <p>WIP</p>
 
 </div>
 
