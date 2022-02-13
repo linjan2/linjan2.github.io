@@ -1780,16 +1780,16 @@ oc patch statefulset my-set -p \
 
   <p>Set <code>spec.updateStrategy.type</code> to <code>OnDelete</code> to not update pods on changes to <code>spec.template</code>.</p>
 
-  <p>The order of pod launch and termination during scaling (not updating) is set by <code>spec.podManagementPolicy</code>. The default one-by-one behavior corresponds to <code>OrderedReady</code>. Change it to <code>Parallel</code> to allow pods to be launched and terminated in parallel.</p>
+  <p>The order of pod launch and termination during scaling (but not updating) is set by <code>spec.podManagementPolicy</code>. The default one-by-one behavior corresponds to <code>OrderedReady</code>. Change it to <code>Parallel</code> to allow pods to be launched and terminated in parallel.</p>
 
   <p>Below are commands to manage the stateful set.</p>
 
   <div class="code"><pre><code
 ><span class="comment"># set image change trigger on stateful set</span>
-oc set triggers statefulset/my-set --from-image=tools:a --containers=container1
+oc set triggers statefulset/my-set --from-image=stateful-image:latest --containers=container1
 
 oc rollout status statefulset/my-set      <span class="comment"># watch the rollout status</span>
-oc get pvc -l app=name                    <span class="comment"># one pvc per pod replica</span>
+oc get pvc -l app=name                    <span class="comment"># one PVC per pod replica</span>
 oc scale statefulset my-set --replicas=1  <span class="comment"># scale replicas</span>
 oc delete statefulset my-set
 oc delete pvc -l app=my-set               <span class="comment"># remove PVCs manually</span>
@@ -1799,7 +1799,7 @@ oc delete service ss                      <span class="comment"># remove headles
 oc delete statefulset name --cascade=orphan</code></pre>
   </div>
 
-  <p>The field <code>statefulset.spec.updateStrategy.rollingUpdate.partition</code> partitions the pods such that all pods of an ordinal greater than or equal to the partition number will be updated when <code>.spec.template</code> is updated. If pods of the other partition are terminated they are launched with the previous configuration.</p>
+  <p>The field <code>statefulset.spec.updateStrategy.rollingUpdate.partition</code> partitions the pods such that all pods of an ordinal greater than or equal to the partition number will be updated when <code>spec.template</code> is updated. If pods of the other partition are terminated they are launched with the previous configuration.</p>
 
   <p>Create a regular service to access the pods with load balancing.</p>
 
