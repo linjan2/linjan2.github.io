@@ -1578,7 +1578,7 @@ oc set route-backends routename stableService=4 canaryService=1</code></pre>
 
   <h4 id="1-4-6-4"><a href="#1-4-6-4"></a>Auto-scaling pods</h4>
 
-  <p>The horisontal pod autoscaler (HPA) resource uses node and pod metrics to automatically scale pods up or down between a minimum and maximum to hit a target CPU utilization. The metrics server is needed to auto-scale and this isn't available in the CRC cluster.</p>
+  <p>The horizontal pod autoscaler (HPA) resource uses node and pod metrics to automatically scale pods up or down between a minimum and maximum to hit a target CPU utilization. The metrics server is needed to auto-scale and this isn't available in the CRC cluster.</p>
 
   <div class="code"><pre><code
 >oc adm top nodes  <span class="comment"># show CPU and memory resource consumption of nodes</span>
