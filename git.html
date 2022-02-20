@@ -397,7 +397,7 @@ case ${CMD} in
   <span class="em">move</span>)   git checkout -q --detach HEAD && git reset --soft ${2} ;;
   <span class="em">attach</span>) git checkout -q ${2} ;;                     <span class="comment"># attach HEAD</span>
             <span class="comment"># restore a file from commit or index</span>
-  <span class="em">get</span>)    git checkout --patch ${3/INDEX} -- ${3} ${@:4} ;;
+  <span class="em">get</span>)    git checkout --patch ${2/INDEX} -- ${3} ${@:4} ;;
   <span class="em">!</span>)      git tag ${2} ${3:-HEAD} ;;                  <span class="comment"># create tag at $3</span>
   <span class="em">-!</span>)     git tag -d ${@:2} ;;                        <span class="comment"># delete tag</span>
   <span class="em">branch</span>) git branch ${@:2} && git checkout ${@:2} ;; <span class="comment"># create branch</span>
