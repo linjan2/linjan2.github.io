@@ -923,7 +923,7 @@ CMD ["cat", "application.txt"]'</code></pre>
     name: "NAME"
     email: "EMAIL"
   message: "COMMIT MESSAGE"
-  env: 
+  env:
   - name: "NAME"
     value: "VALUE"</code></pre>
   </div>
@@ -993,6 +993,17 @@ oc patch bc/name -p '{"spec":{"postCommit":{"command": null, "args":["arg1","arg
 oc set build-hook bc/name --post-commit --remove</code></pre>
   </div>
 
+  <h3 id="1-3-5"><a href="#1-3-5"></a>Removing builds</h3>
+
+  <p>A build configuration can specify how many successful and failed builds to keep. The cluster administrator can manually prune builds globally.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># keep 2 successful builds and 2 failed builds</span>
+oc patch bc/name -p '{spec: {successfulBuildsHistoryLimit: 2, failedBuildsHistoryLimit: 2}}'
+<span class="comment"># prune builds as administrator</span>
+oc adm prune builds --orphans --keep-complete=5 --keep-failed=1 --keep-younger-than=60m --confirm</code></pre>
+  </div>
+
   <h2 id="1-4"><a href="#1-4"></a>Using deployments</h2>
 
   <p>The <code>oc new-app</code> command works like <code>oc new-build</code> when provided a Git URL, but in addition to creating build resources it also creates a deployment. The deployment starts a pod from the image stream that the build configuration pushes its image to.</p>
@@ -1016,16 +1027,16 @@ oc create service clusterip name --tcp=8080:8080
 oc expose service name  <span class="comment"># add route to service under the cluster domain</span></code></pre>
   </div>
 
-  <p>When the deployment replicas is scaled up to more than one pod the service will balance traffic between them. Scale the replicas to zero to stop all the deployment's pods.</p>
-
-  <div class="code"><pre><code
->oc scale deployment/name --replicas=2
-oc rollout status deployment/name</code></pre>
-  </div>
-
 </div>
 
 <div>
+
+  <p>When the deployment replicas is scaled up to more than one pod the service will balance traffic between them. Scale the replicas to zero to stop all the deployment's pods.</p>
+
+  <div class="code"><pre><code
+  >oc scale deployment/name --replicas=2
+  oc rollout status deployment/name</code></pre>
+  </div>
 
   <p>The deployment's <code>spec.template.spec.containers</code> array specifies the images of the pod. The image from the build is automatically filled in and another image can be patched in. Below, an image reference is taken from the image stream tag.</p>
 
@@ -1094,11 +1105,11 @@ oc create secret generic client-cert \
   --from-file=client.key</code></pre>
   </div>
 
-  <p>Add environment variables to the deployment's pod template with <code>oc set env</code>. When the key-value pairs from <code>ConfigMaps</code> and <code>Secrets</code> are used for environment variables the keys are converted to uppercase and dashes and dots become underscores.</p>
-
 </div>
 
 <div>
+
+  <p>Add environment variables to the deployment's pod template with <code>oc set env</code>. When the key-value pairs from <code>ConfigMaps</code> and <code>Secrets</code> are used for environment variables the keys are converted to uppercase and dashes and dots become underscores.</p>
 
   <div class="code"><pre><code
 >oc set env deployment/name ENV1=VAL1 ENV2=VAL2
@@ -1820,7 +1831,10 @@ oc set selector service/my-set app=my-set      <span class="comment"># set label
 
 </div><!--[ PAGES END ]-->
 
-<div id="footer" class="remove-on-print"><span>2022, Linda Jansson.</span></div>
+<div id="footer" class="remove-on-print"
+  ><span>2022, Linda Jansson.</span>
+  <div><iframe src="https://github.com/sponsors/linjan2/button" title="Sponsor linjan2" height="35" width="116" style="border: 0;"></iframe></div>
+</div>
 
 <!--[ SIDE PANEL ]-->
 <input type="checkbox" id="side-panel-switch" aria-hidden="true">
@@ -1955,9 +1969,10 @@ oc set selector service/my-set app=my-set      <span class="comment"># set label
     </div>
 
     <div id="about-tab">
-      <p>This text was written for learning purposes. The website's text, HTML, and CSS were created by Linda Jansson.</p>
-      <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—and myself.</p>
+      <p>This text was created and is maintained by Linda Jansson.</p>
+      <p>The purpose of this text is to organize and share my notes.</p>
       <p>Notify me of issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+      <iframe src="https://github.com/sponsors/linjan2/card" title="Sponsor linjan2" height="225" width="100%" class="themed" style="border: 0;"></iframe>
     </div>
 
   </div>

@@ -46,16 +46,16 @@
     <img src="resources/complex-multiplication.png" alt="Graph of how the complex product of two vectors is a rotated and scaled version of both." width="268" height="282">
   <figcaption id="figure-1-caption">Figure 1: Complex multiplication both rotates and scales vectors. The red vector \(\vec z\) rotates the yellow vector \(\vec v\) by 45 degrees, resulting in the green vector \(\vec v\vec z\).<figcaption>
   </figure>
-  
+
 </div>
 
 <div>
 
   <p>Below is a function for computing the complex product of two-dimensional vectors.</p>
-  
+
   <div class="code"><pre><code
     >typedef struct { float a,b; } vec2;
-  
+
   void complex_multiplication(vec2 *out, vec2 *v1, vec2 *v2)
   {   <span class="comment">// out = v1 * v2</span>
     vec2 v3;
@@ -65,9 +65,9 @@
     out-&gt;b = v3.b;
   }</code></pre>
       </div>
-  
+
   <p>Each successive multiplication rotates the vector by the rotation vector's angle. Normalize the vector to stop scaling. Normalizing divides by the magnitude: \(\frac{\vec z}{\sqrt{a^2+b^2}}\).</p>
-  
+
   <p>To ensure N multiplications equal a full rotation, set the rotation vector's angle to \(2\pi/N\) (i.e. an Nth fraction of a full rotation). The relation between coordinates \((a,b)\) and the angle is:</p>
 
   <figure aria-label="">
@@ -108,7 +108,7 @@ for (int i = 0; i &lt; 10; i += 1) <span class="comment">// rotate 10 times</spa
     complex_multiplication(&v, &z, &v);
 }</code></pre>
   </div>
-  
+
 </div>
 
 <div>
@@ -127,23 +127,23 @@ for (int i = 0; i &lt; 10; i += 1) <span class="comment">// rotate 10 times</spa
       \vec z = (\cos(2\pi / N), \sin(2\pi / N))
     $$
   </figure>
-  
+
 </div>
 
 <div>
 
   <h2 id="1-2"><a href="#1-2"></a>3D rotation</h2>
-  
+
   <p>Rotation on a plane in 3D-space can be achieved with four-dimensional complex multiplication. The rotation vector is a quaternion \(q\), here defined as:</p>
-  
+
   <figure aria-label="">
     $$
       q = (a,b,c,d) = a + bi + cj + ck
     $$
   </figure>
-  
+
   <p>Complex multiplication in four dimensions uses the following equalities.</p>
-  
+
   <figure aria-label="">
     $$
     \begin{aligned}
@@ -260,7 +260,7 @@ void quaternion_multiplication(quaternion *out, quaternion *q1, quaternion *q2)
     = \tan^{-1}\left( \frac{\sqrt{(b^2+c^2+d^2)}}{a} \right)
     $$
   </figure>
-  
+
   <p>If \(\vec u\) is along a major axis its single coordinate can be created just like the \(y\)-component of the 2D rotation vector for a desired rotation angle. Below, \(q_x\) rotates on the yz-plane (perpendicular to x-axis), \(q_y\) rotates on the xz-plane (perpendicular to y-axis), and \(q_z\) rotates on the xy-plane (perpendicular to z-axis).</p>
 
   <figure aria-label="">
@@ -354,7 +354,10 @@ for (int i = 0; i &lt; 8; i += 1) <span class="comment">// rotate 8 times</span>
 </div>
 
 </div><!--[ PAGES END ]-->
-<div id="footer" class="remove-on-print"><span>2022, Linda Jansson.</span></div>
+<div id="footer" class="remove-on-print"
+  ><span>2022, Linda Jansson.</span>
+  <div><iframe src="https://github.com/sponsors/linjan2/button" title="Sponsor linjan2" height="35" width="116" style="border: 0;"></iframe></div>
+</div>
 
 
 <!--[ SIDE PANEL ]-->
@@ -380,7 +383,7 @@ for (int i = 0; i &lt; 8; i += 1) <span class="comment">// rotate 8 times</span>
         <li><a href="#1-2">3D rotation</a></li>
       </ul>
     </div>
-    
+
     <div class="sixteen" id="reference-tab">
       <div class="reference pack16">
         <div class="two"></div><div class="fourteen em">YouTube lecture on quaternions (part 3).</div>
@@ -403,9 +406,10 @@ for (int i = 0; i &lt; 8; i += 1) <span class="comment">// rotate 8 times</span>
     </div>
 
     <div id="about-tab">
-      <p>This text was written for learning purposes. The website's text, HTML, and CSS were created by Linda Jansson.</p>
-      <p>The goal of this text was to organize my notes into a comprehensive format so as to make it more available to others—and myself.</p>
+      <p>This text was created and is maintained by Linda Jansson.</p>
+      <p>The purpose of this text is to organize and share my notes.</p>
       <p>Notify me of issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+      <iframe src="https://github.com/sponsors/linjan2/card" title="Sponsor linjan2" height="225" width="100%" class="themed" style="border: 0;"></iframe>
     </div>
 
   </div>
