@@ -54,17 +54,17 @@
   <p>Below is a function for computing the complex product of two-dimensional vectors.</p>
 
   <div class="code"><pre><code
-    >typedef struct { float a,b; } vec2;
+  >typedef struct { float a,b; } vec2;
 
-  void complex_multiplication(vec2 *out, vec2 *v1, vec2 *v2)
-  {   <span class="comment">// out = v1 * v2</span>
-    vec2 v3;
-    v3.a = v1-&gt;a*v2-&gt;a - v1-&gt;b*v2-&gt;b;
-    v3.b = v1-&gt;a*v2-&gt;b + v1-&gt;b*v2-&gt;a;
-    out-&gt;a = v3.a;
-    out-&gt;b = v3.b;
-  }</code></pre>
-      </div>
+void complex_multiplication(vec2 *out, vec2 *v1, vec2 *v2)
+{   <span class="comment">// out = v1 * v2</span>
+  vec2 v3;
+  v3.a = v1-&gt;a*v2-&gt;a - v1-&gt;b*v2-&gt;b;
+  v3.b = v1-&gt;a*v2-&gt;b + v1-&gt;b*v2-&gt;a;
+  out-&gt;a = v3.a;
+  out-&gt;b = v3.b;
+}</code></pre>
+    </div>
 
   <p>Each successive multiplication rotates the vector by the rotation vector's angle. Normalize the vector to stop scaling. Normalizing divides by the magnitude: \(\frac{\vec z}{\sqrt{a^2+b^2}}\).</p>
 
