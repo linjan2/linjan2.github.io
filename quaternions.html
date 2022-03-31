@@ -316,7 +316,7 @@ void quaternion_multiplication(quaternion *out, quaternion *q1, quaternion *q2)
   <p>Below is code for creating a quaternion for 1/8th turn (45 degrees) on a plane. The plane is perpendicular to a direction that has been rotated from \(q_x\) by both \(q_y\) and \(q_z\). This quaternion is then used to rotate a vector eight times. Since the magnitudes of the quaternions are already 1 no normalization is performed.</p>
 
   <div class="code"><pre><code
->vec2 z = {1.0f, 0.1989123673796580069116f}; <span class="comment">// (1, tan(2PI/4*8)) 1/8th rotation</span>
+>vec2 z = {1.0f, 0.1989123673796580069116f}; <span class="comment">// (1, tan(2PI/(4*8))) 1/8th rotation</span>
 float z_magnitude_squared = (z.a*z.a + z.b*z.b);
 complex_multiplication(&z, &z, &z); <span class="comment">// z = z^2</span>
 z.a /= z_magnitude_squared;
