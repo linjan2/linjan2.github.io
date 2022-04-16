@@ -12,6 +12,7 @@ body
 .pack16>*
 { float:left;
   display:block;
+  min-height:1px;
 }
 .pack16>.one      {width: 6.25%; }
 .pack16>.two      {width: 12.5%; }
@@ -179,7 +180,6 @@ figure>figcaption
   color:#333;
   font-size:0.8rem;
   padding:0.5rem 0.25rem;
-  text-align:center;
 }
 figure>pre>span
 { color:#E46732;
@@ -275,6 +275,9 @@ table.click th>label:hover
   width:100%;
 }
 
+.center {
+  text-align:center;
+}
 .maths
 { font-family:"Cambria Math",serif;
 }
