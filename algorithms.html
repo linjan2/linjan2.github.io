@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=devide-width, initial-scale=1">
+<title>Algorithms in C</title>
+<meta name="description" content="Implementations of algorithms in C.">
+<link rel="stylesheet" href="unstyle.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="print.css" media="print">
+<style>
+.slider {
+  padding: 1rem;
+}
+.slider input {
+  width: 100%;
+}
+svg {
+  border: solid 1px #999;
+}
+
+.matrix .four {
+  font-size: 2rem;
+  box-shadow: inset 0 0 0 0.0625rem #aaa;
+}
+.matrixRight {
+  padding: 0.5rem 2rem 0.5rem 0.5rem;
+}
+.matrixLeft {
+  padding: 0.5rem 0.5rem 0.5rem 2rem;
+}
+.matrix .isset {
+  background-color: #e0e0e0;
+}
+.matrix .isset.oddTile {
+  background-color: #efefef;
+}
+.matrix .target {
+  font-weight: bold;
+}
+</style>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true">
+  <defs>
+    <pattern id="gridPattern" width="5" height="5" patternUnits="userSpaceOnUse">
+      <path d="M 0 0 v5zM 0 0 h5z" fill="none" stroke="#aaa" stroke-width="0.1"/>
+    </pattern>
+    <pattern id="gridPattern2" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect width="10" height="10" fill="url(#gridPattern)" stroke="none"/>
+      <path d="M 0 0 v10zM 0 0 h10z" fill="none" stroke="#333" stroke-width="0.1"/>
+    </pattern>
+  </defs>
+</svg>
+
+<div id="pages" class="clearfix">
+
+<div>
+
+  <h1 id="title"><a href="#title"></a>Algorithms in C</h1>
+
+  <p>This text describes implementations of algorithms in C. Before the sections on algorithms is a section with simple-to-use performance measurement tools and utilities.</p>
+
+  <h2 id="1-1"><a href="#1-1"></a>Code utilities</h2>
+
+  <p>First of all, the following GCC command can be used to compile the code with optimizations and debug symbols.</p>
+
+  <div class="code"><pre><code
+>gcc -o mybinary -O3 -march=native -ffast-math -g -fno-omit-frame-pointer main.c</code></pre>
+  </div>
+
+  <p>Find out which options are enabled or disabled by using the <code>-Q --help</code> flags.</p>
+
+  <div class="code"><pre><code
+>gcc -Q -march=native --help=target  <span class="comment"># enabled/disabled hardware options</span>
+gcc -Q -O3 --help=optimizers  <span class="comment"># enabled/disabled optimizer options at O3</span>
+<span class="comment"># compare options enabled with O2 and O3</span>
+diff -y &lt;(gcc -Q -O2 --help=optimizers) &lt;(gcc -Q -O3 --help=optimizers)</code></pre>
+  </div>
+
+  <p>The code below uses <code>clock_gettime</code> to measure the time passed between two places.</p>
+
+  <div class="code"><pre><code
+>#include &lt;time.h&gt;
+#include &lt;stdio.h&gt;
+
+int main()
+{
+  struct timespec start;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
+  <span class="comment">// do work...</span>
+  unsigned milliseconds = 2500;
+  struct timespec ts;
+  ts.tv_sec = milliseconds / 1000;
+  ts.tv_nsec = (milliseconds % 1000) * 1000000;
+  nanosleep(&ts, NULL);
+
+  struct timespec end;
+  clock_gettime(CLOCK_MONOTONIC, &end);
+
+  time_t nsec =
+      (end.tv_sec * 1000000000ull + end.tv_nsec)
+    - (start.tv_sec * 1000000000ull + start.tv_nsec);
+  time_t usec =
+      (end.tv_sec * 1000000ull + end.tv_nsec / 1000ull)
+    - (start.tv_sec * 1000000ull + start.tv_nsec / 1000ull);
+  time_t msec =
+      (end.tv_sec * 1000ull + end.tv_nsec / 1000000ull)
+    - (start.tv_sec * 1000ull + start.tv_nsec / 1000000ull);
+
+  printf("%lu ns, %lu us, %lu ms\n", nsec, usec, msec);
+
+  return 0;
+}</code></pre>
+  </div>
+
+  <p>The tool <code>perf</code> shows statistics from sampled system performance counters.</p>
+
+  <div class="code"><pre><code
+>perf stat mybinary  <span class="comment"># show statistics of program execution</span>
+perf record -g mybinary  <span class="comment"># record into perf.data</span>
+perf report -g 'graph,0.5,caller'  <span class="comment"># show perf.data report with expandable call graph</span></code></pre>
+  </div>
+
+  <p>If the compiler is eliminating code because it has no side effects then the following functions (demonstrated by Chandler Carruth at CppCon 2015) should stop that by marking assembly code as having unknown side-effects.</p>
+</div>
+
+<div>
+
+  <div class="code"><pre><code
+>static void escape(void *p)
+{ <span class="comment">// pointer p and memory access can't be eliminated</span>
+  __asm__ volatile("" : : "g"(p) : "memory");
+}
+static void clobber()
+{ <span class="comment">// memory access can't be eliminated</span>
+  __asm__ volatile("" : : : "memory");
+}
+
+int main()
+{
+  int *p = malloc(sizeof(int));
+  for (int i = 0; i &lt; 10000; i += 1)
+  {
+    escape(p);
+    *p = i;
+    clobber();
+  }
+}
+</code></pre>
+  </div>
+
+  <p>Compiled assembly code can be viewed as shown in the next code block. It can be useful to inspect the code at costly branch mispredictions as reported by <code>perf</code>, or otherwise find missed opportunities for vectorization. Pressing <code>'a'</code> in <code>perf</code>'s report can also show the annotated assembly for the selected symbol.</p>
+
+  <div class="code"><pre><code
+><span class="comment"># compile and send assembler code to stdout (and remove some labels) </span>
+gcc src/${NAME}.c -O2 -c -S -o - -masm=intel | grep -vE '\s+\.'
+
+<span class="comment"># dump the assembly of a binary</span>
+objdump -drwC -Mintel mybinary | less
+
+<span class="comment"># dump the assembly of a function in a binary</span>
+gdb -q --batch -ex 'disas myfunction' mybinary</code></pre>
+  </div>
+
+  <p>Simple generation of random numbers is shown in the next code block. To properly measure timings, iterate the measured code in a loop and use different random distributions of data. If the data used in an algorithm is not random, the processor can start to optimize its branch predictions based on data patterns.</p>
+
+  <div class="code"><pre><code
+>#include &lt;stdlib.h&gt; <span class="comment">// rand, srand</span>
+#include &lt;unistd.h&gt; <span class="comment">// read, write</span>
+#include &lt;fcntl.h&gt; <span class="comment">// open, fcntl, O_RDONLY</span>
+#include &lt;time.h&gt; <span class="comment">// time</span>
+
+int main()
+{
+  unsigned int seed = 0;
+  int fd = open("/dev/urandom", O_RDONLY);
+  if (fd >= 0)
+  {
+    read(fd, &seed, sizeof seed);
+    close(fd);
+  }
+  else
+  {
+    seed = time(NULL);
+  }
+
+  srand(seed);
+  int r1 = rand();
+  int r2 = rand();
+}</code></pre>
+  </div>
+
+  <p>The code in the next code block reads all data from standard input into memory.</p>
+
+</div>
+
+<div>
+
+  <div class="code"><pre><code
+>#include &lt;stdlib.h&gt; <span class="comment">// malloc</span>
+#include &lt;unistd.h&gt; <span class="comment">// read</span>
+#include &lt;fcntl.h.h&gt; <span class="comment">// STDIN_FILENO</span>
+
+int main()
+{
+  int capacity = 1&lt;&lt;10;
+  char *buf = malloc(capacity);
+  char *end = buf;
+  ssize_t bytes;
+  while ( (bytes = read(STDIN_FILENO, end, capacity)) > 0 )
+  {
+    end += bytes;       <span class="comment">// move to next input position</span>
+    capacity -= bytes;  <span class="comment">// decrease memory block capacity</span>
+  }
+  if (bytes != 0) <span class="comment">// read() should close with 0, and error on non-zero</span>
+  {
+    return errno;
+  }
+}</code></pre>
+  </div>
+
+</div>
+
+<div>
+
+  <h2 id="1-2"><a href="#1-2"></a>Bézier curve interpolation</h2>
+
+  <p>Bézier curves are created from recursive linear interpolations between control points. A quadratic curve is created from three points. A cubic curve is created from four points. Examples of a quadratic and cubic curve are in <a href="#figure-1">figure 1</a>.</p>
+
+  <figure id="figure-1" class="smallFigure">
+    <div id="vueInterpolation" v-scope>
+      <svg width="100%" xmlns="http://www.w3.org/2000/svg" viewBox="-50 -25 100 50">
+        <rect x="-50" y="-25" width="100%" height="100%" fill="url(#gridPattern2)" stroke="none"/>
+        <path d="M 0 -25 v50zM -50 0 h100z" fill="none" stroke="#000" stroke-width="0.1"/>
+
+        <g>
+          <line :x1="Q[0].x" :y1="Q[0].y" :x2="Q[1].x" :y2="Q[1].y" stroke-width="0.2" stroke="#7bc4e5"/>
+          <line :x1="Q[1].x" :y1="Q[1].y" :x2="Q[2].x" :y2="Q[2].y" stroke-width="0.2" stroke="#7bc4e5"/>
+
+          <line :x1="q1.x"   :y1="q1.y"   :x2="q2.x"   :y2="q2.y"   stroke-width="0.2" stroke="#999"/>
+
+          <path stroke="black" stroke-width="0.5" fill="none" :d="pathQ()"/>
+
+          <circle :cx="q1.x" :cy="q1.y" r="0.5" fill="#999"/>
+          <circle :cx="q2.x" :cy="q2.y" r="0.5" fill="#999"/>
+
+          <circle v-for="(p, i) in Q" :key="i"
+            :cx="p.x" :cy="p.y" r="1" fill="#7bc4e5"/>
+
+          <circle :cx="pQ.x" :cy="pQ.y" r="1" fill="#000"/>
+        </g>
+
+        <g>
+          <line :x1="C[0].x" :y1="C[0].y" :x2="C[1].x" :y2="C[1].y" stroke-width="0.2" stroke="#7bc4e5"/>
+          <line :x1="C[1].x" :y1="C[1].y" :x2="C[2].x" :y2="C[2].y" stroke-width="0.2" stroke="#7bc4e5"/>
+          <line :x1="C[2].x" :y1="C[2].y" :x2="C[3].x" :y2="C[3].y" stroke-width="0.2" stroke="#7bc4e5"/>
+
+          <line :x1="c1.x" :y1="c1.y" :x2="c2.x" :y2="c2.y" stroke-width="0.2" stroke="#999"/>
+          <line :x1="c2.x" :y1="c2.y" :x2="c3.x" :y2="c3.y" stroke-width="0.2" stroke="#999"/>
+          <line :x1="c4.x" :y1="c4.y" :x2="c5.x" :y2="c5.y" stroke-width="0.2" stroke="#999"/>
+
+          <path stroke="black" stroke-width="0.5" fill="none" :d="pathC()"/>
+
+          <circle :cx="c1.x" :cy="c1.y" r="0.5" fill="#999"/>
+          <circle :cx="c2.x" :cy="c2.y" r="0.5" fill="#999"/>
+          <circle :cx="c3.x" :cy="c3.y" r="0.5" fill="#999"/>
+          <circle :cx="c4.x" :cy="c4.y" r="0.5" fill="#7bc4e5"/>
+          <circle :cx="c5.x" :cy="c5.y" r="0.5" fill="#7bc4e5"/>
+
+          <circle v-for="(p, i) in C" :key="i"
+              :cx="p.x" :cy="p.y" r="1" fill="#7bc4e5"/>
+
+          <circle :cx="pC.x" :cy="pC.y" r="1" fill="#000"/>
+        </g>
+
+      </svg>
+      <div class="pack16">
+        <div class="eight slider mono">
+          <label><span>t: {{tQ}} %</span>
+            <input type="range" min="0" max="100" v-model.number="tQ" step="10">
+          </label>
+        </div>
+        <div class="eight slider mono">
+          <label><span>t: {{tC}} %</span>
+            <input type="range" min="0" max="100" v-model.number="tC" step="10">
+          </label>
+        </div>
+      </div>
+    </div>
+    <figcaption id="figure-1-caption">Figure 1: Example of quadratic Bézier curve (left) and cubic Bézier curve (right). Control points are shown in blue and dragging the sliders moves interpolated points along the drawn lines.</figcaption>
+  </figure>
+
+  <p>The linear interpolation betwen two points is another point calculated from their weighted sum. The parameter \(t\) represents how far the interpolated point is from the first point. Increasing \(t\) in steps from 0 to 1 creates points along a straight line. The equation is shown next.</p>
+
+  <figure aria-label="Equation for linear interpolation between two points">
+    $$
+    B(t, \boldsymbol{p_0}, \boldsymbol{p_1}) = (1-t)\boldsymbol{p_0} + t\boldsymbol{p_1}
+    =
+    \left[
+    \begin{array}{c}
+      (1-t)\boldsymbol{p_0}.x + t\boldsymbol{p_1}.x\\
+      (1-t)\boldsymbol{p_0}.y + t\boldsymbol{p_1}.y
+    \end{array}
+    \right]
+    \qquad 0 \leq t \leq 1
+    $$
+  </figure>
+
+  <p>The same equation can also be written as scaling the slope from \(\boldsymbol{p_0}\) to \(\boldsymbol{p_1}\).</p>
+
+  <figure aria-label="Equation for linear interpolation as scaling the slope between two points">
+    $$
+    B(t, \boldsymbol{p_0}, \boldsymbol{p_1})
+    = \boldsymbol{p_0} + t(\boldsymbol{p_1} - \boldsymbol{p_0})
+    $$
+  </figure>
+
+  <p>C code for linear interpolation is shown below.</p>
+
+  <div class="code"><pre><code
+>typedef struct P2 { float x, y; } P2_t;
+
+P2_t bezier2(P2_t p0, P2_t p1, float t)
+{
+  return (P2_t)
+    { (1 - t) * p0.x + t * p1.x,
+      (1 - t) * p0.y + t * p1.y
+    };
+}</code></pre>
+  </div>
+
+</div>
+
+<div>
+
+  <p>A quadratic Bézier curve is created from three points. The curve's points are calculated from each step \(t\) using three linear interpolations. The code for interpolation is shown below.</p>
+
+  <div class="code"><pre><code
+>P2_t bezier3(P2_t p0, P2_t p1, P2_t p2, float t)
+{
+  P2_t p3 = bezier2(p0, p1, t);
+  P2_t p4 = bezier2(p1, p2, t);
+  P2_t p5 = bezier2(p3, p4, t);
+  return p5;
+}</code></pre>
+  </div>
+
+  <p>Multiplying out the three linear interpolations results in the following equation.</p>
+
+  <figure aria-label="Equation for quadratic interpolation">
+    $$
+    B(t, \boldsymbol{p_0}, \boldsymbol{p_1}, \boldsymbol{p_2})
+    =
+    (1-t)^2\boldsymbol{p_0} + 2(1-t)t\boldsymbol{p_1} + t^2\boldsymbol{p_2}
+    $$
+  </figure>
+
+  <p>A cubic Bézier curve is created from four points. The curve's points are calculated from each step \(t\) using six linear interpolations. The code for interpolation is shown below.</p>
+
+  <div class="code"><pre><code
+>P2_t bezier4(P2_t p0, P2_t p1, P2_t p2, P2_t p3, float t)
+{
+  P2_t p4 = bezier2(p0, p1, t);
+  P2_t p5 = bezier2(p1, p2, t);
+  P2_t p6 = bezier2(p2, p3, t);
+  P2_t p7 = bezier2(p4, p5, t);
+  P2_t p8 = bezier2(p5, p6, t);
+  P2_t p9 = bezier2(p7, p8, t);
+  return p9;
+}</code></pre>
+    </div>
+
+  <p>Multiplying out the six linear interpolations results in the following equation.</p>
+
+  <figure aria-label="Equation for cubic interpolation">
+    $$
+    B(t, \boldsymbol{p_0}, \boldsymbol{p_1}, \boldsymbol{p_2}, \boldsymbol{p_3})
+    =
+    (1-t)^3\boldsymbol{p_0} + 3(1-t)^2t\boldsymbol{p_1} + 3(1-t)t^2\boldsymbol{p_2} + t^3\boldsymbol{p_3}
+    $$
+  </figure>
+
+</div>
+
+<div>
+
+  <h2 id="1-3"><a href="#1-3"></a>Graphics perspective projection</h2>
+
+  <p>Perspective projection transforms a frustum in camera space to a view space, as illustrated in <a href="#figure-2"> Figure 2</a>. Coordinates that map outside the unit cube are clipped by rendering pipelines. After projection the coordinates are further transformed to a cube to prepare for rendering.</p>
+
+  <figure id="figure-2">
+    <svg width="100%" viewBox="-40 -20 80 40">
+      <rect x="-40" y="-20" width="100%" height="100%" fill="url(#gridPattern2)" stroke="none"/>
+      <polygon points="-25,0 20,-15 20,15 -25,0" fill="none" stroke-width="0.1" stroke="#666" />
+      <polygon points="-10,-5 20,-15 20,15 -10,5" fill="none" stroke-width="0.5" stroke="#7bc4e5" />
+      <line x1="-40" y1="0" x2="40" y2="0" stroke-width="0.2" stroke="#000"/>
+      <line x1="10" y1="-5" x2="-25" y2="0" stroke-width="0.2" stroke="#666"/>
+      <circle cx="-10" cy="-2" r="0.5" fill="#000"/>
+      <circle cx="10" cy="-5" r="0.5" fill="#000"/>
+      <circle cx="-25" cy="0" r="0.5" fill="#000"/>
+      <text x="36" y="-2" font-size="2">-z</text>
+      <text x="-39" y="-2" font-size="2">+z</text>
+      <text x="-11" y="15" font-size="2">near</text>
+      <text x="21" y="15" font-size="2">far</text>
+      <text x="-28" y="15" font-size="2">camera</text>
+      <text x="-25" y="-2" font-size="2">0,0</text>
+      <text x="11" y="-6" font-size="2">p</text>
+      <text x="-9" y="-3" font-size="2">p'</text>
+    </svg>
+  <figcaption id="figure-2-caption">Figure 2: A frustum viewed from the side where higher depth is to the right towards negative values. The point \(p\) is projected to \(p'\) with a depth set to the near plane. Coordinates are from the camera's perspective at \((0,0)\).</figcaption>
+  </figure>
+
+  <p>The relationship between the similar triangles at \(p\) and \(p'\) gives the equations below. The perspective projection divides the point by its positive depth and multiplies by the positive depth of the near plane. The \(z\)-component is negated because the depth values are negative in a right-handed coordinate system.</p>
+
+  <figure aria-label="The transform equations for perspective projection">
+    $$
+    \frac{p}{p_z} = \frac{p'}{n} \qquad \Rightarrow \qquad
+    p' = \frac{np}{-p_z}
+    = \left(
+      \frac{nx}{-p_z},
+      \frac{ny}{-p_z}
+    \right)
+    $$
+  </figure>
+
+  <p>In a graphics pipeline, all coordinates are normalized to a cube where each dimension is in the range \([-1,1]\). The depth component is used for a visibility test when fragments obstruct each other. Normalization means the following.</p>
+
+  <ul>
+    <li>The \(x\) coordinate is scaled linearly from widths \([-w/2,w/2]\) to \([-1,1]\) using \(2x/w\).</li>
+    <li>The \(y\) coordinate is scaled linearly from heights \([-h/2,h/2]\) to \([-1,1]\) using \(2y/h\).</li>
+    <li>The \(z\) coordinate is scaled non-linearly from depths \([-n,f]\) to \([-1,1]\) using \(A/z + B\).</li>
+  </ul>
+
+  <p>Below is the transformation to project and normalize a three-dimensional point to a point in the unit cube. <a href="#figure-3"> Figure 3</a> illustrates the effects of this transformation.</p>
+
+  <figure aria-label="The transform equations for perspective projection">
+    $$
+    T(\boldsymbol{p}) =
+    T(x,y,z) =
+    (x',y',z') =
+    \left(
+      x\frac{2n}{-zw}
+      , \qquad
+      y\frac{2n}{-zh}
+      , \qquad
+      \frac{-2nf}{z(f-n)} + \frac{-(n+f)}{(f-n)}
+    \right)
+    $$
+  </figure>
+
+</div>
+
+<div>
+
+  <p>The width \(w\) and height \(h\) are the camera view's dimensions. Coordinates in world space should first be transformed into camera space with a camera view transformation. Pick a world space point that should be in front of the camera and then translate and rotate it. The same transformation is then applied on all points before the projection transform.</p>
+
+  <p>The purpose of using a non-linear mapping for the depth value is to ensure that fragments closer to the viewer are numerically further apart from each other when mapped from \([near,far]\) to \([-1,1]\). Otherwise numerical errors can make close fragments clip through each other, which is less visible on fragments far away. \(A\) and \(B\) are solved for using \(A/n+B=-1\) and \(A/f+B=-1\).</p>
+
+  <figure id="figure-3">
+    <div id="vuePerspective" v-scope class="pack16">
+      <svg class="eight" viewBox="-20 -20 40 40">
+        <g>
+          <line v-for="(p, i) in P" :key="i"
+            x1="0" y1="0" :x2="p.x*40" :y2="p.y*40" stroke-width="0.5" stroke="#7bc4e5"/>
+          <circle v-for="(p, i) in P" :key="i"
+            :cx="p.x*40" :cy="p.y*40" :r="(10-offsetz)/20+1" fill="#000"/>
+        </g>
+      </svg>
+
+      <svg class="eight" viewBox="-20 -20 40 40">
+        <g>
+          <polygon points="-20,-10 20,-15 20,5 -20,0" fill="none" stroke-width="0.1" stroke="#999" />
+          <line x1="-20" y1="-5" x2="20" y2="-5" stroke-width="0.5" stroke="#7bc4e5"/>
+          <line x1="-20" y1="12" x2="20" y2="12" stroke-width="0.5" stroke="#7bc4e5"/>
+          <line x1="0" y1="-3" x2="0" y2="-7" stroke-width="0.5" stroke="#7bc4e5"/>
+          <line x1="0" y1="10" x2="0" y2="14" stroke-width="0.5" stroke="#7bc4e5"/>
+          <circle :cx="(_depth/100)*40-20" cy="-5" r="1" fill="#000"/>
+          <circle :cx="-z*20" cy="12" r="1" fill="#000"/>
+          <text x="-19" y="-7" font-size="2" font-family="monospace">near</text>
+          <text x="15" y="-7" font-size="2" font-family="monospace">far</text>
+          <text x="-19" y="10" font-size="2" font-family="monospace">-1</text>
+          <text x="16" y="10" font-size="2" font-family="monospace">+1</text>
+          <text x="-19" y="17" font-size="2" font-family="monospace">z': {{z}}</text>
+        </g>
+      </svg>
+
+      <div class="pack16">
+        <div class="eight slider">
+          <label class="mono">x-offset: {{offsetx}}<input type="range" min="-10" max="10" value="0" v-model.number="offsetx" step="1">
+          </label>
+          <label class="mono">y-offset: {{offsety}}<input type="range" min="-10" max="10" value="0" v-model.number="offsety" step="1">
+          </label>
+          <label class="mono">z-offset: -{{offsetz}}<input type="range" min="0" max="10" value="0" v-model.number="offsetz" step="1">
+          </label>
+        </div>
+        <div class="eight slider">
+          <label class="mono">depth: {{_depth}} %<input type="range" min="0" max="100" value="50" v-model.number="depth" step="1">
+          </label>
+          <label class="mono">near: {{n}}<input type="range" min="1" max="9" value="5" v-model.number="n" step="1">
+          </label>
+          <label class="mono">far: {{f}}<input type="range" min="10" max="100" value="50" v-model.number="f" step="10">
+          </label>
+        </div>
+      </div>
+    </div>
+    <figcaption id="figure-3-caption">Figure 3: On the left is the perspective projection of eight points that have the same depth. On the right is the depth before projection at the top and the non-linear projected depth at the bottom. The non-linearity makes the bottom point accelerate more when closer to the left near plane.</figcaption>
+  </figure>
+
+  <p>The code below implements perspective projection of one point.</p>
+
+  <div class="code"><pre><code
+>typedef struct P3 { float x, y, z; } P3_t;
+
+P3_t project_point(P3_t p, float n, float f, float w, float h)
+{
+  float a = -2.0f*n*f / (f-n);
+  float b = -(n+f) / (f-n);
+  return (P3_t p)
+    {
+      ((2.0f*n/w * p.x) / -p.z),
+      ((2.0f*n/h * p.y) / -p.z),
+      a/p.z + b
+    };
+}</code></pre>
+  </div>
+
+</div>
+
+<div>
+
+  <h2 id="1-4"><a href="#1-4"></a>Tiled matrix multiplication</h2>
+
+  <p>Matrix multiplication traverses matrix data in both row-major and column-major order. Tiled matrix multiplication is an attempt to achieve better cache locality by accessing data in a sequence of blocks instead of in a sequence of rows and columns.</p>
+
+  <p>Below is an implementation of matrix multiplication without tiling. The order of computation calculates each row of the output matrix <code>OUT</code> by reading a row of the matrix <code>IN1</code> and performing the dot product with each column of the matrix <code>IN2</code>.</p>
+
+  <div class="code"><pre><code
+>int IN1[] =
+  { 0,  1,  2,  3,
+    4,  5,  6,  7,
+    8,  9,  10, 11,
+    12, 13, 14, 15
+  };
+int IN2[] =
+  { 0,  1,  2,  3,
+    4,  5,  6,  7,
+    8,  9,  10, 11,
+    12, 13, 14, 15
+  };
+int OUT[sizeof IN1 / sizeof IN1[0]];
+int N = 4; <span class="comment">// number of rows</span>
+int M = 4; <span class="comment">// number of columns</span>
+
+int main()
+{
+  for (int i = 0; i &lt; N; i += 1) <span class="comment">// go down the rows</span>
+  {
+    <span class="comment">// dot product row i with each column j</span>
+    for (int j = 0; j &lt; M; j += 1) <span class="comment">// to right as column</span>
+    {
+      for (int k = 0; k &lt; M; k += 1) <span class="comment">// k elements of row and column</span>
+      {
+        OUT[j+N*r] += IN[j+N*r] * IN[k*M+c];
+      }
+    }
+  }
+}</code></pre>
+  </div>
+
+  <p>Below is an implementation of matrix multiplication using tiling. The order of computation calculates tiles in the output matrix <code>OUT</code> by reading a tile of the matrix <code>IN1</code> and performing the dot product with a tile of the matrix <code>IN2</code>.</p>
+
+  <div class="code"><pre><code
+>int main()
+{
+  int H = 2; <span class="comment">// tile height size</span>
+  int W = 2; <span class="comment">// tile width size</span>
+  <span class="comment">// (i,j) loops through each tile in row-major order</span>
+  for (int i = 0; i &lt; N; i += H) <span class="comment">// downward by tile height</span>
+  {
+    for (int j = 0; j &lt; M; j += W) <span class="comment">// rightward by tile width</span>
+    {
+      <span class="comment">// sum dot products spread over multiple tiles</span>
+      for (int k = 0; k &lt; M; k += M/H) <span class="comment">// k tiles of row and column</span>
+      {
+        <span class="comment">// calculate dot products of tile</span>
+        for (int r = i; r &lt; (H+i); r += 1) <span class="comment">// the row of outputs in tile</span>
+        {
+          for (int c = j; c &lt; (W+j); c += 1) <span class="comment">// the column of output in tile</span>
+          {
+            <span class="comment">// dot product (partial for tile only)</span>
+            for (int kk = k; kk &lt; (H+k); kk += 1) <span class="comment">// k elements of tile row and column</span>
+            {
+              OUT[r*N+c] += IN1[kk+r*N] * IN2[kk*M+c];
+            }
+          }
+        }
+      }
+    }
+  }
+}</code></pre>
+  </div>
+
+</div>
+
+<div>
+
+  <p><a href="#figure-4"> Figure 4</a> illustrates non-tiled matrix multiplication. Each row is traversed from left to right. For each row every column is traversed from top to bottom. To calculate one output cell, one row and one column are traversed.</p>
+
+  <figure id="figure-4">
+    <div id="vueMatrix" v-scope class="pack16 mono center">
+      <div class="eight" style="padding-top: 2rem;">
+        $$
+        M_1 \cdot M_2 = M_3 \quad \Rightarrow \quad
+        \begin{array}{c|c}
+         & M_2 \\
+        \hline
+        M_1 & M_3
+        \end{array}
+        $$
+      </div>
+      <div class="eight matrix matrixRight">
+        <div class="pack16">
+          <div class="four" v-for="i in 16" :key="i"
+            :class="{ 'isset': issetColumn(i-1), 'target': issetColumn(i-1) }">{{i-1}}</div>
+        </div>
+      </div>
+      <div class="eight matrix matrixLeft">
+        <div class="pack16">
+          <div class="four" v-for="i in 16" :key="i"
+            :class="{ 'isset': issetRow(i-1), 'target': issetRow(i-1) }">{{i-1}}</div>
+        </div>
+      </div>
+      <div class="eight matrix matrixRight">
+        <div class="pack16" @click="clickM3">
+          <div class="four" v-for="i in 16" :key="i"
+            :class="{ 'isset': (i-1)===selected, 'target': (i-1)===selected }">{{i-1}}</div>
+        </div>
+      </div>
+    </div>
+    <figcaption id="figure-4-caption">Figure 4: Non-tiled matrix multiplication where each row of matrix 1 is multiplied with each column of matrix 2.</figcaption>
+  </figure>
+
+  <p><a href="#figure-5"> Figure 5</a> illustrates tiled matrix multiplication. Each row tile is traversed in a Z-pattern and each column tile is traversed as top-left, bottom-left, top-right, bottom-right (like part of a W). Two tiles occupying the the same two rows are traversed to calculate one output tile.</p>
+
+  <figure id="figure-5">
+    <div id="vueMatrixTiled" v-scope class="pack16 mono center">
+      <div class="eight" style="padding-top: 2rem;">
+        $$
+        M_1 \cdot M_2 = M_3 \quad \Rightarrow \quad
+        \begin{array}{c|c}
+         & M_2 \\
+        \hline
+        M_1 & M_3
+        \end{array}
+        $$
+      </div>
+      <div class="eight matrix matrixRight">
+        <div class="pack16">
+          <div class="four" v-for="i in 16" :key="i"
+            :class="{
+              'isset': issetColumnTile(i-1),
+              'oddTile': i>8,
+              'target': issetColumn(i-1)
+              }">{{i-1}}</div>
+        </div>
+      </div>
+      <div class="eight matrix matrixLeft">
+        <div class="pack16">
+          <div class="four" v-for="i in 16" :key="i"
+            :class="{
+              'isset': issetRowTile(i-1),
+              'oddTile': (i-1)%4>1,
+              'target': issetRow(i-1)
+              }">{{i-1}}</div>
+        </div>
+      </div>
+      <div class="eight matrix matrixRight">
+        <div class="pack16" @click="clickM3">
+          <div class="four" v-for="i in 16" :key="i"
+            :class="{
+              'isset': issetRowTile(i-1) && issetColumnTile(i-1),
+              'target': (i-1)===selected }">{{i-1}}</div>
+        </div>
+      </div>
+    </div>
+    <figcaption id="figure-5-caption">Figure 5: Tiled matrix multiplication where each tile of matrix 1 is multiplied with each tile of matrix 2. Two tiles from each are used to calculate the resulting tile in matrix 3. In this example, a tile in matrix 1 is traversed top-left, top-right, bottom-left, bottom-right and in matrix 2 it's top-left, bottom-left, top-right, bottom-right.</figcaption>
+  </figure>
+
+</div>
+
+</div><!--[ PAGES END ]-->
+
+<div id="footer" class="remove-on-print"
+  ><span>2022, Linda Jansson.</span>
+  <div><iframe src="https://github.com/sponsors/linjan2/button" title="Sponsor linjan2" height="35" width="116" style="border: 0;"></iframe></div>
+</div>
+
+
+<!--[ SIDE PANEL ]-->
+<input type="checkbox" id="side-panel-switch" aria-hidden="true">
+<div id="side-panel" class="remove-on-print">
+  <label id="side-panel-icon" for="side-panel-switch" aria-label="side panel toggle"></label>
+  <div id="tabs" class="pack16">
+
+    <input type="radio" id="tab-1" name="tab-control" aria-hidden="true" checked>
+    <input type="radio" id="tab-2" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-3" name="tab-control" aria-hidden="true">
+    <input type="radio" id="tab-4" name="tab-control" aria-hidden="true">
+
+    <label for="tab-1" class="four" aria-label="side panel outline button">outline</label>
+    <label for="tab-2" class="four" aria-label="side panel external button">external</label>
+    <label for="tab-3" class="four" aria-label="side panel more button">more</label>
+    <label for="tab-4" class="four" aria-label="side panel about button">about</label>
+
+    <div class="sixteen" id="outline-tab">
+      <a href="#title">Algorithms in C</a>
+      <ul>
+        <li><a href="#1-1">Code utilities</a><li>
+        <li><a href="#1-2">Bézier curve interpolation</a></li>
+        <li><a href="#1-3">Graphics perspective projection</a></li>
+        <li><a href="#1-4">Tiled matrix multiplication</a></li>
+      </ul>
+    </div>
+
+    <div class="sixteen" id="reference-tab">
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">Talk on C++ benchmark tools.</div>
+        <div class="four">Title:</div><div class="twelve">CppCon 2015: Chandler Carruth "Tuning C++: Benchmarks, and CPUs, and Compilers! Oh My!"</div>
+        <div class="four">Author:</div><div class="twelve">Chandler Carruth</div>
+        <div class="four">Version:</div><div class="twelve">Accessed 2022-04-16</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://www.youtube.com/watch?v=nXaxk27zwlk">www.youtube.com/watch?v=nXaxk27zwlk</a></div>
+      </div>
+      <div class="reference pack16">
+        <div class="two"></div><div class="fourteen em">Video on Bézier curves.</div>
+        <div class="four">Title:</div><div class="twelve">Witness Wednesday Part 10 - Interpolation</div>
+        <div class="four">Author:</div><div class="twelve">Casey Muratori</div>
+        <div class="four">Version:</div><div class="twelve">2022-04-16</div>
+        <div class="four">Link:</div><div class="twelve"><a href="https://www.youtube.com/watch?v=S2fz4BS2J3Y">www.youtube.com/watch?v=S2fz4BS2J3Y</a></div>
+      </div>
+    </div>
+
+    <div id="more-tab">
+      <span role="img" aria-label="warning icon" class="icon">⚠</span>
+    </div>
+
+    <div id="about-tab">
+      <p>This text was created and is maintained by Linda Jansson.</p>
+      <p>The purpose of this text is to organize and share my notes.</p>
+      <p>Notify me of issues at <a href="https://github.com/linjan2/linjan2.github.io">github.com/linjan2/linjan2.github.io</a>.</p>
+      <iframe src="https://github.com/sponsors/linjan2/card" title="Sponsor linjan2" height="225" class="themed" style="border: 0;"></iframe>
+    </div>
+
+
+  </div>
+</div>
+
+<script src="https://unpkg.com/petite-vue@0.2.2/dist/petite-vue.iife.js"></script>
+
+<script>
+  function bezier2(points, t) {
+    return {
+      x: (1-t) * points[0].x + t * points[1].x,
+      y: (1-t) * points[0].y + t * points[1].y
+    };
+  }
+  PetiteVue.createApp({
+    Q: [
+      { x: -40, y:   0},
+      { x: -30, y: -20},
+      { x: -5,  y:  10}
+    ],
+    C: [
+      { x:  10, y:   0},
+      { x:  20, y: -20},
+      { x:  35, y:  10},
+      { x:  45, y:   0}
+    ],
+    pQ: { x: -40, y:   0},
+    pC: { x:  10, y:   0},
+    q1: { x: -40, y:   0},
+    q2: { x: -30, y: -20},
+    c1: { x:  10, y:   0},
+    c2: { x:  20, y: -20},
+    c3: { x:  35, y:  10},
+    c4: { x:  10, y:   0},
+    c5: { x:  20, y: -20},
+    _tQ: 0,
+    _tC: 0,
+    get tQ() {
+      return this._tQ;
+    },
+    set tQ(t) {
+      this._tQ = t;
+      this.q1 = bezier2([this.Q[0], this.Q[1]], t/100);
+      this.q2 = bezier2([this.Q[1], this.Q[2]], t/100);
+      this.pQ = bezier2([this.q1, this.q2], t/100);
+    },
+    get tC() {
+      return this._tC;
+    },
+    set tC(t) {
+      this._tC = t;
+      this.c1 = bezier2([this.C[0], this.C[1]], t/100);
+      this.c2 = bezier2([this.C[1], this.C[2]], t/100);
+      this.c3 = bezier2([this.C[2], this.C[3]], t/100);
+
+      this.c4 = bezier2([this.c1, this.c2], t/100);
+      this.c5 = bezier2([this.c2, this.c3], t/100);
+
+      this.pC = bezier2([this.c4, this.c5], t/100);
+    },
+    pathQ: function () {
+      return `M ${this.Q[0].x} ${this.Q[0].y} Q ${this.Q[1].x} ${this.Q[1].y} ${this.Q[2].x} ${this.Q[2].y}`;
+    },
+    pathC: function () {
+      return `M ${this.C[0].x} ${this.C[0].y} C ${this.C[1].x} ${this.C[1].y} ${this.C[2].x} ${this.C[2].y} ${this.C[3].x} ${this.C[3].y}`;
+    }
+  }).mount("#vueInterpolation");
+</script>
+
+<script>
+  PetiteVue.createApp({
+    O: [
+      { x: 7.071068,  y: -7.071068, z: -3.0 },
+      { x: -0.000000, y: -9.999999, z: -3.0 },
+      { x: -7.071067, y: -7.071067, z: -3.0 },
+      { x: -9.999998, y: 0.000000,  z: -3.0 },
+      { x: -7.071066, y: 7.071066,  z: -3.0 },
+      { x: 0.000000,  y: 9.999996,  z: -3.0 },
+      { x: 7.071065,  y: 7.071065,  z: -3.0 },
+      { x: 9.999994,  y: -0.000000, z: -3.0 }
+    ],
+    P: [
+      { x: 0.235702, y: -0.235702 },
+      { x: -0.000000, y: -0.333333 },
+      { x: -0.235702, y: -0.235702 },
+      { x: -0.333333, y: 0.000000 },
+      { x: -0.235702, y: 0.235702 },
+      { x: 0.000000, y: 0.333333 },
+      { x: 0.235702, y: 0.235702 },
+      { x: 0.333333, y: -0.000000 }
+    ],
+    _offsetx: 0.0,
+    _offsety: 0.0,
+    _offsetz: 0.0,
+    set offsetx(xo) {
+      this._offsetx = xo;
+      for (var i = 0; i < this.O.length; i += 1) {
+        var x = this.O[i].x + xo;
+        this.P[i].x = ((2*this.N/this.w * x) / -(this.O[i].z + (-this._offsetz)));
+      }
+    },
+    get offsetx() {
+      return this._offsetx;
+    },
+    set offsety(yo) {
+      this._offsety = yo;
+      for (var i = 0; i < this.O.length; i += 1) {
+        var y = this.O[i].y + yo;
+        this.P[i].y = ((2*this.N/this.h * y) / -(this.O[i].z + (-this._offsetz)));
+      }
+    },
+    get offsety() {
+      return this._offsety;
+    },
+    set offsetz(zo) {
+      this._offsetz = zo;
+      for (var i = 0; i < this.O.length; i += 1) {
+        var z = this.O[i].z + (-zo);
+        var x = this.O[i].x + this._offsetx;
+        var y = this.O[i].y + this._offsety;
+        this.P[i].x = ((2.0*this.N/this.w * x) / -z);
+        this.P[i].y = ((2.0*this.N/this.h * y) / -z);
+      }
+    },
+    get offsetz() {
+      return this._offsetz;
+    },
+    _depth: 9.0,
+    z: 0,
+    N: 1,
+    F: 100,
+    n: 5.0,
+    f: 50.0,
+    w: 20.0,
+    h: 20.0,
+    get depth() {
+      return this._depth;
+    },
+    set depth(d) {
+      this._depth = d;
+      var a = 2.0*this.n*this.f / (this.n-this.f);
+      var b = (this.n+this.f) / (this.n-this.f);
+      var z = (this._depth/100.0) * (this.f - this.n) + this.n;
+      this.z = b + a/-z;
+    }
+  }).mount("#vuePerspective");
+</script>
+
+<script>
+  PetiteVue.createApp({
+    selected: 5,
+    row: 1,
+    column: 1,
+    issetRow: function issetRow(n) {
+      return this.row === Math.floor(n/4);
+    },
+    issetColumn: function issetColumn(n) {
+      return this.column === (n % 4);
+    },
+    clickM3: function clickM3(e) {
+      this.selected = parseInt(e.target.innerText, 10);
+      this.row = Math.floor(this.selected / 4);
+      this.column = Math.floor(this.selected % 4);
+    }
+  }).mount("#vueMatrix");
+</script>
+
+<script>
+  PetiteVue.createApp({
+    selected: 5,
+    row: 1,
+    column: 1,
+    rowTile: 0,
+    columnTile: 0,
+    issetRow: function issetRow(n) {
+      return this.row === Math.floor(n/4);
+    },
+    issetColumn: function issetColumn(n) {
+      return this.column === (n % 4);
+    },
+    issetRowTile: function issetRowTile(n) {
+      return this.rowTile === Math.floor(n/8);
+    },
+    issetColumnTile: function issetColumnTile(n) {
+      return this.columnTile === Math.floor((n % 4)/2);
+    },
+    clickM3: function clickM3(e) {
+      this.selected = parseInt(e.target.innerText, 10);
+      this.row = Math.floor(this.selected / 4);
+      this.column = Math.floor(this.selected % 4);
+      this.rowTile = Math.floor(this.selected / 8);
+      this.columnTile = Math.floor((this.selected % 4) / 2);
+    }
+  }).mount("#vueMatrixTiled");
+</script>
+
+</body>
+</html>
