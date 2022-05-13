@@ -524,7 +524,7 @@ cat /host/etc/containers/{registries.conf,registries.conf.d/*}</code></pre>
 oc extract secret/pull-secret -n openshift-config --keys=.dockerconfigjson
 oc registry login --registry=docker.io --auth-basic=USERNAME:PASSWORD --to=.dockerconfigjson
 oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson
-oc get pods --all-namespaces -w  <span class="comment"># wait until affected pods are restarted</span></code></pre>
+oc get pods -n openshift-image-registry -w  <span class="comment"># wait until affected pods are restarted</span></code></pre>
   </div>
 
 </div>
@@ -625,7 +625,7 @@ oc import-image ubi8-minimal:8.5 --confirm -n common \
 
 <span class="comment"># create BuildConfig for binary upload and expecting a Dockerfile</span>
 oc new-build --name main --binary --strategy=docker
-oc get buildconfig main o yaml  <span class="comment"># view BuildConfig</span>
+oc get buildconfig main -o yaml  <span class="comment"># view BuildConfig</span>
 
 <span class="comment"># create a Dockerfile (multi-staged)</span>
 REGISTRY=$(oc registry info --internal)

@@ -125,7 +125,7 @@ perf record -g mybinary  <span class="comment"># record into perf.data</span>
 perf report -g 'graph,0.5,caller'  <span class="comment"># show perf.data report with expandable call graph</span></code></pre>
   </div>
 
-  <p>If the compiler is eliminating code because it has no side effects then the following functions (demonstrated by Chandler Carruth at CppCon 2015) should stop that by marking assembly code as having unknown side-effects.</p>
+  <p>If the compiler is eliminating code because it has no side effects then the following functions should stop that by ensuring the given assembly code is compiled as is. The assembly string is empty in this case, but the compiler may not re-order memory access instructions around it.</p>
 </div>
 
 <div>

@@ -156,7 +156,7 @@ endlocal</code></pre>
 
   <h3 id="1-1-2"><a href="#1-1-2"></a>Extra compiler options</h3>
 
-  <p>The linker option <code>/subsystem:console</code> will create a console window for process if the executable isn't started from the command-line; this is the default. It also sets the default entry point to <code>mainCRTStartup</code>. <code>/subsystem:windows</code> will not create a console window since the process intends to create windows itself. It also sets the default entry point to <code>WinMainCRTStartup</code>.</p>
+  <p>The linker option <code>/subsystem:console</code> will create a console window for the process if the executable isn't started from the command-line; this is the default. It also sets the default entry point to <code>mainCRTStartup</code>. <code>/subsystem:windows</code> will not create a console window since the process intends to create windows itself. It also sets the default entry point to <code>WinMainCRTStartup</code>.</p>
 
   <p>Compiler option <code>/I path</code> adds a search path for include files. Linker option <code>/libpath:path</code> adds search path for library files. Both can be specified multiple times for multiple paths.</p>
 
@@ -218,7 +218,7 @@ set linker_flags= /debug:full /incremental:no /pdbaltpath:main.pdb</code></pre>
       </ul>
     </li>
     <li>
-      Define<code>memset()</code> if the compiler doesn't inline it with an intrinsic version.
+      Define <code>memset()</code> if the compiler doesn't inline it with an intrinsic version.
       <ul>
         <li>a <code>memset()</code> function call is generated for static initialization of arrays and structs.</li>
         <li>the intrinsic version is requested when passing <code>/O2</code> or <code>/Oi</code> and when not passing <code>/Od</code> to the compiler.</li>

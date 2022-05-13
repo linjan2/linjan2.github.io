@@ -21,7 +21,7 @@
   <p>UTF-16 stores either 16 data bits in a 16-bit integer or 20 data bits within two 16-bit integers. The high and low word of a double 16-bit UTF-16 character each has 10 data bits and are called a surrogate pair. The remaining non-data bits are used to recognize the encoding.</p>
   <p>UTF-8 stores 21-bit values within one, two, three, or four 8-bit integers. For multibyte sequences the non-data bits in the first byte identifies the sequence length. Subsequent bytes start with the non-data bits <code>10</code> followed by 6 data bits.</p>
 
-  <figure aria-labelledby="figure-1-caption" id="figure-1">
+  <figure id="figure-1">
 <pre role="img">        Codepoint:                Encoding:                                    Data bits:
 UTF-32: 0x0 - 0x1F FFFF      <=>  0000 0000 000x xxxx xxxx xxxx xxxx xxxx      (21 data bits)
 
