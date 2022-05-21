@@ -170,9 +170,8 @@ spec:
   podSelector: {}
   ingress:
   - from:
-    - namespaceSelector:
-        matchLabels:
-          policy-group.network.openshift.io/ingress: ""
+    - namespaceSelector: { matchLabels: { network.openshift.io/policy-group: ingress } }
+    - namespaceSelector: { matchLabels: { network.openshift.io/policy-group: monitoring } }
   egress:
   - to:
     ports:
