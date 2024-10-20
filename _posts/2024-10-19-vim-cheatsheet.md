@@ -1,6 +1,6 @@
 ---
 title: Vim cheatsheet
-categories:
+categories: cheatsheet
 ---
 
 # Vim cheatsheet
