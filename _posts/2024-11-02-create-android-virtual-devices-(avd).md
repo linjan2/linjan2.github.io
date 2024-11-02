@@ -1,6 +1,6 @@
 ---
 title: Create Android Virtual Devices (AVD)
-categories:
+categories: uncategorized
 ---
 
 # Create Android Virtual Devices (AVD)
