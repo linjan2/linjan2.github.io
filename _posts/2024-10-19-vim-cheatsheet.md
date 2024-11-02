@@ -35,10 +35,11 @@ categories: cheatsheet
 | `:'<,'>!awk -f script.awk` | Run command `awk` on visual selection. |
 | `:read !date`       | Insert output of command `date`. |
 | `:read FILE`        | Insert contents of file `FILE`. |
+| `:new | 0read ! git diff #` | Open a file's git diff in new window pane. |
 | `:Lexplore`         | Open netrw in left pane. |
 | `<C-w>w`            | Cycle pane focus. |
 | `<C-w>l`            | Focus on left pane. |
-| `<C-w>\|` / `<C-w>_` | Maximize size of pane width/height. |
+| `<C-w>|` / `<C-w>_` | Maximize size of pane width/height. |
 | `<C-w>=`            | Equalize sizes of all panes. |
 | `<C-w>10>` / `<C-w>-10>` | Increase/decrease pane width by 10 columns. |
 
