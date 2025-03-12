@@ -1,6 +1,6 @@
 ---
 title: Camera tethering on Linux
-categories: uncategorized
+categories: linux
 ---
 
 # Camera tethering on Linux
