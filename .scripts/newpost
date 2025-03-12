@@ -1,0 +1,31 @@
+set -o errexit
+set -o nounset
+
+cd $(dirname "${0}")/..
+
+TITLE=''
+if [ $# -eq 0 ]
+then
+  read -p 'TITLE: ' -r TITLE
+else
+  TITLE="${@}"
+fi
+
+: ${TITLE:?title must not be empty}
+
+# replace spaces with dashes
+TITLE_IN_FILE=${TITLE// /-}
+# transform to lowercase
+TITLE_IN_FILE=${TITLE_IN_FILE,,}
+
+FILE="_posts/$(date +%Y-%m-%d)-${TITLE_IN_FILE}.md"
+
+cat > ${FILE} <<<"---
+title: ${TITLE}
+categories: uncategorized
+---
+
+# ${TITLE}
+"
+
+echo ${FILE}
