@@ -1,0 +1,24 @@
+{
+  "scripts": {
+    "pre": ":",
+    "lint": "npx eslint --report-unused-disable-directives .",
+    "lint-fix": "npx eslint --fix .",
+    "build": "npx rollup --config --bundleConfigAsCjs --environment BUILD:production"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.1",
+    "@rollup/plugin-babel": "^6.1.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-eslint": "^9.2.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@stylistic/eslint-plugin": "^5.5.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-jsdoc": "^61.2.1",
+    "globals": "^16.5.0",
+    "rollup": "^4.53.2"
+  }
+}

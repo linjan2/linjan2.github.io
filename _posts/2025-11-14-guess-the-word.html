@@ -1,0 +1,47 @@
+---
+title: Guess the word
+js:
+  - https://unpkg.com/petite-vue@0.4.1/dist/petite-vue.iife.js
+  - /assets/guess-the-word/index.js
+css: /assets/guess-the-word/style.css
+categories: ⚙️webapps
+---
+
+<!-- avoid excerpt separator \n\n -->
+
+{% raw %}
+<article id="app" v-scope @vue:mounted="reload()">
+  <figure>
+    <figcaption>Guess the word! Kind of like Wordle. Correctly placed letters are shown in green and bold. Letters that occur in the word, but are not correctly placed are shown in purple and italic. The guess must fill all letters of the word, but the guess itself doesn't have to be a valid dictionary word. Guess as many times as you want 💖🎊🥂.</figcaption>
+
+    <select v-model="type" @input="select" name="language">
+      <option value="words">English</option>
+      <option value="ord">Swedish</option>
+    </select>
+    <button @click="reload()">New game</button>
+
+    <div class="words flex flex-column" :class="{solved: solved}">
+      <div v-for="(r, i) in letters" :key="i" class="flex flex-row letters-row">
+        <span v-for="(c, j) in r" :key="j" class="letter" :class="c.c">{{c.l}}</span>
+      </div>
+      <div class="flex flex-row letters-row" v-if="!solved">
+        <span v-for="n in word.length" :key="n" :class="{unfilled: !input[n-1]}" class="letter">{{input[n-1] || '.'}}</span>
+      </div>
+      <div id="guess-input" class="flex flex-row content">
+        <div class="flex flex-row"><input :maxlength="word.length" :disabled="solved||word===''" placeholder="enter a word" type="text" v-model="input" @keyup.enter="add(input)" /></div>
+        <div class="flex flex-row"><button @click="add(input)" :disabled="solved || word==='' || input.length!==word.length" name="guess">Guess</button></div>
+      </div>
+    </div>
+
+    <div v-if="solved && definition!==null">
+      <blockquote :cite="definition.wordnikUrl">
+        <p>
+          <a :href="definition.wordnikUrl"><dfn>{{definition.word}}</dfn></a>
+          <br>{{definition.text}}
+          <br>—<a :href="definition.attributionUrl"><cite>{{definition.attributionText}}</cite></a>
+        </p>
+      </blockquote>
+    </div>
+  </figure>
+</article>
+{% endraw %}

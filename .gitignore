@@ -1,7 +1,27 @@
-_site
-.sass-cache
-.jekyll-cache
-.jekyll-metadata
-vendor
-Gemfile.lock
+# === Node.js / Rollup ===
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+npm-debug.log
+yarn-error.log*
+yarn-debug.log*
+.pnpm-debug.log*
+*.log
 
+# === Jekyll Build Output ===
+_site/
+.jekyll-cache/
+.jekyll-metadata
+.sass-cache
+.cache/
+
+# === Environment & Secrets ===
+.env
+.env.local
+.env.*.local
+GITHUB_TOKEN
+npmrc
+
+# === Local Dev Overrides ===
+_config.local.yml

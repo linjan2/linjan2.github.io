@@ -2,14 +2,25 @@ title: linjan2 takes notes
 author: Linda Jansson
 email: null
 description: 
-source_repo: https://github.com/linjan2/linjan2.github.io
-baseurl: ''
 url: linjan2.github.io
-github_username: linjan2
+baseurl: ''
+source_repo: https://github.com/linjan2/linjan2.github.io
+repository: linjan2/linjan2.github.io
 
-theme: minima
 plugins:
   - jekyll-feed
+  - jekyll-remote-theme
+  - jekyll-minifier
+
+# theme: minima
+remote_theme: jekyll/minima
+
+minima:
+  skin: auto
+  social_links:
+    - title: GitHub
+      icon: github
+      url: https://github.com/linjan2
 
 defaults:
   - scope:
@@ -26,3 +37,18 @@ defaults:
       path: pages
     values:
       layout: page
+
+disqus:
+  shortname: linda-jansson-com
+
+jekyll-minifier:
+  uglifier_args:
+    harmony: true
+  # js_compressor: terser
+  # terser_args:
+  #   compress:
+  #     arrows: true
+  #     ecma: 6
+  #   mangle: true
+  #   output:
+  #     comments: false

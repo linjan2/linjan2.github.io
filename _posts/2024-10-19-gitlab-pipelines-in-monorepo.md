@@ -1,6 +1,6 @@
 ---
 title: GitLab pipelines in monorepo
-categories: uncategorized
+categories: 🫥uncategorized
 ---
 
 # GitLab pipelines in monorepo
