@@ -17,6 +17,9 @@ remote_theme: jekyll/minima
 
 minima:
   skin: auto
+  nav_pages:
+    - pages/categories.md
+    - pages/about.md
   social_links:
     - title: GitHub
       icon: github
@@ -32,7 +35,7 @@ defaults:
       type: posts
     values:
       layout: post
-      permalink: /:categories/:title/
+      permalink: /:title/
   - scope:
       path: pages
     values:

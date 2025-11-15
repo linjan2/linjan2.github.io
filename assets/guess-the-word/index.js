@@ -143,4 +143,4 @@ PetiteVue
             }
         }
     })
-    .mount("#word-app");
+    .mount("#app");
